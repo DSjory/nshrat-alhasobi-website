@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translated Episodes | Archive - Alhasoobi Bulletin</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    
+    <header id="main-header">
+        
+        <div class="header-right-section">
+            <div class="header-logo-main">
+                <img src="شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
+            </div>
+
+            <div class="header-text">
+                <h1>نشرة الحاسوبي</h1>
+                <p>موعدك الأسبوعي في جديد التقنية</p>
+            </div>
+        </div>
+
+        <nav class="main-nav">
+            <ul>
+                <li><a href="index.html">الرئيسية</a></li>
+                <li><a href="episodes_ar.html">نشرات عربية</a></li>
+                <li><a href="episodes_en.html" aria-current="page">نشرات مترجمة</a></li>
+                <li><a href="join.html">انضم إلينا</a></li>
+                <li><a href="about.html">فريق العمل</a></li>
+            </ul>
+        </nav>
+        
+        <div class="header-left-section">
+            <div class="header-tools">
+                <button class="header-tool-button" id="search-button" aria-label="بحث">
+                    <i class="fas fa-search"></i> 
+                </button>
+
+                <button class="header-tool-button" id="mode-toggle-button" aria-label="تبديل الوضع">
+                    <i class="fas fa-moon"></i> 
+                </button>
+            </div>
+            
+            <div class="header-logo-icon">
+                <img src="مبادرة قراءة.png" alt= "ايقونة ثقف">
+            </div>
+
+        </div>
+    </header>
+
+    <main id="main-content">
+        
+        <section id="all-episodes-section">
+            <div style="padding-top: 130px;"></div> 
+            
+            <h2 class="section-title">أرشيف النشرات المترجمة</h2>
+            <p class="section-description">تصفح جميع الأعداد السابقة التي قمنا بترجمته</p>
+            
+            <div class="episodes-grid all-episodes-grid">
+                
+                <a href="link_to_en_episode_1.html" class="episode-card">
+                    <div class="card-image-container"><img src="en_episode_cover_1.jpg" alt="Translated Episode 1 Cover"></div>
+                    <div class="card-details">
+                        <p class="card-category">AI</p>
+                        <h4 class="card-title">The Future of Large Language Models: Beyond ChatGPT</h4>
+                        <div class="card-footer">
+                            <span class="episode-number">Translated 7</span>
+                            <span class="publisher-name">Original Source</span>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="link_to_en_episode_2.html" class="episode-card">
+                    <div class="card-image-container"><img src="en_episode_cover_2.jpg" alt="Translated Episode 2 Cover"></div>
+                    <div class="card-details">
+                        <p class="card-category">Space Tech</p>
+                        <h4 class="card-title">Space Exploration: The Next Era of Private Sector Innovation</h4>
+                        <div class="card-footer">
+                            <span class="episode-number">Translated 6</span>
+                            <span class="publisher-name">Original Source</span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="link_to_en_episode_3.html" class="episode-card">
+                    <div class="card-image-container"><img src="en_episode_cover_3.jpg" alt="Translated Episode 3 Cover"></div>
+                    <div class="card-details">
+                        <p class="card-category">Security</p>
+                        <h4 class="card-title">Post-Quantum Cryptography: Preparing for the Quantum Threat</h4>
+                        <div class="card-footer">
+                            <span class="episode-number">Translated 5</span>
+                            <span class="publisher-name">Original Source</span>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="link_to_en_episode_4.html" class="episode-card">
+                    <div class="card-image-container"><img src="en_episode_cover_4.jpg" alt="Translated Episode 4 Cover"></div>
+                    <div class="card-details">
+                        <p class="card-category">Hardware</p>
+                        <h4 class="card-title">Apple's M4 Chip: Redefining Performance and Efficiency</h4>
+                        <div class="card-footer">
+                            <span class="episode-number">Translated 4</span>
+                            <span class="publisher-name">Original Source</span>
+                        </div>
+                    </div>
+                </a>
+                
+            </div>
+        </section>
+
+    </main>
+    
+    <footer>
+        </footer>
+
+    <script>
+        // هذا السكربت ضروري لـ تفعيل الوضع الليلي في هذه الصفحة أيضاً
+        document.addEventListener('DOMContentLoaded', () => {
+            const modeToggleButton = document.getElementById('mode-toggle-button');
+            
+            modeToggleButton.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode'); 
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('theme', 'dark');
+                    modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
+                } else {
+                    localStorage.setItem('theme', 'light');
+                    modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+                }
+            });
+
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                 modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+    </script>
+
+</body>
+
+<footer>
+<div class="footer-bottom">
+        &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
+    </div>
+</footer>
+
+</html>

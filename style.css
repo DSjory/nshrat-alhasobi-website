@@ -1,0 +1,966 @@
+:root {
+    /* نظام الألوان الأساسي */
+    --color-background-light: #fff1e6; /* بيج فاتح */
+    --color-text-dark: #083e51; /* أسود داكن/أزرق أساسي */
+    --color-accent-blue: #075e7c; /* لون النص التمييزي */
+    --padding-sides: 40px; /* مسافة افتراضية للأطراف */
+    
+    /* متغيرات الوضع الليلي (Dark Mode) - تم تعديل درجة السواد */
+    --color-background-dark: #1f2124; /* رمادي داكن مريح (تم تخفيفه) */
+    --color-text-light: #f5f5f5; /* نص فاتح للوضع الليلي */
+    --color-border-dark: #333; /* حدود داكنة للوضع الليلي */
+    --color-card-dark: #2c2e33; /* خلفية البطاقة في الوضع الليلي */
+}
+
+/* تضمين الخط 29LT Zarid Text: */
+@font-face {
+    font-family: '29LT Zarid Text';
+    src: url('29LTZaridText.woff2') format('woff2'); /* افترض وجود الملف */
+    font-weight: normal;
+    font-style: normal;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: '29LT Zarid Text', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    direction: rtl; 
+    background-color: var(--color-background-light);
+    color: var(--color-text-dark);
+    line-height: 1.8;
+    transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+a {
+    text-decoration: none;
+    color: var(--color-text-dark);
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: var(--color-accent-blue);
+}
+
+/* ---------------------------------------------------- */
+/* تنسيق الوضع الليلي (Dark Mode) - للصفحة بالكامل        */
+/* ---------------------------------------------------- */
+
+body.dark-mode {
+    background-color: var(--color-background-dark);
+    color: var(--color-text-light);
+}
+
+body.dark-mode a {
+    color: var(--color-text-light);
+}
+
+body.dark-mode a:hover {
+    color: var(--color-accent-blue);
+}
+
+/* ضمان لون النص الأبيض/الفاتح في المحتوى */
+body.dark-mode #hero-section h2,
+body.dark-mode #hero-section p,
+body.dark-mode #main-content h3,
+body.dark-mode #main-content p,
+body.dark-mode .card-title,
+body.dark-mode .card-category,
+body.dark-mode .card-footer {
+    color: var(--color-text-light) !important; 
+}
+
+/* تنسيق الهيدر في الوضع الليلي */
+body.dark-mode #main-header {
+    background-color: var(--color-background-dark);
+    border-bottom-color: var(--color-border-dark);
+}
+
+body.dark-mode #main-header * {
+    color: var(--color-text-light) !important;
+}
+
+body.dark-mode .main-nav ul li a:hover,
+body.dark-mode .main-nav ul li a[aria-current="page"] {
+    color: var(--color-accent-blue) !important; 
+}
+
+body.dark-mode .header-tool-button:hover {
+    background-color: rgba(7, 94, 124, 0.2) !important;
+}
+
+body.dark-mode img {
+    filter: brightness(0) invert(1);
+    transition: filter 0.4s ease;
+}
+
+body.dark-mode .episode-card {
+    background-color: var(--color-card-dark);
+    border-color: var(--color-border-dark);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* ---------------------------------------------------- */
+/* 1. تصميم شريط التنقل العلوي (Header) - التصحيح        */
+/* ---------------------------------------------------- */
+
+#main-header {
+    position: fixed; 
+    top: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--color-background-light); 
+    border-bottom: 2px solid var(--color-accent-blue); 
+    z-index: 999;
+    padding: 10px var(--padding-sides);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap; 
+}
+
+.header-right-section {
+    display: flex;
+    align-items: center;
+    flex-grow: 1; 
+    justify-content: flex-start;
+}
+
+.header-logo-main img {
+    height: 60px;
+    display: block;
+    margin-left: 20px;
+    flex-shrink: 0;
+}
+
+.header-text {
+    text-align: right; 
+    flex-grow: 1; 
+    margin: 0 10px;
+    line-height: 1.2;
+}
+
+.header-text h1 {
+    font-size: 1.6em;
+    color: var(--color-accent-blue);
+    margin: 0;
+}
+
+.header-text p {
+    font-size: 0.9em; 
+    color: var(--color-text-dark);
+    margin: 0;
+}
+
+/* قائمة التنقل */
+.main-nav {
+    flex-grow: 4; 
+    text-align: right; /* سنستخدمه لبعض المتصفحات لكن التوسيط الرئيسي سيكون عبر الـ ul */
+    padding-right: 0; /* إزالة الـ padding الذي قد يدفعها */
+}
+
+.main-nav ul {
+    list-style: none;
+    display: flex;
+    /* التعديل: توسيط الروابط في المنتصف */
+    justify-content: flex-start; 
+}
+
+.main-nav ul li {
+    margin: 0 12px;
+}
+
+.main-nav ul li a {
+    font-weight: 600; 
+    font-size: 1em;
+    padding: 5px 0;
+    border-bottom: 2px solid transparent; 
+    transition: border-bottom 0.3s ease, color 0.3s ease;
+}
+
+.main-nav ul li a:hover,
+.main-nav ul li a[aria-current="page"] {
+    color: var(--color-accent-blue);
+    border-bottom: 2px solid var(--color-accent-blue); 
+}
+
+.header-left-section {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; 
+    flex-shrink: 0; 
+}
+
+.header-tools {
+    display: flex;
+    align-items: center;
+    margin-left: 15px; 
+}
+
+.header-tool-button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-dark);
+    font-size: 1.4em;
+    padding: 8px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.header-tool-button:hover {
+    background-color: rgba(7, 94, 124, 0.1);
+    color: var(--color-accent-blue);
+}
+
+.header-logo-icon img {
+    height: 40px; 
+    display: block;
+    margin-left: 10px;
+    flex-shrink: 0;
+}
+
+/* ---------------------------------------------------- */
+/* 2. تصميم قسم الواجهة (Hero Section) و Main Content    */
+/* ---------------------------------------------------- */
+
+#main-content {
+    /* توسيط محتوى الصفحة الرئيسي وإضافة مسافات جانبية */
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px var(--padding-sides);
+}
+
+#hero-section {
+    padding-top: 130px;
+    padding-bottom: 50px;
+    text-align: center;
+    max-width: 900px;
+    margin: 0 auto;
+    padding-left: 0; /* تم إزالة الـ padding الجانبي هنا لأن الـ Main يغطيه */
+    padding-right: 0;
+}
+
+#hero-section h2 {
+    font-size: 2.2em;
+    color: var(--color-accent-blue);
+    margin-bottom: 25px;
+}
+
+#hero-section p {
+    font-size: 1em; 
+    color: var(--color-text-dark);
+    text-align: justify;
+    margin-bottom: 40px;
+}
+
+/* ---------------------------------------------------- */
+/* 3. تنسيق قسم أحدث النشرات (Latest Episodes Grid)      */
+/* ---------------------------------------------------- */
+
+#latest-episodes-section {
+    padding-top: 20px;
+    padding-bottom: 50px;
+}
+
+.section-title {
+    text-align: center;
+    font-size: 2em;
+    color: var(--color-accent-blue);
+    margin-bottom: 40px;
+    padding-top: 20px;
+}
+
+.episodes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.episode-card {
+    display: block;
+    background-color: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-align: right;
+    border: 1px solid #e0e0e0;
+}
+
+.episode-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.card-image-container {
+    width: 100%;
+    height: 200px; 
+    overflow: hidden;
+}
+
+.card-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.episode-card:hover .card-image-container img {
+    transform: scale(1.05);
+}
+
+.card-details {
+    padding: 15px 20px 10px 20px;
+}
+
+.card-category {
+    font-size: 0.8em;
+    font-weight: 700;
+    color: #6c757d;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.card-title {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: 15px;
+    line-height: 1.4;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9em;
+    color: var(--color-accent-blue);
+    border-top: 1px solid #f0f0f0;
+    padding-top: 10px;
+    margin-top: 10px;
+}
+
+/* ---------------------------------------------------- */
+/* 6. تنسيق الأرشيف الكامل (All Episodes Grid)           */
+/* ---------------------------------------------------- */
+
+.section-description {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 50px auto; /* إضافة مسافة سفلية */
+    font-size: 1.1em;
+    color: #6c757d;
+}
+
+body.dark-mode .section-description {
+    color: #a1a1a1;
+}
+
+
+/* تنسيق العرض الشبكي لجميع النشرات (4 أعمدة) */
+.episodes-grid.all-episodes-grid {
+    /* تغيير عرض الأعمدة للسماح بـ 4 بطاقات بدلاً من 3 */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 25px; /* تقليل المسافة بين البطاقات قليلاً */
+}
+
+
+/* تنسيق الاستجابة (Media Queries) لصفحة الأرشيف */
+@media (max-width: 1200px) {
+    /* على الشاشات العريضة جداً، نضمن ظهور 4 أعمدة */
+    .episodes-grid.all-episodes-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    /* على الجوال، ستبقى عموداً واحداً كما في الصفحة الرئيسية */
+    .episodes-grid.all-episodes-grid {
+        grid-template-columns: 1fr;
+    }
+    .section-description {
+        margin-left: 15px;
+        margin-right: 15px;
+        text-align: right;
+    }
+}
+
+/* ---------------------------------------------------- */
+/* 4. تنسيق قسم الاشتراك (Subscribe Section)             */
+/* ---------------------------------------------------- */
+
+#subscribe-section {
+    padding: 60px var(--padding-sides);
+    text-align: center;
+    background-color: transparent; 
+    margin-top: 60px;
+    margin-bottom: 40px;
+}
+
+.subscribe-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.subscribe-cta-link {
+    display: block;
+    font-size: 1.8em;
+    color: var(--color-accent-blue);
+    font-weight: 700;
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+.subscribe-cta-link:hover {
+    color: #054f6b;
+    text-decoration: none;
+}
+
+
+/* ---------------------------------------------------- */
+/* 5. تنسيق الاستجابة (Media Queries) - للموبايل        */
+/* ---------------------------------------------------- */
+
+@media (max-width: 992px) {
+    .main-nav {
+        flex-basis: 100%;
+        justify-content: center;
+        margin-top: 10px;
+        padding-right: 0;
+        border-top: 1px solid rgba(8, 62, 81, 0.1);
+        padding-top: 10px;
+    }
+    .main-nav ul {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    #main-header {
+        padding: 10px 15px;
+    }
+    
+    .header-logo-main img {
+        height: 45px;
+    }
+
+    .header-text {
+        display: none;
+    }
+
+    .header-tool-button {
+        font-size: 1.2em;
+        padding: 5px;
+        margin-left: 5px;
+    }
+
+    .header-logo-icon img {
+        height: 35px;
+    }
+
+    .header-right-section {
+        flex-grow: 0;
+    }
+
+    .header-left-section {
+        margin-left: 0;
+    }
+
+    .main-nav {
+        flex-basis: 100%;
+        justify-content: center;
+        margin-top: 10px;
+        padding-right: 0;
+        border-top: 1px solid rgba(8, 62, 81, 0.1);
+        padding-top: 10px;
+    }
+    .main-nav ul {
+        justify-content: space-around;
+        flex-wrap: wrap;
+    }
+    .main-nav ul li {
+        margin: 5px 8px;
+    }
+
+    #hero-section {
+        padding-top: 100px;
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    #hero-section h2 {
+        font-size: 1.8em;
+    }
+    
+    .episodes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    #main-content {
+        padding: 20px 15px;
+    }
+    
+    .subscribe-cta-link {
+        font-size: 1.5em;
+    }
+}
+
+/* ---------------------------------------------------- */
+/* 7. تنسيق قسم الانضمام (Join Section)                   */
+/* ---------------------------------------------------- */
+
+#join-section {
+    padding: 60px 0;
+    text-align: center;
+}
+
+.join-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 var(--padding-sides);
+}
+
+.join-description {
+    font-size: 1.15em;
+    line-height: 1.8;
+    margin-bottom: 30px;
+    color: var(--color-text-dark);
+}
+
+.join-note {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-bottom: 40px;
+    padding: 15px;
+    border: 1px dashed #ced4da;
+    max-width: 500px;
+    margin: 0 auto 40px auto;
+}
+
+body.dark-mode .join-note {
+    color: #a1a1a1;
+    border-color: #495057;
+}
+
+.join-cta-button {
+    display: inline-block;
+    background-color: var(--color-accent-blue);
+    color: var(--color-background-light) !important; /* لون الخلفية الفاتح للنص لضمان التباين */
+    padding: 15px 35px;
+    border-radius: 8px;
+    font-size: 1.2em;
+    font-weight: 700;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border: 2px solid var(--color-accent-blue);
+    box-shadow: 0 4px 10px rgba(7, 94, 124, 0.3);
+}
+
+.join-cta-button:hover {
+    background-color: #054f6b; /* لون أزرق أغمق عند التحويم */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(7, 94, 124, 0.4);
+}
+
+/* ---------------------------------------------------- */
+/* 8. تنسيق نموذج الانضمام (Recruitment Form)             */
+/* ---------------------------------------------------- */
+
+#join-form-section {
+    padding: 60px 0;
+}
+
+.form-container {
+    max-width: 850px;
+    margin: 0 auto;
+    padding: 0 var(--padding-sides);
+}
+
+.form-note {
+    font-size: 0.95em;
+    color: var(--color-accent-blue);
+    margin-bottom: 40px;
+    padding: 15px;
+    border: 2px solid var(--color-accent-blue);
+    border-radius: 8px;
+    background-color: rgba(7, 94, 124, 0.05); /* خلفية فاتحة للتركيز */
+    text-align: right;
+}
+
+body.dark-mode .form-note {
+    color: var(--color-text-light);
+    border-color: var(--color-text-light);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.recruitment-form {
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .recruitment-form {
+    background-color: var(--color-card-dark);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+fieldset {
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+body.dark-mode fieldset {
+    border-color: var(--color-border-dark);
+}
+
+legend {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: var(--color-accent-blue);
+    padding: 0 10px;
+    margin-right: 10px;
+}
+
+.form-group {
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px dashed #f0f0f0;
+}
+
+body.dark-mode .form-group {
+    border-bottom-color: var(--color-border-dark);
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 1.1em;
+    color: var(--color-text-dark);
+}
+
+body.dark-mode .form-group label {
+    color: var(--color-text-light);
+}
+
+.form-group input[type="text"],
+.form-group input[type="tel"],
+.form-group input[type="email"],
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 1em;
+    transition: border-color 0.3s ease;
+    background-color: #f8f9fa;
+    color: var(--color-text-dark);
+}
+
+body.dark-mode .form-group input[type="text"],
+body.dark-mode .form-group input[type="tel"],
+body.dark-mode .form-group input[type="email"],
+body.dark-mode .form-group textarea {
+    background-color: #495057;
+    border-color: #6c757d;
+    color: var(--color-text-light);
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    border-color: var(--color-accent-blue);
+    outline: none;
+    box-shadow: 0 0 5px rgba(7, 94, 124, 0.3);
+}
+
+.required {
+    color: #dc3545; /* لون أحمر للعناصر المطلوبة */
+    margin-right: 5px;
+}
+
+/* تنسيق خيارات الراديو والمربعات */
+.radio-group, .checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 10px 0;
+}
+
+.radio-group label, .checkbox-group label {
+    display: flex;
+    align-items: center;
+    font-weight: normal;
+    font-size: 1em;
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.radio-group input[type="radio"], .checkbox-group input[type="checkbox"] {
+    margin-left: 8px;
+    height: 18px;
+    width: 18px;
+}
+
+/* تنسيق زر الإرسال */
+.submit-button {
+    display: block;
+    width: 100%;
+    background-color: var(--color-accent-blue);
+    color: #ffffff;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.2em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    margin-top: 20px;
+}
+
+.submit-button:hover {
+    background-color: #054f6b;
+    transform: translateY(-2px);
+}
+
+/* استجابة الموبايل */
+@media (max-width: 768px) {
+    .form-container {
+        padding: 0 15px;
+    }
+    .recruitment-form {
+        padding: 20px 15px;
+    }
+    .radio-group, .checkbox-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* ---------------------------------------------------- */
+/* 9. تنسيق صفحة فريق العمل (About Page)                 */
+/* ---------------------------------------------------- */
+
+.about-container {
+    max-width: 900px;
+    margin: 0 auto 50px auto;
+    padding: 0 var(--padding-sides);
+    text-align: center;
+}
+
+.about-text {
+    font-size: 1.1em;
+    line-height: 1.8;
+    color: var(--color-text-dark);
+}
+
+body.dark-mode .about-text {
+    color: var(--color-text-light);
+}
+
+.subsection-title {
+    text-align: center;
+    font-size: 1.7em;
+    color: var(--color-accent-blue);
+    margin: 60px 0 30px 0;
+    border-bottom: 2px solid var(--color-accent-blue);
+    display: inline-block;
+    padding-bottom: 5px;
+}
+
+/* تنسيق القيادة العليا (2 عمود) */
+.leader-grid {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 60px;
+    padding: 0 var(--padding-sides);
+}
+
+.team-member-card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    text-align: center;
+    max-width: 250px;
+    transition: transform 0.3s ease;
+}
+
+body.dark-mode .team-member-card {
+    background-color: var(--color-card-dark);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.team-member-card:hover {
+    transform: translateY(-5px);
+}
+
+.member-photo-container {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 15px auto;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--color-accent-blue);
+}
+
+.member-photo-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.member-name {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: var(--color-text-dark);
+}
+
+.member-role {
+    font-size: 0.95em;
+    color: #6c757d;
+}
+
+body.dark-mode .member-role {
+    color: #a1a1a1;
+}
+
+
+/* تنسيق شبكة اللجان (4 أعمدة) */
+.committee-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 0 var(--padding-sides) 80px var(--padding-sides);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.committee-card {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+body.dark-mode .committee-card {
+    background-color: #2c2e33;
+    border-color: #495057;
+}
+
+.committee-card h4 {
+    font-size: 1.2em;
+    color: var(--color-accent-blue);
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ced4da;
+    padding-bottom: 10px;
+}
+
+body.dark-mode .committee-card h4 {
+    border-bottom-color: #495057;
+}
+
+.member-list {
+    list-style: none;
+    padding: 0;
+}
+
+.member-list li {
+    font-size: 1em;
+    margin-bottom: 8px;
+    padding-right: 15px;
+    position: relative;
+}
+
+.member-list li::before {
+    content: "•"; /* نقطة أو أيقونة بسيطة */
+    color: var(--color-accent-blue);
+    font-weight: 900;
+    position: absolute;
+    right: 0;
+}
+
+
+/* استجابة الموبايل */
+@media (max-width: 768px) {
+    .leader-grid {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+    .committee-grid-container {
+        grid-template-columns: 1fr;
+        padding: 0 15px 50px 15px;
+    }
+}
+
+/* ---------------------------------------------------- */
+/* 11. تنسيق الفوتر (Footer)                              */
+/* ---------------------------------------------------- */
+/* ---------------------------------------------------- */
+/* 11. تنسيق الفوتر (Footer) - تصميم بسيط ومركزي       */
+/* ---------------------------------------------------- */
+
+footer {
+    /* إزالة الخلفية والتفاصيل */
+    background-color: transparent;
+    padding: 20px var(--padding-sides);
+    border-top: none;
+    text-align: center; /* توسيط المحتوى */
+    color: #6c757d; /* لون نص رمادي فاتح */
+    font-size: 0.9em;
+}
+
+body.dark-mode footer {
+    background-color: transparent;
+    color: #a1a1a1;
+}
+
+.footer-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: block; /* التخلص من flex */
+    padding-bottom: 5px;
+}
+
+.footer-logo-area, .footer-links, .footer-section, .social-icons-area {
+    /* التأكد من عدم عرض أي عناصر غير مرغوب فيها */
+    display: inline-block;
+    margin: 0 10px;
+}
+
+.footer-bottom {
+    /* حقوق النشر */
+    padding-top: 5px;
+    margin-top: 5px;
+    border-top: 1px dashed #e9ecef;
+    color: #6c757d;
+}
+
+body.dark-mode .footer-bottom {
+    border-top-color: #495057;
+    color: #a1a1a1;
+}
+
+.social-icons-area a {
+    color: #6c757d;
+    font-size: 1.2em;
+    margin: 0 5px;
+    transition: color 0.3s;
+}
+
+body.dark-mode .social-icons-area a {
+    color: #a1a1a1;
+}
+
+.social-icons-area a:hover {
+    color: var(--color-accent-blue);
+}

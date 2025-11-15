@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>انضم إلينا | فريق عمل نشرة الحاسوبي</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    
+    <header id="main-header">
+        
+        <div class="header-right-section">
+            <div class="header-logo-main">
+                <img src="شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
+            </div>
+
+            <div class="header-text">
+                <h1>نشرة الحاسوبي</h1>
+                <p>موعدك الأسبوعي في جديد التقنية</p>
+            </div>
+        </div>
+
+        <nav class="main-nav">
+            <ul>
+                <li><a href="index.html">الرئيسية</a></li>
+                <li><a href="episodes_ar.html">نشرات عربية</a></li>
+                <li><a href="episodes_en.html">نشرات مترجمة</a></li>
+                <li><a href="join.html" aria-current="page">انضم إلينا</a></li>
+                <li><a href="about.html">فريق العمل</a></li>
+            </ul>
+        </nav>
+        
+        <div class="header-left-section">
+            <div class="header-tools">
+                <button class="header-tool-button" id="search-button" aria-label="بحث">
+                    <i class="fas fa-search"></i> 
+                </button>
+
+                <button class="header-tool-button" id="mode-toggle-button" aria-label="تبديل الوضع">
+                    <i class="fas fa-moon"></i> 
+                </button>
+            </div>
+            
+        </div>
+    </header>
+
+    <main id="main-content">
+        
+        <section id="join-form-section">
+            <div style="padding-top: 130px;"></div> 
+            
+            <h2 class="section-title">تسجيل المهتمين بالانضمام لفريق النشرة</h2>
+            
+            <div class="join-container">
+                <p class="join-description">
+                   نحن نؤمن بأن كل شغوف بالتقنية لديه قصة أو فكرة تستحق أن تُشارك. إذا كانت لديك مهارات في كتابة المقالات التقنية، أو الترجمة، أو التصميم، أو جمع الأخبار، فمكانك معنا. انضم إلى فريق نشرة حاسوبي وساهم في صناعة محتوى تقني مميز باللغة العربية.
+                </p>
+
+            <div class="form-container">
+                <p class="form-note">
+                    تنويه: هذا التسجيل هو **تسجيل أولي** لجمع بيانات المهتمين. سيتم إرسال رسائل القبول للمقبولين .
+                </p>
+
+                <form action="#" method="POST" class="recruitment-form">
+                    
+                    <fieldset>
+                        <legend>معلومات التواصل الأساسية</legend>
+                        <div class="form-group">
+                            <label for="full_name">الاسم الثلاثي <span class="required">*</span></label>
+                            <input type="text" id="full_name" name="full_name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone_number">رقم الجوال <span class="required">*</span></label>
+                            <input type="tel" id="phone_number" name="phone_number" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">الإيميل <span class="required">*</span></label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <legend>التخصص والاهتمامات</legend>
+                        
+                        <div class="form-group">
+                            <label>هل أنت عضو في نادي الحاسبات؟ <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="club_member" value="نعم" required> نعم</label>
+                                <label><input type="radio" name="club_member" value="لا"> لا</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>اللجنة التي تود الانضمام إليها <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="committee" value="الإعلامية" required> الإعلامية</label>
+                                <label><input type="radio" name="committee" value="شؤون الأعضاء"> شؤون الأعضاء</label>
+                                <label><input type="radio" name="committee" value="العلمية"> العلمية</label>
+                                <label><input type="radio" name="committee" value="إدارة المشاريع"> إدارة المشاريع</label>
+                                <label><input type="radio" name="committee" value="التنظيمية"> التنظيمية</label>
+                                <label><input type="radio" name="committee" value="العلاقات"> العلاقات</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <legend>تقييم الاهتمام</legend>
+                        
+                        <div class="form-group">
+                            <label>ما مدى اهتمامك بمتابعة أخبار التقنية ومواكبة مستجداتها؟ <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="tech_interest" value="عالي جدا" required> عالي جدا</label>
+                                <label><input type="radio" name="tech_interest" value="متوسط"> متوسط</label>
+                                <label><input type="radio" name="tech_interest" value="ضعيف"> ضعيف</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>هل سبق وأن اشتركت أو قرأت نشرة بريدية تقنية (مثل نشرة الحاسوبي)؟ <span class="required">*</span></label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="read_newsletter" value="نعم، وأتابعها باستمرار" required> نعم، وأتابعها باستمرار</label>
+                                <label><input type="radio" name="read_newsletter" value="نعم، ولكن نادرا"> نعم، ولكن نادراً</label>
+                                <label><input type="radio" name="read_newsletter" value="لا"> لا</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>ما أكثر ما يجذبك في نشرة الحاسوبي؟ (اختر ما يناسبك)</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="attraction[]" value="المقالات التقنية"> المقالات التقنية</label>
+                                <label><input type="checkbox" name="attraction[]" value="أخبار الأسبوع"> أخبار الأسبوع</label>
+                                <label><input type="checkbox" name="attraction[]" value="الإضاءة والأفكار الملهمة"> الإضاءة والأفكار الملهمة</label>
+                                <label><input type="checkbox" name="attraction[]" value="الإعلانات والفعاليات"> الإعلانات والفعاليات</label>
+                                <label><input type="checkbox" name="attraction[]" value="طريقة التقديم المبسطة"> طريقة التقديم المبسطة</label>
+                                <label><input type="checkbox" name="attraction[]" value="التصميم والتنظيم"> التصميم والتنظيم</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <legend>مهارات ومساهمات</legend>
+                        
+                        <div class="form-group">
+                            <label>هل لديك مهارات أو رغبة في المساهمة في أحد هذه الجوانب؟ (اختر ما يناسبك)</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="skills[]" value="كتابة المقالات التقنية"> كتابة المقالات التقنية</label>
+                                <label><input type="checkbox" name="skills[]" value="الترجمة"> الترجمة ( عربي - إنجليزي)</label>
+                                <label><input type="checkbox" name="skills[]" value="التدقيق اللغوي"> التدقيق اللغوي</label>
+                                <label><input type="checkbox" name="skills[]" value="تصميم"> تصميم</label>
+                                <label><input type="checkbox" name="skills[]" value="صائد الأخبار"> صائد الأخبار</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>ما مدى التزامك بالعمل الجماعي وفق مواعيد أسبوعية أو دورية؟</label>
+                            <div class="radio-group">
+                                <label><input type="radio" name="commitment" value="ملتزم جدا"> ملتزم جداً</label>
+                                <label><input type="radio" name="commitment" value="احتاج إلى تنظيم وقتي أكثر"> أحتاج إلى تنظيم وقتي أكثر</label>
+                                <label><input type="radio" name="commitment" value="أفضل العمل الفردي غير المقيد"> أفضل العمل الفردي غير المقيد</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset>
+                        <legend>أسئلة مفتوحة</legend>
+                        
+                        <div class="form-group">
+                            <label for="motivation">ما الذي يدفعك للانضمام إلى فريق نشرة حاسوبي؟ <span class="required">*</span></label>
+                            <textarea id="motivation" name="motivation" rows="4" required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="tech_field">ما هو المجال التقني الذي يهمك وتود أن تسهم فيه عبر النشرة؟</label>
+                            <input type="text" id="tech_field" name="tech_field">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="suggestion">شاركنا فكرة أو اقتراح تود أن تضيفه للنشرة أو تراها تستحق التطوير.</label>
+                            <textarea id="suggestion" name="suggestion" rows="4"></textarea>
+                        </div>
+                    </fieldset>
+
+                    <button type="submit" class="submit-button">إرسال طلب الانضمام</button>
+                    
+                </form>
+                </div>
+
+        </section>
+
+    </main>
+    
+    <footer>
+        </footer>
+
+    <script>
+        // سكريبت الوضع الليلي
+        document.addEventListener('DOMContentLoaded', () => {
+            const modeToggleButton = document.getElementById('mode-toggle-button');
+            
+            modeToggleButton.addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode'); 
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('theme', 'dark');
+                    modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
+                } else {
+                    localStorage.setItem('theme', 'light');
+                    modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+                }
+            });
+
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                 modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+    </script>
+
+</body>
+
+<footer>
+<div class="footer-bottom">
+        &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
+    </div>
+</footer>
+
+</html>
