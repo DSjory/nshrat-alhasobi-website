@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نشرة الحاسوبي | موعدك الأسبوعي في جديد التقنية</title>
+    <title>فريق العمل | نشرة الحاسوبي</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="search.js"></script>
 </head>
 
 <body>
@@ -23,19 +24,20 @@
             </div>
         </div>
 
-        <nav class="main-nav">
-            <ul>
-                <li><a href="index.html" aria-current="page">الرئيسية</a></li> 
-                <li><a href="episodes_ar.html">جميع النشرات</a></li>
-                <li><a href="episodes_en.html">النشرات المترجمة</a></li> 
-                <li><a href="join.html">انضم إلينا</a></li>
-                <li><a href="about.html">فريق العمل</a></li>
-            </ul>
-        </nav>
+    <nav class="main-nav">
+    <ul>
+        <li><a href="index.html" >الرئيسية</a></li> 
         
-
-        <div class="header-tools">
-     <button id="search-button" class="header-tool-button">
+        <li><a href="episodes_ar.html">جميع النشرات  </a></li>
+        
+        <li><a href="episodes_en.html">النشرات المترجمة</a></li> 
+        
+        <li><a href="join.html">انضم إلينا</a></li>
+        <li><a href="about.html" aria-current="page">فريق العمل</a></li>
+    </ul> </nav>
+        
+       <div class="header-tools">
+      <button id="search-button" class="header-tool-button">
         <i class="fas fa-search"></i>
      </button>
 
@@ -54,82 +56,55 @@
      </div>
     </header>
 
-
-    <div id="search-bar-container" style="display: none; background-color: var(--main-bg-color); padding: 15px; border-bottom: 1px solid var(--border-color);"> 
-        <div class="search-controls" style="max-width: 1200px; margin: auto; display: flex; gap: 10px; align-items: center;">
-            
-            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد أو التصنيف..." 
-                style="flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
-            
-            <select id="category-filter" style="padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
-                <option value="all">جميع التصنيفات</option>
-                <option value="هندسة">هندسة</option>
-                <option value="برمجة">برمجة</option>
-                <option value="بيانات">علم البيانات</option>
-            </select>
-            
-            <button id="search-execute-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: var(--primary-color); color: white; cursor: pointer;">بحث</button>
-
-            <button id="close-search-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: #f44336; color: white; cursor: pointer;">إغلاق</button>
-        </div>
-    </div>
-
-
     <main id="main-content">
         
-        <section id="hero-section">
-            <h2>في زمن تتسابق فيه عجلة التقنية...</h2>
-            <p>
-                تضيء فيه كل لحظة اكتشافاً جديداً، تأتيك نشرة الحاسوبي كرفيق أمين، يضع بين يديك خلاصة عالم الابتكار كل أسبوع.
-                نشرة بريدية أنشئت بشغف، لتجعلك دائماً في قلب الحدث، مطّلعًا على آخر أخبار التقنية، وأحدث اتجاهات المستقبل، عبر أسلوب مبسط، شيق، وموثوق.
-                هي أكثر من مجرد نشرة… إنها جواز سفرك نحو مواكبة التغيير وفهم ملامح الغد.
-            </p>
-        </section>
+        <section id="mission-vision">
+            <div style="padding-top: 130px;"></div> 
 
-        <section id="latest-episodes-section">
-            <h3 class="section-title">أحدث النشرات</h3>
-            
-            <div id="latest-episodes-grid" class="episodes-grid latest-grid">
-                <!-- سيتم تعبئتها من Supabase -->
-            </div>
-        </section>
-
-        <section id="subscribe-section">
-            <div class="subscribe-container">
-                <a href="https://forms.office.com/r/AZdBQUBMvb" class="subscribe-cta-link">
-                    لتصلك النشرة على إيميلك سجل الآن
-                </a>
+            <h2 class="section-title">فريق عمل نشرة الحاسوبي</h2>
+            <div class="about-container">
+                <p class="about-text">
+                    تأسست نشرة الحاسوبي لتكون جسراً معرفياً يربط القارئ العربي بآخر مستجدات عالم التقنية والابتكار. نعمل بفريق شغوف ومتكامل من الطلاب والمختصين لتقديم محتوى دقيق ومبسط يلهم الجيل القادم من قادة التكنولوجيا. رؤيتنا هي أن نصبح المصدر الأول للمحتوى التقني العربي الموثوق.
+                </p>
             </div>
         </section>
         
+        <section id="team-structure">
+        
+            </div  >
+                <h4 class="subsection-title">فريق نشرة الحاسوبي لعام 1446هـ</h4>
+
+               <div class="full-team-photo-container">
+               <img src="فريق النشرة لعام 1446.png" alt="صورة فريق نشرة الحاسوبي لعام 1446" class="full-team-photo large-photo">
+    
+            </div>
+            
+            <h3 class="subsection-title">مطورين الموقع</h3>
+            <div class="committee-grid"></div>
+            <div class="committee-card">
+                    <h4>فريق تطوير الموقع</h4>
+                    <ul class="member-list">
+                        <li>جوري الكناني</li> 
+                        <li>ريتال رومي</li>
+                        <li>أمل الزهراني</li>
+                        <li>ريتال صعيدي</li>
+                        <li>فاطمة عنقاوي</li>
+                    </ul>
+                </div>
+            </div>
+
+        </section>
+
     </main>
     
-        <!-- ترتيب السكربتات الصحيح -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="search.js"></script>
+    <footer>
+        </footer>
 
-
-    <!-- بعدين نستدعي التهيئة (اختياري، لكن أضمن) -->
-    <script>
-        // لو حاب تضمن إن كل شي يشتغل حتى لو في مشكلة تحميل
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof initializeSearch === 'function') {
-                initializeSearch('issues');
-            }
-            if (document.getElementById('latest-episodes-grid')) {
-                loadLatestEpisodes('issues', 3);
-            }
-        });
-
-        
-    </script>
-</body>
-</html>
 
 </body>
 
 <footer>
-    <div class="footer-bottom">
+<div class="footer-bottom">
         &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
     </div>
 </footer>
