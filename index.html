@@ -25,28 +25,55 @@
 
         <nav class="main-nav">
             <ul>
-                <li><a href="index.html" aria-current="page">الرئيسية</a></li>
-                <li><a href="episodes_ar.html">نشرات عربية</a></li>
-                <li><a href="episodes_en.html">نشرات مترجمة</a></li>
+                <li><a href="index.html" aria-current="page">الرئيسية</a></li> 
+                <li><a href="episodes_ar.html">جميع النشرات</a></li>
+                <li><a href="episodes_en.html">النشرات المترجمة</a></li> 
                 <li><a href="join.html">انضم إلينا</a></li>
                 <li><a href="about.html">فريق العمل</a></li>
             </ul>
         </nav>
         
-        <div class="header-left-section">
-            <div class="header-tools">
-                <button class="header-tool-button" id="search-button" aria-label="بحث">
-                    <i class="fas fa-search"></i> 
-                </button>
 
-                <button class="header-tool-button" id="mode-toggle-button" aria-label="تبديل الوضع">
-                    <i class="fas fa-moon"></i> 
-                </button>
-            </div>
-            
-            
+        <div class="header-tools">
+     <button id="search-button" class="header-tool-button">
+        <i class="fas fa-search"></i>
+     </button>
+
+     <div id="search-bar-container" data-table-name="issues">
+        <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد...">
+        
+        <button id="close-search-btn" class="header-tool-button">
+            <i class="fas fa-times"></i>
+        </button>
+        
         </div>
+    
+     <button id="mode-toggle-button" class="header-tool-button">
+        <i class="fas fa-moon"></i>
+     </button>
+     </div>
     </header>
+
+
+    <div id="search-bar-container" style="display: none; background-color: var(--main-bg-color); padding: 15px; border-bottom: 1px solid var(--border-color);"> 
+        <div class="search-controls" style="max-width: 1200px; margin: auto; display: flex; gap: 10px; align-items: center;">
+            
+            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد أو التصنيف..." 
+                style="flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+            
+            <select id="category-filter" style="padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+                <option value="all">جميع التصنيفات</option>
+                <option value="هندسة">هندسة</option>
+                <option value="برمجة">برمجة</option>
+                <option value="بيانات">علم البيانات</option>
+            </select>
+            
+            <button id="search-execute-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: var(--primary-color); color: white; cursor: pointer;">بحث</button>
+
+            <button id="close-search-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: #f44336; color: white; cursor: pointer;">إغلاق</button>
+        </div>
+    </div>
+
 
     <main id="main-content">
         
@@ -55,59 +82,16 @@
             <p>
                 تضيء فيه كل لحظة اكتشافاً جديداً، تأتيك نشرة الحاسوبي كرفيق أمين، يضع بين يديك خلاصة عالم الابتكار كل أسبوع.
                 نشرة بريدية أنشئت بشغف، لتجعلك دائماً في قلب الحدث، مطّلعًا على آخر أخبار التقنية، وأحدث اتجاهات المستقبل، عبر أسلوب مبسط، شيق، وموثوق.
-                هي أكثر من مجرد نشره… إنها جواز سفرك نحو مواكبة التغيير وفهم ملامح الغد.
+                هي أكثر من مجرد نشرة… إنها جواز سفرك نحو مواكبة التغيير وفهم ملامح الغد.
             </p>
         </section>
 
         <section id="latest-episodes-section">
             <h3 class="section-title">أحدث النشرات</h3>
             
-            <div class="episodes-grid">
-                
-                <a href="link_to_episode_3.html" class="episode-card">
-                    <div class="card-image-container">
-                        <img src="episode_cover_3.jpg" alt="غلاف نشرة رقم 3">
-                    </div>
-                    <div class="card-details">
-                        <p class="card-category">NEWS</p>
-                        <h4 class="card-title">التحول الرقمي في السعودية: ثورة البيانات والذكاء الاصطناعي</h4>
-                        <div class="card-footer">
-                            <span class="episode-number">العدد 16</span>
-                            <span class="publisher-name">نشرة الحاسوبي</span>
-                        </div>
-                    </div>
-                </a>
-                
-                <a href="link_to_episode_2.html" class="episode-card">
-                    <div class="card-image-container">
-                        <img src="episode_cover_2.jpg" alt="غلاف نشرة رقم 2">
-                    </div>
-                    <div class="card-details">
-                        <p class="card-category">NEWS</p>
-                        <h4 class="card-title">الحوسبة الكمية!</h4>
-                        <div class="card-footer">
-                            <span class="episode-number">العدد 15</span>
-                            <span class="publisher-name">نشرة الحاسوبي</span>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="link_to_episode_1.html" class="episode-card">
-                    <div class="card-image-container">
-                        <img src="episode_cover_1.jpg" alt="غلاف نشرة رقم 1">
-                    </div>
-                    <div class="card-details">
-                        <p class="card-category">NEWS</p>
-                        <h4 class="card-title">الأمن السيبراني: خط دفاعك الأول في العالم الرقمي</h4>
-                        <div class="card-footer">
-                            <span class="episode-number">العدد 14</span>
-                            <span class="publisher-name">نشرة الحاسوبي</span>
-                        </div>
-                    </div>
-                </a>
-                
+            <div id="latest-episodes-grid" class="episodes-grid latest-grid">
+                <!-- سيتم تعبئتها من Supabase -->
             </div>
-            
         </section>
 
         <section id="subscribe-section">
@@ -120,42 +104,32 @@
         
     </main>
     
-    <footer>
-        </footer>
+        <!-- ترتيب السكربتات الصحيح -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="search.js"></script>
 
+
+    <!-- بعدين نستدعي التهيئة (اختياري، لكن أضمن) -->
     <script>
+        // لو حاب تضمن إن كل شي يشتغل حتى لو في مشكلة تحميل
         document.addEventListener('DOMContentLoaded', () => {
-            const modeToggleButton = document.getElementById('mode-toggle-button');
-            
-            // **وظيفة تفعيل الوضع الليلي على الصفحة بالكامل**
-            modeToggleButton.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode'); // تغيير الكلاس على الـ <body>
-                
-                // حفظ التفضيل وتغيير الأيقونة
-                if (document.body.classList.contains('dark-mode')) {
-                    localStorage.setItem('theme', 'dark');
-                    modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>'; // تغيير الأيقونة للشمس
-                } else {
-                    localStorage.setItem('theme', 'light');
-                    modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>'; // تغيير الأيقونة للقمر
-                }
-            });
-
-            // **التحقق من تفضيل المستخدم المحفوظ عند تحميل الصفحة**
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-mode');
-                modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
-            } else {
-                 modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+            if (typeof initializeSearch === 'function') {
+                initializeSearch('issues');
+            }
+            if (document.getElementById('latest-episodes-grid')) {
+                loadLatestEpisodes('issues', 3);
             }
         });
+
+        
     </script>
+</body>
+</html>
 
 </body>
 
 <footer>
-<div class="footer-bottom">
+    <div class="footer-bottom">
         &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
     </div>
 </footer>
