@@ -6,6 +6,7 @@
     <title>انضم إلينا | فريق عمل نشرة الحاسوبي</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="search.js"></script>
 </head>
 
 <body>
@@ -23,15 +24,17 @@
             </div>
         </div>
 
-        <nav class="main-nav">
-            <ul>
-                <li><a href="index.html">الرئيسية</a></li>
-                <li><a href="episodes_ar.html">نشرات عربية</a></li>
-                <li><a href="episodes_en.html">نشرات مترجمة</a></li>
-                <li><a href="join.html" aria-current="page">انضم إلينا</a></li>
-                <li><a href="about.html">فريق العمل</a></li>
-            </ul>
-        </nav>
+    <nav class="main-nav">
+    <ul>
+        <li><a href="index.html" >الرئيسية</a></li> 
+        
+        <li><a href="episodes_ar.html">جميع النشرات  </a></li>
+        
+        <li><a href="episodes_en.html">النشرات المترجمة</a></li> 
+        
+        <li><a href="join.html" aria-current="page">انضم إلينا</a></li>
+        <li><a href="about.html">فريق العمل</a></li>
+    </ul> </nav>
         
         <div class="header-left-section">
             <div class="header-tools">
@@ -56,7 +59,7 @@
             
             <div class="join-container">
                 <p class="join-description">
-                   نحن نؤمن بأن كل شغوف بالتقنية لديه قصة أو فكرة تستحق أن تُشارك. إذا كانت لديك مهارات في كتابة المقالات التقنية، أو الترجمة، أو التصميم، أو جمع الأخبار، فمكانك معنا. انضم إلى فريق نشرة حاسوبي وساهم في صناعة محتوى تقني مميز باللغة العربية.
+                   نحن نؤمن بأن كل شغوف بالتقنية لديه قصة أو فكرة تستحق أن تُشارك. إذا كانت لديك مهارات في كتابة المقالات التقنية، أو الترجمة، أو التصميم، أو جمع الأخبار، فمكانك معنا. انضم إلى فريق نشرة الحاسوبي وساهم في صناعة محتوى تقني مميز .
                 </p>
 
             <div class="form-container">
@@ -94,7 +97,7 @@
                         </div>
 
                         <div class="form-group">
-                            <label>اللجنة التي تود الانضمام إليها <span class="required">*</span></label>
+                            <label>اللجنة  <span class="required">*</span></label>
                             <div class="radio-group">
                                 <label><input type="radio" name="committee" value="الإعلامية" required> الإعلامية</label>
                                 <label><input type="radio" name="committee" value="شؤون الأعضاء"> شؤون الأعضاء</label>
@@ -195,32 +198,6 @@
     <footer>
         </footer>
 
-    <script>
-        // سكريبت الوضع الليلي
-        document.addEventListener('DOMContentLoaded', () => {
-            const modeToggleButton = document.getElementById('mode-toggle-button');
-            
-            modeToggleButton.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode'); 
-                
-                if (document.body.classList.contains('dark-mode')) {
-                    localStorage.setItem('theme', 'dark');
-                    modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
-                } else {
-                    localStorage.setItem('theme', 'light');
-                    modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
-                }
-            });
-
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-mode');
-                modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
-            } else {
-                 modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
-            }
-        });
-    </script>
 
 </body>
 
