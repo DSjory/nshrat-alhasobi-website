@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>فريق العمل | نشرة الحاسوبي</title>
+    <title>نشرة الحاسوبي | موعدك الأسبوعي في جديد التقنية</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -25,171 +25,111 @@
 
         <nav class="main-nav">
             <ul>
-                <li><a href="index.html">الرئيسية</a></li>
-                <li><a href="episodes_ar.html">نشرات عربية</a></li>
-                <li><a href="episodes_en.html">نشرات مترجمة</a></li>
+                <li><a href="index.html" aria-current="page">الرئيسية</a></li> 
+                <li><a href="episodes_ar.html">جميع النشرات</a></li>
+                <li><a href="episodes_en.html">النشرات المترجمة</a></li> 
                 <li><a href="join.html">انضم إلينا</a></li>
-                <li><a href="about.html" aria-current="page">فريق العمل</a></li>
+                <li><a href="about.html">فريق العمل</a></li>
             </ul>
         </nav>
         
-        <div class="header-left-section">
-            <div class="header-tools">
-                <button class="header-tool-button" id="search-button" aria-label="بحث">
-                    <i class="fas fa-search"></i> 
-                </button>
 
-                <button class="header-tool-button" id="mode-toggle-button" aria-label="تبديل الوضع">
-                    <i class="fas fa-moon"></i> 
-                </button>
-            </div>
-            
-            <div class="header-logo-icon">
-                <img src="photo_2025-11-14_22-25-59.jpg" alt="أيقونة نشرة الحاسوبي">
-            </div>
+        <div class="header-tools">
+     <button id="search-button" class="header-tool-button">
+        <i class="fas fa-search"></i>
+     </button>
+
+     <div id="search-bar-container" data-table-name="issues">
+        <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد...">
+        
+        <button id="close-search-btn" class="header-tool-button">
+            <i class="fas fa-times"></i>
+        </button>
+        
         </div>
+    
+     <button id="mode-toggle-button" class="header-tool-button">
+        <i class="fas fa-moon"></i>
+     </button>
+     </div>
     </header>
+
+
+    <div id="search-bar-container" style="display: none; background-color: var(--main-bg-color); padding: 15px; border-bottom: 1px solid var(--border-color);"> 
+        <div class="search-controls" style="max-width: 1200px; margin: auto; display: flex; gap: 10px; align-items: center;">
+            
+            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد أو التصنيف..." 
+                style="flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+            
+            <select id="category-filter" style="padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+                <option value="all">جميع التصنيفات</option>
+                <option value="هندسة">هندسة</option>
+                <option value="برمجة">برمجة</option>
+                <option value="بيانات">علم البيانات</option>
+            </select>
+            
+            <button id="search-execute-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: var(--primary-color); color: white; cursor: pointer;">بحث</button>
+
+            <button id="close-search-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: #f44336; color: white; cursor: pointer;">إغلاق</button>
+        </div>
+    </div>
+
 
     <main id="main-content">
         
-        <section id="mission-vision">
-            <div style="padding-top: 130px;"></div> 
+        <section id="hero-section">
+            <h2>في زمن تتسابق فيه عجلة التقنية...</h2>
+            <p>
+                تضيء فيه كل لحظة اكتشافاً جديداً، تأتيك نشرة الحاسوبي كرفيق أمين، يضع بين يديك خلاصة عالم الابتكار كل أسبوع.
+                نشرة بريدية أنشئت بشغف، لتجعلك دائماً في قلب الحدث، مطّلعًا على آخر أخبار التقنية، وأحدث اتجاهات المستقبل، عبر أسلوب مبسط، شيق، وموثوق.
+                هي أكثر من مجرد نشرة… إنها جواز سفرك نحو مواكبة التغيير وفهم ملامح الغد.
+            </p>
+        </section>
 
-            <h2 class="section-title">فريق عمل نشرة الحاسوبي</h2>
-            <div class="about-container">
-                <p class="about-text">
-                    تأسست نشرة الحاسوبي لتكون جسراً معرفياً يربط القارئ العربي بآخر مستجدات عالم التقنية والابتكار. نعمل بفريق شغوف ومتكامل من الطلاب والمختصين لتقديم محتوى دقيق ومبسط يلهم الجيل القادم من قادة التكنولوجيا. رؤيتنا هي أن نصبح المصدر الأول للمحتوى التقني العربي الموثوق.
-                </p>
+        <section id="latest-episodes-section">
+            <h3 class="section-title">أحدث النشرات</h3>
+            
+            <div id="latest-episodes-grid" class="episodes-grid latest-grid">
+                <!-- سيتم تعبئتها من Supabase -->
+            </div>
+        </section>
+
+        <section id="subscribe-section">
+            <div class="subscribe-container">
+                <a href="https://forms.office.com/r/AZdBQUBMvb" class="subscribe-cta-link">
+                    لتصلك النشرة على إيميلك سجل الآن
+                </a>
             </div>
         </section>
         
-        <section id="team-structure">
-            <h3 class="subsection-title">الهيكل التنظيمي والفريق القيادي</h3>
-
-            <div class="leader-grid">
-                
-                <div class="team-member-card leader-card">
-                    <div class="member-photo-container">
-                        <img src="placeholder_jory.jpg" alt="جوري الكناني">
-                    </div>
-                    <p class="member-name">جوري الكناني</p>
-                    <p class="member-role">رئيسة النشرة</p>
-                </div>
-                
-                <div class="team-member-card leader-card">
-                    <div class="member-photo-container">
-                        <img src="placeholder_shomoukh.jpg" alt="شموخ المجنوني">
-                    </div>
-                    <p class="member-name">شموخ المجنوني</p>
-                    <p class="member-role">نائبة النشرة</p>
-                </div>
-            </div>
-            
-            <h3 class="subsection-title">أعضاء الفريق حسب اللجان</h3>
-
-            <div class="committee-grid-container">
-
-                <div class="committee-card">
-                    <h4>الكتابة / التصميم / صائدو الأخبار</h4>
-                    <ul class="member-list">
-                        <li>سارة المالكي</li>
-                        <li>غدي القحطاني</li>
-                        <li>غلا البشري</li>
-                        <li>فجر الزهراني</li>
-                        <li>جمانة فلمبان</li>
-                        <li>رزان فارس</li>
-                        <li>ريماس فرج</li>
-                        <li>زياد إمام</li>
-                        <li>فاطمة علاء</li>
-                        <li>مصعب اسكندر</li>
-                        <li>مروج إبراهيم</li>
-                        <li>ميساء مليباري</li>
-                    </ul>
-                </div>
-
-                <div class="committee-card">
-                    <h4>الإشراف والتدقيق</h4>
-                    <ul class="member-list">
-                        <li>إشراق فقيها</li>
-                        <li>أماسي إبراهيم</li>
-                        <li>آية فلاته</li>
-                        <li>الحسين لحمادي</li>
-                    </ul>
-                </div>
-                
-                <div class="committee-card">
-                    <h4>الفريق الإعلامي</h4>
-                    <ul class="member-list">
-                        <li>ماريه الجحدلي</li>
-                        <li>محمد باخشوان</li>
-                        <li>شوق الوديناني</li>
-                        <li>يوسف حمودي</li>
-                    </ul>
-                </div>
-                
-                <div class="committee-card">
-                    <h4>إرسال النشرة وحساب النقاط</h4>
-                    <ul class="member-list">
-                        <li>معن حلواني</li>
-                        <li>حنان تركستاني</li>
-                        <li>مروج دخيل الله</li>
-                        <li>مريم باورير</li>
-                    </ul>
-                </div>
-
-            </div>
-            
-            <h3 class="subsection-title">مطورين الموقع</h3>
-            <div class="committee-grid"></div>
-            <div class="committee-card">
-                    <h4>فريق تطوير الموقع</h4>
-                    <ul class="member-list">
-                        <li>المطور الأول</li> 
-                        <li>المطور الثاني</li>
-                        <li>المطور الثالث</li>
-                        <li>المطور الرابع</li>
-                    </ul>
-                </div>
-            </div>
-
-        </section>
-
     </main>
     
-    <footer>
-        </footer>
+        <!-- ترتيب السكربتات الصحيح -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="search.js"></script>
 
+
+    <!-- بعدين نستدعي التهيئة (اختياري، لكن أضمن) -->
     <script>
-        // سكريبت الوضع الليلي
+        // لو حاب تضمن إن كل شي يشتغل حتى لو في مشكلة تحميل
         document.addEventListener('DOMContentLoaded', () => {
-            const modeToggleButton = document.getElementById('mode-toggle-button');
-            
-            modeToggleButton.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode'); 
-                
-                if (document.body.classList.contains('dark-mode')) {
-                    localStorage.setItem('theme', 'dark');
-                    modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
-                } else {
-                    localStorage.setItem('theme', 'light');
-                    modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
-                }
-            });
-
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-mode');
-                modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
-            } else {
-                 modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+            if (typeof initializeSearch === 'function') {
+                initializeSearch('issues');
+            }
+            if (document.getElementById('latest-episodes-grid')) {
+                loadLatestEpisodes('issues', 3);
             }
         });
+
+        
     </script>
+</body>
+</html>
 
 </body>
 
 <footer>
-<div class="footer-bottom">
+    <div class="footer-bottom">
         &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
     </div>
 </footer>
