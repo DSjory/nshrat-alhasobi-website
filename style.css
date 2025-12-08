@@ -5,11 +5,13 @@
     --color-accent-blue: #075e7c; /* لون النص التمييزي */
     --padding-sides: 40px; /* مسافة افتراضية للأطراف */
     
+    
     /* متغيرات الوضع الليلي (Dark Mode) - تم تعديل درجة السواد */
-    --color-background-dark: #1f2124; /* رمادي داكن مريح (تم تخفيفه) */
+    --color-background-dark: #1f2124 ; /* رمادي داكن مريح (تم تخفيفه) */
     --color-text-light: #f5f5f5; /* نص فاتح للوضع الليلي */
     --color-border-dark: #333; /* حدود داكنة للوضع الليلي */
     --color-card-dark: #2c2e33; /* خلفية البطاقة في الوضع الليلي */
+    
 }
 
 /* تضمين الخط 29LT Zarid Text: */
@@ -96,6 +98,14 @@ body.dark-mode img {
     filter: brightness(0) invert(1);
     transition: filter 0.4s ease;
 }
+
+/* إلغاء قلب الألوان عن صور النشرات في الوضع الليلي */
+body.dark-mode .episode-body img,
+body.dark-mode #dynamic-episode-details img,
+body.dark-mode .card-image-container img {
+    filter: none !important;
+}
+
 
 body.dark-mode .episode-card {
     background-color: var(--color-card-dark);
@@ -258,7 +268,7 @@ body.dark-mode .episode-card {
 }
 
 /* ---------------------------------------------------- */
-/* 3. تنسيق قسم أحدث النشرات (Latest Episodes Grid)      */
+/* 3. تنسيق قسم أحدث النشرات (Latest Episodes Grid)      */
 /* ---------------------------------------------------- */
 
 #latest-episodes-section {
@@ -276,12 +286,17 @@ body.dark-mode .episode-card {
 
 .episodes-grid {
     display: grid;
+    /* التأكد من استخدام الـ Grid بشكل سليم للـ 3 أعمدة */
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 30px;
 }
 
 .episode-card {
-    display: block;
+    /* 🛑 التعديل: جعل البطاقة حاوية Flex عمودية لمرونة التوزيع الرأسي */
+    display: flex;
+    flex-direction: column; 
+    height: 100%; /* مهم لضمان تساوي الارتفاع في الـ Grid */
+    
     background-color: #ffffff;
     border-radius: 12px;
     overflow: hidden;
@@ -298,11 +313,17 @@ body.dark-mode .episode-card {
 
 .card-image-container {
     width: 100%;
-    height: 200px; 
+    /* 🛑 التعديل: استبدال الارتفاع الثابت بنسبة العرض إلى الارتفاع (16:9) */
+    height: auto; 
+    padding-top: 56.25%; 
+    position: relative;
     overflow: hidden;
 }
 
 .card-image-container img {
+    position: absolute; 
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -314,7 +335,12 @@ body.dark-mode .episode-card {
 }
 
 .card-details {
-    padding: 15px 20px 10px 20px;
+    /* 🛑 التعديل: هذا الجزء سيأخذ المساحة المتبقية ويدفع الـ footer للأسفل */
+    padding: 15px 20px 15px 20px; 
+    flex-grow: 1; /* يستهلك المساحة الرأسية المتبقية */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* يبدأ العناصر من الأعلى */
 }
 
 .card-category {
@@ -331,6 +357,7 @@ body.dark-mode .episode-card {
     color: var(--color-text-dark);
     margin-bottom: 15px;
     line-height: 1.4;
+    /* إزالة أي قيود على الارتفاع ليتسع العنوان لأكثر من سطر */
 }
 
 .card-footer {
@@ -340,11 +367,12 @@ body.dark-mode .episode-card {
     color: var(--color-accent-blue);
     border-top: 1px solid #f0f0f0;
     padding-top: 10px;
-    margin-top: 10px;
+    /* 🛑 التعديل الأهم: دفع الـ footer إلى أسفل البطاقة */
+    margin-top: auto; 
 }
 
 /* ---------------------------------------------------- */
-/* 6. تنسيق الأرشيف الكامل (All Episodes Grid)           */
+/* 6. تنسيق الأرشيف الكامل (All Episodes Grid)           */
 /* ---------------------------------------------------- */
 
 .section-description {
@@ -370,24 +398,23 @@ body.dark-mode .section-description {
 
 /* تنسيق الاستجابة (Media Queries) لصفحة الأرشيف */
 @media (max-width: 1200px) {
-    /* على الشاشات العريضة جداً، نضمن ظهور 4 أعمدة */
+/* على الشاشات العريضة جداً، نضمن ظهور 4 أعمدة */
     .episodes-grid.all-episodes-grid {
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
 }
 
 @media (max-width: 768px) {
-    /* على الجوال، ستبقى عموداً واحداً كما في الصفحة الرئيسية */
+/* على الجوال، ستبقى عموداً واحداً كما في الصفحة الرئيسية */
     .episodes-grid.all-episodes-grid {
         grid-template-columns: 1fr;
-    }
+     }
     .section-description {
         margin-left: 15px;
         margin-right: 15px;
         text-align: right;
     }
 }
-
 /* ---------------------------------------------------- */
 /* 4. تنسيق قسم الاشتراك (Subscribe Section)             */
 /* ---------------------------------------------------- */
@@ -420,93 +447,7 @@ body.dark-mode .section-description {
 }
 
 
-/* ---------------------------------------------------- */
-/* 5. تنسيق الاستجابة (Media Queries) - للموبايل        */
-/* ---------------------------------------------------- */
 
-@media (max-width: 992px) {
-    .main-nav {
-        flex-basis: 100%;
-        justify-content: center;
-        margin-top: 10px;
-        padding-right: 0;
-        border-top: 1px solid rgba(8, 62, 81, 0.1);
-        padding-top: 10px;
-    }
-    .main-nav ul {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 768px) {
-    #main-header {
-        padding: 10px 15px;
-    }
-    
-    .header-logo-main img {
-        height: 45px;
-    }
-
-    .header-text {
-        display: none;
-    }
-
-    .header-tool-button {
-        font-size: 1.2em;
-        padding: 5px;
-        margin-left: 5px;
-    }
-
-    .header-logo-icon img {
-        height: 35px;
-    }
-
-    .header-right-section {
-        flex-grow: 0;
-    }
-
-    .header-left-section {
-        margin-left: 0;
-    }
-
-    .main-nav {
-        flex-basis: 100%;
-        justify-content: center;
-        margin-top: 10px;
-        padding-right: 0;
-        border-top: 1px solid rgba(8, 62, 81, 0.1);
-        padding-top: 10px;
-    }
-    .main-nav ul {
-        justify-content: space-around;
-        flex-wrap: wrap;
-    }
-    .main-nav ul li {
-        margin: 5px 8px;
-    }
-
-    #hero-section {
-        padding-top: 100px;
-        padding-left: 15px;
-        padding-right: 15px;
-    }
-
-    #hero-section h2 {
-        font-size: 1.8em;
-    }
-    
-    .episodes-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    #main-content {
-        padding: 20px 15px;
-    }
-    
-    .subscribe-cta-link {
-        font-size: 1.5em;
-    }
-}
 
 /* ---------------------------------------------------- */
 /* 7. تنسيق قسم الانضمام (Join Section)                   */
@@ -903,12 +844,48 @@ body.dark-mode .committee-card h4 {
 }
 
 /* ---------------------------------------------------- */
-/* 11. تنسيق الفوتر (Footer)                              */
-/* ---------------------------------------------------- */
-/* ---------------------------------------------------- */
-/* 11. تنسيق الفوتر (Footer) - تصميم بسيط ومركزي       */
+/* تنسيق الصورة (الحجم الوسط) وتثبيت عرض المطورين الأفقي */
 /* ---------------------------------------------------- */
 
+/* 1. تنسيق عنوان الفريق (أصغر) */
+.team-photo-title {
+    font-size: 1.5em; 
+    color: var(--color-accent-blue);
+    text-align: center;
+    margin-top: 50px; 
+}
+
+/* 2. حاوية الصورة (لضمان الحجم الوسط) */
+.full-team-photo-container {
+    width: 70%; 
+    max-width: 450px; /* 🛑 تم تثبيت الحجم هنا (450 بكسل كحد أقصى) */
+    margin: 20px auto 40px auto; 
+    text-align: center;
+    border: 1px solid var(--color-accent-blue); 
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); 
+    background-color: var(--color-background-light); 
+}
+
+/* 3. الصورة نفسها - لضمان أنها تملأ الحاوية فقط */
+.full-team-photo.large-photo {
+    width: 100% !important; /* ضمان التزام الصورة بعرض حاويتها بالقوة */
+    height: auto;
+    display: block;
+    border-radius: 8px;
+}
+
+.photo-caption {
+    margin-top: 15px;
+    color: var(--color-text-dark);
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+/* ---------------------------------------------------- */
+/* 11. تنسيق الفوتر (Footer)                              */
+/* ---------------------------------------------------- */
 footer {
     /* إزالة الخلفية والتفاصيل */
     background-color: transparent;
@@ -963,4 +940,214 @@ body.dark-mode .social-icons-area a {
 
 .social-icons-area a:hover {
     color: var(--color-accent-blue);
+}
+
+
+/* ---------------------------------------------------- */
+/* 1. تصميم الهواتف (Mobile: Max-width 575.98px) */
+/* ---------------------------------------------------- */
+@media (max-width: 575.98px) {
+    
+    /* 1. تقليل المسافات الجانبية */
+    :root {
+        --padding-sides: 15px; /* تقليل المسافة الجانبية للمحتوى */
+    }
+
+    /* 2. الهيدر (Header) وشريط التنقل */
+    #main-header {
+        flex-direction: column; /* ترتيب العناصر عمودياً */
+        align-items: flex-start;
+        padding: 10px var(--padding-sides);
+    }
+    .main-nav ul {
+        flex-direction: column; /* ترتيب الروابط عمودياً */
+        gap: 8px; /* مسافة بين الروابط */
+        padding-top: 10px;
+        align-items: flex-start;
+    }
+    
+    /* 3. شبكة المحتوى (مثل بطاقات النشرات) */
+    .episodes-grid, .team-grid {
+        grid-template-columns: 1fr; /* عمود واحد فقط لكل الشاشة */
+        gap: 20px;
+    }
+    
+    /* 4. تعديلات الخطوط */
+    h1 {
+        font-size: 1.8rem;
+    }
+    h2 {
+        font-size: 1.4rem;
+    }
+}
+
+/* ---------------------------------------------------- */
+/* 2. تصميم التابلت (Tablet: 768px to 991.98px) */
+/* ---------------------------------------------------- */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    :root {
+        --padding-sides: 30px; 
+    }
+    
+    /* عرض عمودين لبطاقات النشرات */
+    .episodes-grid {
+        grid-template-columns: 1fr 1fr; 
+        gap: 25px;
+    }
+    
+    /* تنسيق الهيدر */
+    #main-header {
+        flex-wrap: wrap; /* السماح للعناصر بالنزول لسطر جديد إذا لم يتسع العرض */
+    }
+    .main-nav {
+        order: 1; /* وضع شريط التنقل تحت الشعار إذا لم يتسع */
+        width: 100%;
+        margin-top: 10px;
+        text-align: center;
+    }
+}
+
+/* ---------------------------------------------------- */
+/* 3. الحاسوب المكتبي (Desktop: 992px to 1199.98px) */
+/* ---------------------------------------------------- */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    /* هنا عادة تكون التنسيقات العادية للموقع مناسبة، لكن يمكن تعديل عرض الأعمدة */
+    .episodes-grid {
+        grid-template-columns: repeat(3, 1fr); /* 3 أعمدة */
+        gap: 30px;
+    }
+}
+
+/* ---------------------------------------------------- */
+/* 3. الحاسوب المكتبي (Desktop: 992px to 1199.98px) */
+/* ---------------------------------------------------- */
+@media (min-width: 992px) and (max-width: 1199.98px) {
+    /* هنا عادة تكون التنسيقات العادية للموقع مناسبة، لكن يمكن تعديل عرض الأعمدة */
+    .episodes-grid {
+        grid-template-columns: repeat(3, 1fr); /* 3 أعمدة */
+        gap: 30px;
+    }
+}
+
+
+/* إجبار كروت أحدث النشرات تكون مربعات صغيرة مهما كانت الخصائص السابقة */
+
+
+
+.episode-body {
+    line-height: 1.9;
+    font-size: 1rem;
+    text-align: justify;
+}
+
+.episode-body p {
+    margin-bottom: 0.8em;
+}
+
+.episode-body h2,
+.episode-body h3,
+.episode-body h4 {
+    margin-top: 1.2em;
+    margin-bottom: 0.5em;
+    color: var(--color-accent-blue);
+}
+
+.episode-body ul {
+    padding-right: 20px;
+    margin-bottom: 1em;
+}
+
+.episode-body li {
+    margin-bottom: 0.3em;
+}
+
+.episode-body blockquote {
+    margin: 1em 0;
+    padding: 0.8em 1em;
+    border-right: 4px solid var(--color-accent-blue);
+    background-color: #fff7f0;
+}
+
+.episode-label,
+.episode-meta,
+.episode-signature {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+
+
+.episode-body img.episode-image {
+  max-width: 100%;
+  border-radius: 12px;
+  margin: 16px 0;
+  display: block;
+}
+
+/*------------------------------------------*/
+/*           صندوق البحث الجميل            */
+/*------------------------------------------*/
+/* 1. تنسيق حاوية البحث الداخلية (التي تحتوي على الإدخال والفلتر) */
+/* يجب التأكد من أن حاوية البحث هذه موجودة في الهيدر بجوار أيقونة البحث */
+#search-bar-container {
+    /* * هذا التصميم يفترض أن `#search-bar-container` يحتوي على 
+    * `#search-input` و `#category-filter` وزر التنفيذ (اختياري).
+    */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    
+    /* الخصائص الأساسية للانزلاق: */
+    width: 0; /* العرض الافتراضي صفر (مخفي) */
+    opacity: 0; /* الشفافية صفر (مخفي) */
+    overflow: hidden; /* إخفاء المحتوى الزائد أثناء التصغير */
+    transition: width 0.4s ease, opacity 0.3s ease; /* إضافة تأثير الحركة */
+    
+    /* للتأكد من أن البحث يظهر بجوار الأدوات الأخرى */
+    margin-left: 15px; 
+}
+
+/* 2. تنسيق الأيقونة التي تُظهر البحث (#search-button) */
+/* (ملاحظة: هذا الزر موجود في الكود الأصلي كـ `header-tool-button`) */
+#search-button {
+    /* لا تحتاج لتعديلات كبيرة، فقط تأكد من أنه `display: block` */
+    flex-shrink: 0;
+}
+
+
+/* 3. تنسيق حقل الإدخال ليكون شكله جيداً عندما يظهر */
+#search-input {
+    min-width: 250px; /* العرض الأدنى ليتمكن المستخدم من الكتابة */
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    font-size: 1em;
+    /* تأكد من أن الخلفية تتغير في الوضع الليلي */
+    background-color: #f8f9fa;
+    color: var(--color-text-dark);
+}
+
+body.dark-mode #search-input {
+    background-color: #495057;
+    color: var(--color-text-light);
+    border-color: #6c757d;
+}
+
+/* 4. إظهار الحاوية (التمدد) - سنقوم بتطبيق هذا الكلاس عبر JS */
+.search-active {
+    width: 350px !important; /* العرض المطلوب عند الظهور */
+    opacity: 1 !important; /* الشفافية الكاملة */
+}
+
+/* 5. تنسيق زر الإغلاق */
+#close-search-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-dark);
+    font-size: 1.2em;
+    padding: 5px;
+}
+body.dark-mode #close-search-btn {
+    color: var(--color-text-light);
 }
