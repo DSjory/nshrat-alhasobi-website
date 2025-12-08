@@ -8,6 +8,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
+<script>
+    // هذا السطر يحدد أي جدول يستخدم (مهم جدًا!)
+    document.body.dataset.table = "issues";        // في episodes_ar.html و index.html
+    
+</script>
+
 <body>
     
     <header id="main-header">
@@ -25,150 +31,80 @@
 
         <nav class="main-nav">
             <ul>
-                <li><a href="index.html">الرئيسية</a></li>
-                <li><a href="episodes_ar.html" aria-current="page">نشرات عربية</a></li>
-                <li><a href="episodes_en.html">نشرات مترجمة</a></li>
+                <li><a href="index.html">الرئيسية</a></li> 
+                <li><a href="episodes_ar.html" aria-current="page">جميع النشرات</a></li>
+                <li><a href="episodes_en.html">النشرات المترجمة</a></li> 
                 <li><a href="join.html">انضم إلينا</a></li>
                 <li><a href="about.html">فريق العمل</a></li>
             </ul>
         </nav>
         
-        <div class="header-left-section">
-            <div class="header-tools">
-                <button class="header-tool-button" id="search-button" aria-label="بحث">
-                    <i class="fas fa-search"></i> 
-                </button>
+        <div class="header-tools">
+      <button id="search-button" class="header-tool-button">
+        <i class="fas fa-search"></i>
+     </button>
 
-                <button class="header-tool-button" id="mode-toggle-button" aria-label="تبديل الوضع">
-                    <i class="fas fa-moon"></i> 
-                </button>
-            </div>
-            
+     <div id="search-bar-container" data-table-name="issues">
+        <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد...">
+        
+        <button id="close-search-btn" class="header-tool-button">
+            <i class="fas fa-times"></i>
+        </button>
+        
         </div>
+    
+     <button id="mode-toggle-button" class="header-tool-button">
+        <i class="fas fa-moon"></i>
+     </button>
+     </div>
     </header>
+
+
+    <div id="search-bar-container" style="display: none; background-color: var(--main-bg-color); padding: 15px; border-bottom: 1px solid var(--border-color);"> 
+        <div class="search-controls" style="max-width: 1200px; margin: auto; display: flex; gap: 10px; align-items: center;">
+            
+            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد أو التصنيف..." 
+                style="flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+            
+            <select id="category-filter" style="padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+                <option value="all">جميع التصنيفات</option>
+                <option value="هندسة">هندسة</option>
+                <option value="برمجة">برمجة</option>
+                <option value="بيانات">علم البيانات</option>
+            </select>
+            
+            <button id="search-execute-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: var(--primary-color); color: white; cursor: pointer;">بحث</button>
+
+            <button id="close-search-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: #f44336; color: white; cursor: pointer;">إغلاق</button>
+        </div>
+    </div>
 
     <main id="main-content">
         
         <section id="all-episodes-section">
             <div style="padding-top: 130px;"></div> 
             
-            <h2 class="section-title">يمكنك الاطلاع على جميع النشرات </h2>
-            <p class="section-description">تصفح جميع الأعداد السابقة من النشرة منذ العدد الأول. يتم ترتيب النشرات من الأحدث إلى الأقدم.</p>
-            
-            <div class="episodes-grid all-episodes-grid">
-                
-                <a href="link_to_episode_1.html" class="episode-card">
-                    <div class="card-image-container"><img src="episode_cover_1.jpg" alt="غلاف نشرة 1"></div>
-                    <div class="card-details">
-                        <p class="card-category">أمن سيبراني</p>
-                        <h4 class="card-title">الأمن السيبراني: خط دفاعك الأول في العالم الرقمي</h4>
-                        <div class="card-footer">
-                            <span class="episode-number">العدد 16</span>
-                            <span class="publisher-name">نشرة الحاسوبي</span>
-                        </div>
-                    </div>
-                </a>
-                
-                 <a href="link_to_episode_1.html" class="episode-card">
-                    <div class="card-image-container"><img src="episode_cover_1.jpg" alt="غلاف نشرة 1"></div>
-                    <div class="card-details">
-                        <p class="card-category">أمن سيبراني</p>
-                        <h4 class="card-title">الأمن السيبراني: خط دفاعك الأول في العالم الرقمي</h4>
-                        <div class="card-footer">
-                            <span class="episode-number">العدد 16</span>
-                            <span class="publisher-name">نشرة الحاسوبي</span>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="link_to_episode_3.html" class="episode-card">
-                    <div class="card-image-container"><img src="episode_cover_3.jpg" alt="غلاف نشرة 3"></div>
-                    <div class="card-details">
-                        <p class="card-category">ذكاء اصطناعي</p>
-                        <h4 class="card-title">التحول الرقمي في السعودية: ثورة البيانات والذكاء الاصطناعي</h4>
-                        <div class="card-footer">
-                            <span class="episode-number">العدد 14</span>
-                            <span class="publisher-name">نشرة الحاسوبي</span>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="link_to_episode_4.html" class="episode-card">
-                    <div class="card-image-container"><img src="episode_cover_4.jpg" alt="غلاف نشرة 4"></div>
-                    <div class="card-details">
-                        <p class="card-category">مراجعات</p>
-                        <h4 class="card-title">مراجعة أعمق لهاتف سامسونج الجديد: هل يستحق الشراء؟</h4>
-                        <div class="card-footer">
-                            <span class="episode-number">العدد 13</span>
-                            <span class="publisher-name">نشرة الحاسوبي</span>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="link_to_episode_5.html" class="episode-card">
-                    <div class="card-image-container"><img src="episode_cover_5.jpg" alt="غلاف نشرة 5"></div>
-                    <div class="card-details">
-                        <p class="card-category">بلوكتشين</p>
-                        <h4 class="card-title">مستقبل العملات الرقمية بعد التطورات الأخيرة</h4>
-                        <div class="card-footer">
-                            <span class="episode-number">العدد 12</span>
-                            <span class="publisher-name">نشرة الحاسوبي</span>
-                        </div>
-                    </div>
-                </a>
-
-                <a href="link_to_episode_6.html" class="episode-card">
-                    <div class="card-image-container"><img src="episode_cover_6.jpg" alt="غلاف نشرة 6"></div>
-                    <div class="card-details">
-                        <p class="card-category">إطلاق جديد</p>
-                        <h4 class="card-title">إطلاق منصة "تطبيق" الجديدة للتعلم الذكي</h4>
-                        <div class="card-footer">
-                            <span class="episode-number">العدد 11</span>
-                            <span class="publisher-name">نشرة الحاسوبي</span>
-                        </div>
-                    </div>
-                </a>
-                
-                
+            <h2 class="section-title">يمكنك الاطلاع على جميع النشرات</h2>
+            <p class="section-description">تصفح جميع الأعداد السابقة من النشرة منذ العدد الأول.
+            <div id="episodes-grid" class="episodes-grid all-episodes-grid">
+                <!-- سيتم تعبئة النشرات من Supabase -->
             </div>
         </section>
 
     </main>
     
-    <footer>
-        </footer>
+    <!-- ترتيب السكربتات الصحيح -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="search.js"></script>
 
     <script>
-        // هذا السكربت ضروري لـ تفعيل الوضع الليلي في هذه الصفحة أيضاً
-        document.addEventListener('DOMContentLoaded', () => {
-            const modeToggleButton = document.getElementById('mode-toggle-button');
-            
-            modeToggleButton.addEventListener('click', () => {
-                document.body.classList.toggle('dark-mode'); 
-                
-                if (document.body.classList.contains('dark-mode')) {
-                    localStorage.setItem('theme', 'dark');
-                    modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
-                } else {
-                    localStorage.setItem('theme', 'light');
-                    modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
-                }
-            });
-
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-mode');
-                modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
-            } else {
-                 modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
-            }
-        });
+        initializeSearch('issues');
     </script>
 
 </body>
 
 <footer>
-<div class="footer-bottom">
+    <div class="footer-bottom">
         &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
     </div>
 </footer>
