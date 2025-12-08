@@ -113,12 +113,11 @@
     <script>
         // لو حاب تضمن إن كل شي يشتغل حتى لو في مشكلة تحميل
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof initializeSearch === 'function') {
-                initializeSearch('issues');
-            }
-            if (document.getElementById('latest-episodes-grid')) {
-                loadLatestEpisodes('issues', 3);
-            }
+         // للتأكد من أن الدالة loadLatestEpisodes موجودة في search.js
+        if (typeof loadLatestEpisodes === 'function' && document.getElementById('latest-episodes-grid')) {
+            loadLatestEpisodes(3); // ← سيتم عرض أحدث 3 نشرات فقط
+         }
+            // ملاحظة: تم حذف initializeSearch لعدم وضوح مكانه في الكود الحالي
         });
 
         
