@@ -268,7 +268,7 @@ body.dark-mode .episode-card {
 }
 
 /* ---------------------------------------------------- */
-/* 3. تنسيق قسم أحدث النشرات (Latest Episodes Grid)      */
+/* 3. تنسيق قسم أحدث النشرات (Latest Episodes Grid)      */
 /* ---------------------------------------------------- */
 
 #latest-episodes-section {
@@ -372,7 +372,7 @@ body.dark-mode .episode-card {
 }
 
 /* ---------------------------------------------------- */
-/* 6. تنسيق الأرشيف الكامل (All Episodes Grid)           */
+/* 6. تنسيق الأرشيف الكامل (All Episodes Grid)           */
 /* ---------------------------------------------------- */
 
 .section-description {
@@ -416,7 +416,7 @@ body.dark-mode .section-description {
     }
 }
 /* ---------------------------------------------------- */
-/* 4. تنسيق قسم الاشتراك (Subscribe Section)             */
+/* 4. تنسيق قسم الاشتراك (Subscribe Section)             */
 /* ---------------------------------------------------- */
 
 #subscribe-section {
@@ -875,6 +875,18 @@ body.dark-mode .committee-card h4 {
     display: block;
     border-radius: 8px;
 }
+
+/* ضبط صندوق صورة الفريق في الوضع الليلي */
+body.dark-mode .full-team-photo-container {
+    background-color: var(--color-card-dark);  /* نفس لون الكروت في الدارك مود */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* اختياري: ظل أوضح شوي */
+}
+
+/* إلغاء الفلتر عن صورة الفريق عشان ما تنعكس ألوانها */
+body.dark-mode .full-team-photo.large-photo {
+    filter: none !important;
+}
+
 
 .photo-caption {
     margin-top: 15px;
