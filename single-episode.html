@@ -231,6 +231,34 @@
     });
 </script>
 
+<script>
+  // تفعيل وضع الليل في صفحة عرض النشرة فقط
+  document.addEventListener('DOMContentLoaded', () => {
+    const modeToggleButton = document.getElementById('mode-toggle-button');
+    if (!modeToggleButton) return;
+
+    // نقرأ آخر اختيار محفوظ في المتصفح
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark-mode');
+      modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
+    } else {
+      modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+    }
+
+    // عند الضغط على الزر نبدّل بين الوضعين ونحدّث التخزين
+    modeToggleButton.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      modeToggleButton.innerHTML = isDark
+        ? '<i class="fas fa-sun"></i>'
+        : '<i class="fas fa-moon"></i>';
+    });
+  });
+</script>
+
+
     <footer>
         <div class="footer-bottom">
             &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
