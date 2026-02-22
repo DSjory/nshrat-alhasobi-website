@@ -68,7 +68,7 @@
      </div>
     </header>
 
-    <div class="slogan-banner">نشرة الحاسوبي موعدك الأسبوعي في جديد التقنيه</div>
+
 
     <div id="search-bar-container" style="display: none; background-color: var(--main-bg-color); padding: 15px; border-bottom: 1px solid var(--border-color);"> 
         <div class="search-controls" style="max-width: 1200px; margin: auto; display: flex; gap: 10px; align-items: center;">
@@ -99,6 +99,9 @@
                 نشرة بريدية أنشئت بشغف، لتجعلك دائماً في قلب الحدث، مطّلعًا على آخر أخبار التقنية، وأحدث اتجاهات المستقبل، عبر أسلوب مبسط، شيق، وموثوق.
                 هي أكثر من مجرد نشرة… إنها جواز سفرك نحو مواكبة التغيير وفهم ملامح الغد.
             </p>
+            <div class="hero-cta" style="margin-top:18px;">
+                <a href="https://forms.office.com/r/AZdBQUBMvb" class="subscribe-cta-link">لتصلك النشرة على إيميلك سجل الآن</a>
+            </div>
         </section>
 
         <section id="latest-episodes-section">
@@ -116,13 +119,7 @@
             </div>
         </section>
 
-        <section id="subscribe-section">
-            <div class="subscribe-container">
-                <a href="https://forms.office.com/r/AZdBQUBMvb" class="subscribe-cta-link">
-                    لتصلك النشرة على إيميلك سجل الآن
-                </a>
-            </div>
-        </section>
+        <!-- subscribe CTA moved to hero section -->
         
     </main>
     
@@ -133,6 +130,7 @@
         <!-- ترتيب السكربتات الصحيح -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="search.js"></script>
+    <script src="latest-news.js"></script>
 
 
     <!-- بعدين نستدعي التهيئة (اختياري، لكن أضمن) -->
@@ -148,15 +146,11 @@
 
         
     </script>
+    <script src="footer-year.js"></script>
+    <footer>
+        <div class="footer-bottom">
+            &copy; <span class="footer-year">2025</span> نشرة الحاسوبي. جميع الحقوق محفوظة.
+        </div>
+    </footer>
 </body>
-</html>
-
-</body>
-
-<footer>
-    <div class="footer-bottom">
-        &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
-    </div>
-</footer>
-
 </html>

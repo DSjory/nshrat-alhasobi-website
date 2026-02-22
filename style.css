@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap');
+
 :root {
     /* Global design system (new) */
     --bg-color: #FAF9F7; /* main app background (soft) */
@@ -21,7 +23,7 @@
 /* تضمين الخط 29LT Zarid Text: */
 @font-face {
     font-family: '29LT Zarid Text';
-    src: url('29LTZaridText.woff2') format('woff2'); /* افترض وجود الملف */
+    /* Local custom font file removed to avoid 404; place 29LTZaridText.woff2 under assets/fonts/ if you want to use it and update this path. */
     font-weight: normal;
     font-style: normal;
 }
@@ -118,6 +120,37 @@ body.dark-mode .episode-card {
     border-color: var(--color-border-dark);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
+
+/* Ensure broad text visibility in dark mode */
+body.dark-mode,
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode h6,
+body.dark-mode p,
+body.dark-mode li,
+body.dark-mode a,
+body.dark-mode .member-name,
+body.dark-mode .member-role,
+body.dark-mode .slogan-banner,
+body.dark-mode .section-title,
+body.dark-mode .subscribe-cta-link,
+body.dark-mode .news-title,
+body.dark-mode .news-snippet,
+body.dark-mode .footer-bottom {
+    color: var(--color-text-light) !important;
+}
+
+/* Make social icons readable in dark mode */
+body.dark-mode .developer-card .social-links a {
+    color: var(--color-text-light) !important;
+    background: rgba(255,255,255,0.06) !important;
+}
+
+/* support <img> icons */
+.developer-card .social-links img { width:18px; height:18px; display:block; }
 
 /* ---------------------------------------------------- */
 /* 1. تصميم شريط التنقل العلوي (Header) - التصحيح        */
@@ -835,6 +868,127 @@ body.dark-mode .committee-card h4 {
     right: 0;
 }
 
+/* Developer grid for team cards */
+.developer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 20px var(--padding-sides);
+    max-width: 1200px;
+    margin: 20px auto 60px auto;
+}
+
+.developer-card .member-name {
+    font-size: 1.05em;
+    font-weight: 800;
+    margin-top: 12px;
+    color: var(--color-accent-blue);
+}
+.developer-card .member-role {
+    color: var(--muted-color);
+    font-size: 0.95em;
+    margin-bottom: 12px;
+}
+
+.member-photo-container { /* extend to support initials fallback */
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 12px auto;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid var(--color-accent-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+}
+
+.member-photo-container .initials {
+    font-weight: 800;
+    color: #043E52;
+    font-size: 1.1rem;
+}
+
+.developer-card .social-links {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+.developer-card .social-links a {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    background: rgba(4,62,82,0.06);
+    color: #043E52;
+    transition: transform 0.18s ease, background 0.18s ease;
+    text-decoration: none;
+}
+.developer-card .social-links a:hover {
+    background: rgba(4,62,82,0.12);
+    transform: translateY(-3px);
+}
+.developer-card .social-links svg { width:18px; height:18px; display:block; }
+
+/* Mask-based icon coloring: use provided SVG file unchanged; color via CSS */
+.icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+}
+.icon.icon-github {
+    width: 32px;
+    height: 32px;
+    background-color: var(--secondary-color);
+    -webkit-mask-image: url('assets/icons/GitHub_Invertocat_Black_Clearspace.svg');
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-image: url('assets/icons/GitHub_Invertocat_Black_Clearspace.svg');
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+}
+/* Ensure icon adapts to dark mode */
+body.dark-mode .icon.icon-github {
+    background-color: var(--color-text-light) !important;
+}
+
+/* LinkedIn icon via CSS mask (use SVG unchanged; color via CSS) */
+.icon.icon-linkedin {
+    width: 20px;
+    height: 20px;
+    background-color: var(--secondary-color);
+    -webkit-mask-image: url('assets/icons/linkedin.svg');
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+    mask-image: url('assets/icons/linkedin.svg');
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+}
+body.dark-mode .icon.icon-linkedin {
+    background-color: var(--color-text-light) !important;
+}
+
+/* PNG GitHub fallback styling */
+.social-icon.github-png {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+    object-fit: contain;
+}
+/* ensure contrast in dark mode if PNG is dark - invert as needed */
+body.dark-mode .social-icon.github-png {
+    filter: brightness(0) invert(1);
+}
+
+
 
 /* استجابة الموبايل */
 @media (max-width: 768px) {
@@ -1312,6 +1466,22 @@ body.dark-mode .main-nav ul li a[aria-current="page"] {
 .news-card .news-snippet { color: var(--muted-color); font-size: 0.95rem; margin-bottom: 12px; flex-grow:1; }
 .news-card .read-more { color: var(--primary-color); font-weight:700; text-decoration:none; align-self:flex-start; }
 
+/* News meta and category */
+.news-top { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.news-category { background: rgba(1,106,109,0.08); color: var(--primary-color); font-weight:700; padding:4px 8px; border-radius:8px; font-size:0.78rem; }
+.news-source { color: var(--muted-color); font-size:0.85rem; }
+.news-date { color: var(--muted-color); font-size:0.82rem; margin-bottom:8px; }
+
+/* text truncation for consistent heights */
+.news-title { display:block; overflow: hidden; text-overflow: ellipsis; -webkit-line-clamp:2; -webkit-box-orient: vertical; display:-webkit-box; }
+.news-snippet { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient: vertical; overflow:hidden; }
+
+/* ensure footer sticks to bottom if space */
+.news-footer { margin-top: 12px; }
+
+/* make cards visually consistent */
+.news-card { min-height: 320px; }
+
 /* tooltip helper (simple) */
 .action-btn[title] { position: relative; }
 .action-btn[title]:hover::after {
@@ -1333,10 +1503,114 @@ body.dark-mode .main-nav ul li a[aria-current="page"] {
     .join-fixed-bottom { inset-inline-end: 12px; bottom: 12px; }
 }
 
+@media (max-width: 480px) {
+    .subscribe-cta-link { padding: 9px 14px; font-size: 0.95rem; }
+    .header-logo-main img { height: 48px; }
+}
+
 /* Ensure logical properties used where possible */
 .header-text { margin-inline-start: 10px; margin-inline-end: 0; }
 
 /* End of new components */
+
+/* ------------------ Page entrance animations (fade in up) ------------------ */
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(18px); }
+    60% { opacity: 0.95; transform: translateY(-6px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Initial state for elements we want to animate */
+.slogan-banner,
+.newsletter-card,
+.episode-card,
+.news-card,
+.main-nav ul li a,
+.section-title,
+.episode-body,
+.subscribe-container,
+#hero-section h2,
+#hero-section p {
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+/* When JS enables animations on the body, run the keyframe with stagger support */
+.has-animations .fade-up,
+.has-animations .slogan-banner,
+.has-animations .newsletter-card,
+.has-animations .episode-card,
+.has-animations .news-card,
+.has-animations .main-nav ul li a,
+.has-animations .section-title,
+.has-animations .episode-body,
+.has-animations .subscribe-container,
+.has-animations #hero-section h2,
+.has-animations #hero-section p {
+    animation-name: fadeInUp;
+    animation-duration: 1100ms; /* slightly slower for elegance */
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(.2,.8,.2,1);
+    animation-delay: var(--animate-delay, 0ms);
+}
+
+/* Hero CTA button styling */
+.hero-cta {
+    text-align: center;
+    margin-top: 18px;
+}
+.subscribe-cta-link {
+    display: inline-block;
+    background: var(--primary-color);
+    color: #ffffff;
+    padding: 10px 16px; /* slightly smaller */
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: 0 8px 22px rgba(1,106,109,0.12);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    text-decoration: none;
+}
+.subscribe-cta-link:hover,
+.subscribe-cta-link:focus {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 40px rgba(1,106,109,0.2);
+}
+.subscribe-cta-link:focus-visible { outline: 3px solid rgba(1,106,109,0.18); outline-offset: 4px; }
+
+/* Ensure visibility in dark mode */
+body.dark-mode #hero-section h2,
+body.dark-mode #hero-section p,
+body.dark-mode .slogan-banner {
+    color: var(--color-text-light) !important;
+}
+
+body.dark-mode .subscribe-cta-link {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 10px 30px rgba(1,106,109,0.22);
+}
+
+/* If hero background uses secondary color, ensure contrast for CTA */
+.slogan-banner { color: var(--secondary-color); }
+body.dark-mode .slogan-banner { color: #e8f6f5; }
+
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .has-animations .fade-up,
+    .has-animations .slogan-banner,
+    .has-animations .newsletter-card,
+    .has-animations .episode-card,
+    .has-animations .news-card,
+    .has-animations .main-nav ul li a,
+    .has-animations .section-title,
+    .has-animations .episode-body,
+    .has-animations .subscribe-container {
+        animation: none !important;
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}
     padding: 5px;
 }
 body.dark-mode #close-search-btn {

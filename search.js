@@ -34,6 +34,17 @@ function displayResults(episodes, container) {
             </div>
         `;
         container.appendChild(card);
+
+        // enable entrance animation for dynamically created cards
+        try {
+            const count = container.querySelectorAll('.episode-card').length - 1;
+            const delay = Math.min(1000, count * 140);
+            card.classList.add('fade-up');
+            card.style.setProperty('--animate-delay', `${delay}ms`);
+            document.body.classList.add('has-animations');
+        } catch (e) {
+            // ignore
+        }
     });
 }
 
@@ -100,10 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadLatestEpisodes(3);
     }
 
-    // New: load external latest news JSON into #latest-news-grid when present
-    if (document.getElementById('latest-news-grid')) {
-        loadLatestNewsFromAPI();
-    }
+    // Latest news loader moved into separate file: latest-news.js
 
     // صفحات الأرشيف → جلب كل النشرات
     if (document.getElementById('episodes-grid')) {
@@ -165,21 +173,58 @@ async function loadLatestNewsFromAPI() {
             const card = document.createElement('article');
             card.className = 'news-card';
 
-            const imageUrl = item.image || item.img || '';
-            const title = item.title || item.headline || '';
-            const snippet = item.summary || item.description || '';
-            const link = item.link || item.url || '#';
+            const title = item.title || '';
+            const link = item.link || item.url || item.id || '#';
+            const summary = item.summary_ai || item.summary || item.description || '';
+            const publishedRaw = item.published || item.pubDate || '';
+            let published = '';
+            try {
+                const d = new Date(publishedRaw);
+                if (!isNaN(d)) {
+                    published = d.toLocaleString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                }
+            } catch (e) { published = publishedRaw; }
+
+            const sourceUrl = item.source || item.link || '';
+            function hostname(u) {
+                try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return '' }
+            }
+
+            const category = item.category || '';
 
             card.innerHTML = `
-                ${imageUrl ? `<img class="news-image" src="${imageUrl}" alt="${title}" loading="lazy">` : ''}
+                ${item.image ? `<img class="news-image" src="${item.image}" alt="${escapeHtml(title)}" loading="lazy">` : ''}
                 <div class="news-body">
-                    <div class="news-title">${escapeHtml(title)}</div>
-                    <div class="news-snippet">${escapeHtml(snippet)}</div>
-                    <a class="read-more" href="${link}" target="_blank" rel="noopener">اقرأ أكثر</a>
+                    <div class="news-top">
+                        ${category ? `<span class="news-category">${escapeHtml(category)}</span>` : ''}
+                        ${sourceUrl ? `<span class="news-source">${escapeHtml(hostname(sourceUrl))}</span>` : ''}
+                    </div>
+                    <h4 class="news-title">${escapeHtml(title)}</h4>
+                    ${published ? `<div class="news-date">${escapeHtml(published)}</div>` : ''}
+                    <p class="news-snippet">${escapeHtml(summary)}</p>
+                    <div class="news-footer"><a class="read-more" href="${link}" target="_blank" rel="noopener">اقرأ أكثر</a></div>
                 </div>
             `;
 
             container.appendChild(card);
+
+            // animation for news cards
+            try {
+                const index = container.querySelectorAll('.news-card').length - 1;
+                const delay = Math.min(1000, index * 140);
+                card.classList.add('fade-up');
+                card.style.setProperty('--animate-delay', `${delay}ms`);
+                document.body.classList.add('has-animations');
+            } catch (e) {}
+
+            // enable entrance animation for dynamically created news cards
+            try {
+                const index = container.querySelectorAll('.news-card').length - 1;
+                const delay = Math.min(1000, index * 140);
+                card.classList.add('fade-up');
+                card.style.setProperty('--animate-delay', `${delay}ms`);
+                document.body.classList.add('has-animations');
+            } catch (e) {}
         });
 
     } catch (err) {
@@ -249,6 +294,43 @@ function setupArticleActionBar() {
 // initialize action bar when article is present
 document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('article-action-bar')) setupArticleActionBar();
+});
+
+/* Setup page entrance animations: add .fade-up and stagger delays, then enable .has-animations */
+function setupPageAnimations() {
+    // Apply fade-up to the whole page: assign to top-level visible body children
+    // This makes the entrance effect apply to the whole page rather than isolated sections.
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.body.classList.add('has-animations');
+        return;
+    }
+
+    const children = Array.from(document.body.children).filter(el => {
+        // skip scripts, noscript and elements not visually rendered
+        return el.tagName.toLowerCase() !== 'script' && el.tagName.toLowerCase() !== 'noscript' && el.offsetParent !== null;
+    });
+
+    // if no top-level children found, still enable has-animations so nested dynamic elements can animate
+    if (!children.length) {
+        document.body.classList.add('has-animations');
+        return;
+    }
+
+    children.forEach((el, idx) => {
+        el.classList.add('fade-up');
+        const delay = Math.min(1200, idx * 160);
+        el.style.setProperty('--animate-delay', `${delay}ms`);
+    });
+
+    // Also ensure any existing dynamic cards already got fade-up earlier; enabling the class runs animations
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        document.body.classList.add('has-animations');
+    }));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    // run animations after small idle to avoid blocking load
+    setTimeout(setupPageAnimations, 120);
 });
 
 // الوضع الليلي
