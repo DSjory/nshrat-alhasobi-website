@@ -100,6 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
         loadLatestEpisodes(3);
     }
 
+    // New: load external latest news JSON into #latest-news-grid when present
+    if (document.getElementById('latest-news-grid')) {
+        loadLatestNewsFromAPI();
+    }
+
     // صفحات الأرشيف → جلب كل النشرات
     if (document.getElementById('episodes-grid')) {
         performSearch();
@@ -139,6 +144,112 @@ function setupSearchToggle() {
         document.querySelectorAll('#search-input').forEach(i => i.value = '');
     };
 }
+
+/* Fetch external latest news JSON and render cards */
+async function loadLatestNewsFromAPI() {
+    const container = document.getElementById('latest-news-grid');
+    if (!container) return;
+    container.innerHTML = '<p style="text-align:center;padding:20px;color:#666;">جاري جلب أحدث الأخبار...</p>';
+
+    try {
+        const res = await fetch('https://c3ziz.github.io/saudi-news-ai-rss/api/latest.json');
+        if (!res.ok) throw new Error('Network response not ok');
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+            container.innerHTML = '<p style="text-align:center;color:#999;">لا توجد أخبار حالياً.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        data.forEach(item => {
+            const card = document.createElement('article');
+            card.className = 'news-card';
+
+            const imageUrl = item.image || item.img || '';
+            const title = item.title || item.headline || '';
+            const snippet = item.summary || item.description || '';
+            const link = item.link || item.url || '#';
+
+            card.innerHTML = `
+                ${imageUrl ? `<img class="news-image" src="${imageUrl}" alt="${title}" loading="lazy">` : ''}
+                <div class="news-body">
+                    <div class="news-title">${escapeHtml(title)}</div>
+                    <div class="news-snippet">${escapeHtml(snippet)}</div>
+                    <a class="read-more" href="${link}" target="_blank" rel="noopener">اقرأ أكثر</a>
+                </div>
+            `;
+
+            container.appendChild(card);
+        });
+
+    } catch (err) {
+        console.error('خطأ في جلب أحدث الأخبار:', err);
+        container.innerHTML = '<p style="text-align:center;color:#e74c3c;">فشل جلب الأخبار.</p>';
+    }
+}
+
+/* Simple HTML escaper for titles/snippets */
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+    return String(unsafe)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+/* Setup article action bar interactions (like/save/comment/report) */
+function setupArticleActionBar() {
+    const likeBtn = document.getElementById('like-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const commentBtn = document.getElementById('comment-btn');
+    const reportBtn = document.getElementById('report-btn');
+
+    if (likeBtn) {
+        likeBtn.addEventListener('click', () => {
+            likeBtn.classList.toggle('liked');
+            // simple local count animation
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            saveBtn.classList.toggle('liked');
+            const saved = JSON.parse(localStorage.getItem('savedIssues') || '[]');
+            // try to find issue id from URL
+            const params = new URLSearchParams(location.search);
+            const issue = params.get('issue');
+            if (!issue) return;
+            const idx = saved.indexOf(issue);
+            if (idx === -1) saved.push(issue); else saved.splice(idx,1);
+            localStorage.setItem('savedIssues', JSON.stringify(saved));
+        });
+    }
+
+    if (commentBtn) {
+        commentBtn.addEventListener('click', () => {
+            const el = document.getElementById('comment-content');
+            if (el) el.focus();
+            window.scrollTo({ top: document.getElementById('comments-section')?.offsetTop - 120 || 0, behavior: 'smooth' });
+        });
+    }
+
+    if (reportBtn) {
+        reportBtn.addEventListener('click', () => {
+            const proceed = confirm('هل تريد الإبلاغ عن مشكلة في هذه النشرة؟');
+            if (proceed) {
+                // basic client-side report: open mailto to maintain privacy
+                window.location.href = 'mailto:info@example.com?subject=تقرير%20مشكلة%20في%20النشرة';
+            }
+        });
+    }
+}
+
+// initialize action bar when article is present
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('article-action-bar')) setupArticleActionBar();
+});
 
 // الوضع الليلي
 function setupModeToggle() {

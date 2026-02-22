@@ -1,16 +1,20 @@
 :root {
-    /* نظام الألوان الأساسي */
-    --color-background-light: #fff1e6; /* بيج فاتح */
-    --color-text-dark: #083e51; /* أسود داكن/أزرق أساسي */
-    --color-accent-blue: #075e7c; /* لون النص التمييزي */
-    --padding-sides: 40px; /* مسافة افتراضية للأطراف */
-    
-    
-    /* متغيرات الوضع الليلي (Dark Mode) - تم تعديل درجة السواد */
-    --color-background-dark: #1f2124 ; /* رمادي داكن مريح (تم تخفيفه) */
-    --color-text-light: #f5f5f5; /* نص فاتح للوضع الليلي */
-    --color-border-dark: #333; /* حدود داكنة للوضع الليلي */
-    --color-card-dark: #2c2e33; /* خلفية البطاقة في الوضع الليلي */
+    /* Global design system (new) */
+    --bg-color: #FAF9F7; /* main app background (soft) */
+    --primary-color: #016A6d; /* primary actions, CTAs */
+    --secondary-color: #043E52; /* headings, footer bg */
+    --text-color: #043E52; /* default text color */
+    --card-bg: #FFFFFF; /* card background */
+    --muted-color: #6c757d;
+    --padding-sides: 40px; /* default horizontal padding */
+
+    /* Legacy / dark mode variables kept for compatibility */
+    --color-background-light: #fff1e6;
+    --color-accent-blue: #075e7c;
+    --color-background-dark: #1f2124;
+    --color-text-light: #f5f5f5;
+    --color-border-dark: #333;
+    --color-card-dark: #2c2e33;
     
 }
 
@@ -29,12 +33,14 @@
 }
 
 body {
-    font-family: '29LT Zarid Text', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    direction: rtl; 
-    background-color: var(--color-background-light);
-    color: var(--color-text-dark);
-    line-height: 1.8;
-    transition: background-color 0.4s ease, color 0.4s ease;
+    font-family: '29LT Zarid Text', 'Tajawal', Tahoma, Arial, sans-serif;
+    direction: rtl;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.7;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 a {
@@ -1158,6 +1164,161 @@ body.dark-mode #search-input {
     cursor: pointer;
     color: var(--color-text-dark);
     font-size: 1.2em;
+
+}
+
+/* ------------------ New Design System Components ------------------ */
+
+/* Navigation buttons - prominent CTAs */
+.main-nav ul li a {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: #ffffff;
+    padding: 8px 14px;
+    border-radius: 10px;
+    box-shadow: 0 6px 14px rgba(1, 106, 109, 0.12);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    font-weight: 700;
+}
+
+.main-nav ul li a:hover,
+.main-nav ul li a[aria-current="page"] {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 30px rgba(1, 106, 109, 0.18);
+    opacity: 0.98;
+}
+
+/* Top CTA bar (subscription / join link moved to top) */
+.top-cta-bar {
+    width: 100%;
+    background-color: var(--secondary-color);
+    color: #fff;
+    padding: 6px 0;
+    text-align: center;
+    font-weight: 700;
+}
+.top-cta-bar a { color: #fff; text-decoration: none; }
+
+/* Slogan banner under header */
+.slogan-banner {
+    max-width: 1200px;
+    margin: 90px auto 20px; /* leave space for fixed header */
+    padding: 12px 20px;
+    background: linear-gradient(90deg, rgba(1,106,109,0.06), rgba(4,62,82,0.03));
+    border-radius: 10px;
+    color: var(--secondary-color);
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+/* Newsletter reading card */
+.newsletter-card {
+    background-color: var(--card-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(4,62,82,0.06);
+    max-width: 900px;
+    margin-inline: auto;
+    margin-top: 20px;
+}
+
+/* Action bar for like/comment/save/report */
+.action-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 28px;
+}
+.action-btn {
+    background: #fff;
+    border: 1px solid #eee;
+    padding: 10px;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.action-btn:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+.action-btn .fa { color: var(--secondary-color); font-size: 1.1rem; }
+.action-btn.liked { background: linear-gradient(180deg, rgba(1,106,109,0.06), rgba(1,106,109,0.02)); border-color: rgba(1,106,109,0.12); }
+.action-btn.liked .fa { color: var(--primary-color); transform: scale(1.12); }
+
+/* heart pop animation */
+@keyframes heart-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.action-btn.liked .fa-heart { animation: heart-pop 420ms cubic-bezier(.2,.9,.3,1); }
+
+/* Sticky bottom Join Us button */
+.join-fixed-bottom {
+    position: fixed;
+    inset-inline-end: 20px; /* RTL-aware: distance from right */
+    bottom: 20px;
+    z-index: 1200;
+}
+.join-fixed-bottom a {
+    display: inline-block;
+    background: var(--primary-color);
+    color: #fff;
+    padding: 12px 18px;
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(1,106,109,0.18);
+    font-weight: 800;
+    text-decoration: none;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.join-fixed-bottom a:hover { transform: translateY(-4px) scale(1.02); }
+
+/* Latest news grid (from external JSON) */
+.latest-news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+}
+.news-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(4,62,82,0.06);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.news-card:hover { transform: translateY(-6px); box-shadow: 0 14px 40px rgba(4,62,82,0.1); }
+.news-card .news-image { width: 100%; height: 160px; object-fit: cover; display: block; }
+.news-card .news-body { padding: 14px; flex-grow: 1; display:flex; flex-direction:column; }
+.news-card .news-title { font-weight: 800; color: var(--secondary-color); margin-bottom: 8px; font-size: 1.05rem; line-height:1.3; }
+.news-card .news-snippet { color: var(--muted-color); font-size: 0.95rem; margin-bottom: 12px; flex-grow:1; }
+.news-card .read-more { color: var(--primary-color); font-weight:700; text-decoration:none; align-self:flex-start; }
+
+/* tooltip helper (simple) */
+.action-btn[title] { position: relative; }
+.action-btn[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    right: 0;
+}
+
+/* Small responsive tweaks */
+@media (max-width: 768px) {
+    .slogan-banner { margin: 120px 16px 18px; }
+    .join-fixed-bottom { inset-inline-end: 12px; bottom: 12px; }
+}
+
+/* Ensure logical properties used where possible */
+.header-text { margin-inline-start: 10px; margin-inline-end: 0; }
+
+/* End of new components */
     padding: 5px;
 }
 body.dark-mode #close-search-btn {
