@@ -283,6 +283,15 @@ body.dark-mode .developer-card .social-links a {
     padding: 20px var(--padding-sides);
 }
 
+/* For pages that use a different main wrapper (e.g., single-episode), ensure content isn't hidden behind fixed header */
+.main-content-area {
+    padding-top: 130px; /* matches header + top-cta spacing */
+}
+
+@media (max-width: 768px) {
+    .main-content-area { padding-top: 160px; }
+}
+
 #hero-section {
     padding-top: 130px;
     padding-bottom: 50px;
@@ -1520,33 +1529,14 @@ body.dark-mode .main-nav ul li a[aria-current="page"] {
     100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Initial state for elements we want to animate */
-.slogan-banner,
-.newsletter-card,
-.episode-card,
-.news-card,
-.main-nav ul li a,
-.section-title,
-.episode-body,
-.subscribe-container,
-#hero-section h2,
-#hero-section p {
+/* Initial state for elements that will animate: apply only to elements with `.fade-up` */
+.fade-up {
     opacity: 0;
     transform: translateY(10px);
 }
 
-/* When JS enables animations on the body, run the keyframe with stagger support */
-.has-animations .fade-up,
-.has-animations .slogan-banner,
-.has-animations .newsletter-card,
-.has-animations .episode-card,
-.has-animations .news-card,
-.has-animations .main-nav ul li a,
-.has-animations .section-title,
-.has-animations .episode-body,
-.has-animations .subscribe-container,
-.has-animations #hero-section h2,
-.has-animations #hero-section p {
+/* When JS enables animations on the body, run the keyframe for elements with `.fade-up` */
+.has-animations .fade-up {
     animation-name: fadeInUp;
     animation-duration: 1100ms; /* slightly slower for elegance */
     animation-fill-mode: both;
@@ -1610,8 +1600,6 @@ body.dark-mode .slogan-banner { color: #e8f6f5; }
         opacity: 1 !important;
         transform: none !important;
     }
-}
-    padding: 5px;
 }
 body.dark-mode #close-search-btn {
     color: var(--color-text-light);
