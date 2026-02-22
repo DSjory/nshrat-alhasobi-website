@@ -1183,9 +1183,27 @@ body.dark-mode #search-input {
 
 .main-nav ul li a:hover,
 .main-nav ul li a[aria-current="page"] {
+    background-color: var(--secondary-color);
+    color: #ffffff;
     transform: translateY(-3px) scale(1.02);
-    box-shadow: 0 10px 30px rgba(1, 106, 109, 0.18);
-    opacity: 0.98;
+    box-shadow: 0 14px 40px rgba(4, 62, 82, 0.18);
+    opacity: 1;
+    border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* keyboard focus accessibility */
+.main-nav ul li a:focus-visible {
+    outline: 3px solid rgba(1,106,109,0.18);
+    outline-offset: 3px;
+    box-shadow: 0 12px 30px rgba(4,62,82,0.14);
+}
+
+/* Dark mode specific hover adjustments */
+body.dark-mode .main-nav ul li a:hover,
+body.dark-mode .main-nav ul li a[aria-current="page"] {
+    background-color: var(--primary-color);
+    color: #fff;
+    box-shadow: 0 12px 30px rgba(1,106,109,0.22);
 }
 
 /* Top CTA bar (subscription / join link moved to top) */
