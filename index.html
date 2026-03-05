@@ -15,17 +15,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نشرة الحاسوبي | موعدك الأسبوعي في جديد التقنية</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
+    <div class="top-cta-bar">
+        <a href="join.html">انضم كمستفيد — كن جزءًا من نشرة الحاسوبي</a>
+    </div>
     
     <header id="main-header">
         
         <div class="header-right-section">
             <div class="header-logo-main">
-                <img src="شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
+                <img src="assets/img/شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
             </div>
 
             <div class="header-text">
@@ -66,6 +69,7 @@
     </header>
 
 
+
     <div id="search-bar-container" style="display: none; background-color: var(--main-bg-color); padding: 15px; border-bottom: 1px solid var(--border-color);"> 
         <div class="search-controls" style="max-width: 1200px; margin: auto; display: flex; gap: 10px; align-items: center;">
             
@@ -95,6 +99,9 @@
                 نشرة بريدية أنشئت بشغف، لتجعلك دائماً في قلب الحدث، مطّلعًا على آخر أخبار التقنية، وأحدث اتجاهات المستقبل، عبر أسلوب مبسط، شيق، وموثوق.
                 هي أكثر من مجرد نشرة… إنها جواز سفرك نحو مواكبة التغيير وفهم ملامح الغد.
             </p>
+            <div class="hero-cta" style="margin-top:18px;">
+                <a href="https://forms.office.com/r/AZdBQUBMvb" class="subscribe-cta-link">لتصلك النشرة على إيميلك سجل الآن</a>
+            </div>
         </section>
 
         <section id="latest-episodes-section">
@@ -105,19 +112,25 @@
             </div>
         </section>
 
-        <section id="subscribe-section">
-            <div class="subscribe-container">
-                <a href="https://forms.office.com/r/AZdBQUBMvb" class="subscribe-cta-link">
-                    لتصلك النشرة على إيميلك سجل الآن
-                </a>
+        <section id="latest-news-section">
+            <h3 class="section-title">أحدث الأخبار</h3>
+            <div id="latest-news-grid" class="latest-news-grid">
+                <!-- سيتم جلبها من API خارجي -->
             </div>
         </section>
+
+        <!-- subscribe CTA moved to hero section -->
         
     </main>
     
+    <div class="join-fixed-bottom" aria-hidden="false">
+        <a href="join.html" aria-label="انضم إلينا">انضم إلينا</a>
+    </div>
+
         <!-- ترتيب السكربتات الصحيح -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="search.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/latest-news.js"></script>
 
 
     <!-- بعدين نستدعي التهيئة (اختياري، لكن أضمن) -->
@@ -133,15 +146,11 @@
 
         
     </script>
+    <script src="js/footer-year.js"></script>
+    <footer>
+        <div class="footer-bottom">
+            &copy; <span class="footer-year">2025</span> نشرة الحاسوبي. جميع الحقوق محفوظة.
+        </div>
+    </footer>
 </body>
-</html>
-
-</body>
-
-<footer>
-    <div class="footer-bottom">
-        &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
-    </div>
-</footer>
-
 </html>

@@ -14,24 +14,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>فريق العمل | نشرة الحاسوبي</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
 <!-- تحميل مكتبة Supabase أولاً -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <!-- بعدين ملف الموقع اللي فيه Dark Mode + البحث -->
-<script src="search.js"></script>
+<script src="js/search.js"></script>
 
 </head>
 
 <body>
-    
+    <div class="top-cta-bar">
+        <a href="join.html">انضم كمستفيد — كن جزءًا من نشرة الحاسوبي</a>
+    </div>
+
     <header id="main-header">
         
         <div class="header-right-section">
             <div class="header-logo-main">
-                <img src="شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
+                <img src="assets/img/شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
             </div>
 
             <div class="header-text">
@@ -72,6 +75,8 @@
      </div>
     </header>
 
+    
+
     <main id="main-content">
         
         <section id="mission-vision">
@@ -88,41 +93,122 @@
         <section id="team-structure">
         
             </div  >
-                <h4 class="subsection-title">فريق نشرة الحاسوبي لعام 1446هـ</h4>
+                <h3 class="subsection-title">فريق نشرة الحاسوبي لعام 1446هـ</h3>
 
-               <div class="full-team-photo-container">
-               <img src="فريق النشرة لعام 1446.png" alt="صورة فريق نشرة الحاسوبي لعام 1446" class="full-team-photo large-photo">
+                   <div class="full-team-photo-container">
+                   <img src="assets/img/فريق النشرة لعام 1446.png" alt="صورة فريق نشرة الحاسوبي لعام 1446" class="full-team-photo large-photo">
     
-            </div>
-            
-            <h3 class="subsection-title">مطورين الموقع</h3>
-            <div class="committee-grid"></div>
-            <div class="committee-card">
-                    <h4>فريق تطوير الموقع</h4>
-                    <ul class="member-list">
-                        <li>جوري الكناني</li> 
-                        <li>ريتال رومي</li>
-                        <li>أمل الزهراني</li>
-                        <li>ريتال صعيدي</li>
-                        <li>فاطمة عنقاوي</li>
-                    </ul>
                 </div>
-            </div>
+            
+                <h3 class="subsection-title">مطورين الموقع</h3>
+
+                <div class="developer-grid">
+                    <!-- First developer (requested) -->
+                    <div class="team-member-card developer-card">
+                        <div class="member-photo-container">
+                            <div class="initials">عح</div>
+                        </div>
+                        <div class="member-name">عبدالعزيز حافظ</div>
+                        <div class="member-role">مطور الموقع</div>
+                        <div class="social-links">
+                            <a href="https://github.com/C3ZIZ" target="_blank" rel="noopener" aria-label="GitHub">
+                                <span class="icon icon-github" aria-hidden="true"></span>
+                            </a>
+                            <a href="https://www.linkedin.com/in/ahhafiz/" target="_blank" rel="noopener" aria-label="LinkedIn">
+                                <span class="icon icon-linkedin" aria-hidden="true"></span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Existing team members converted to cards -->
+                    <div class="team-member-card developer-card">
+                        <div class="member-photo-container"><div class="initials">جك</div></div>
+                        <div class="member-name">جوري الكناني</div>
+                        <div class="member-role">رئيس النشرة</div>
+                        <div class="social-links">
+                            <a href="#" aria-label="GitHub">
+                                <span class="icon icon-github" aria-hidden="true"></span>
+                            </a>
+                            <a href="#" aria-label="LinkedIn">
+                                <span class="icon icon-linkedin" aria-hidden="true"></span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="team-member-card developer-card">
+                        <div class="member-photo-container"><div class="initials">رر</div></div>
+                        <div class="member-name">ريتال رومي</div>
+                        <div class="member-role">محررة</div>
+                        <div class="social-links">
+                            <a href="#" aria-label="GitHub">
+                                <span class="icon icon-github" aria-hidden="true"></span>
+                            </a>
+                            <a href="#" aria-label="LinkedIn">
+                                <span class="icon icon-linkedin" aria-hidden="true"></span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="team-member-card developer-card">
+                        <div class="member-photo-container"><div class="initials">أز</div></div>
+                        <div class="member-name">أمل الزهراني</div>
+                        <div class="member-role">محررة</div>
+                        <div class="social-links">
+                            <a href="#" aria-label="GitHub">
+                                <span class="icon icon-github" aria-hidden="true"></span>
+                            </a>
+                            <a href="#" aria-label="LinkedIn">
+                                <span class="icon icon-linkedin" aria-hidden="true"></span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="team-member-card developer-card">
+                        <div class="member-photo-container"><div class="initials">رص</div></div>
+                        <div class="member-name">ريتال صعيدي</div>
+                        <div class="member-role">تصميم ومساهمة</div>
+                        <div class="social-links">
+                            <a href="#" aria-label="GitHub">
+                                <span class="icon icon-github" aria-hidden="true"></span>
+                            </a>
+                            <a href="#" aria-label="LinkedIn">
+                                <span class="icon icon-linkedin" aria-hidden="true"></span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="team-member-card developer-card">
+                        <div class="member-photo-container"><div class="initials">فا</div></div>
+                        <div class="member-name">فاطمة عنقاوي</div>
+                        <div class="member-role">منسقة المحتوى</div>
+                        <div class="social-links">
+                            <a href="#" aria-label="GitHub">
+                                <span class="icon icon-github" aria-hidden="true"></span>
+                            </a>
+                            <a href="#" aria-label="LinkedIn">
+                                <span class="icon icon-linkedin" aria-hidden="true"></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
         </section>
 
     </main>
     
+    <div class="join-fixed-bottom" aria-hidden="false">
+        <a href="join.html" aria-label="انضم إلينا">انضم إلينا</a>
+    </div>
+
     <footer>
         </footer>
 
 
+    <script src="js/footer-year.js"></script>
+    <footer>
+        <div class="footer-bottom">
+            &copy; <span class="footer-year">2025</span> نشرة الحاسوبي. جميع الحقوق محفوظة.
+        </div>
+    </footer>
 </body>
-
-<footer>
-<div class="footer-bottom">
-        &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
-    </div>
-</footer>
-
 </html>

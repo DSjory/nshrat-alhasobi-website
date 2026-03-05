@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="en" dir="rtl">
 <head>
 
 <!-- Google tag (gtag.js) -->
@@ -15,19 +15,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Translated Episodes | Archive - Alhasoobi Bulletin</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 
 
 <body>
-    
+    <div class="top-cta-bar">
+        <a href="join.html">انضم كمستفيد — كن جزءًا من نشرة الحاسوبي</a>
+    </div>
+
     <header id="main-header">
         
         <div class="header-right-section">
             <div class="header-logo-main">
-                <img src="شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
+                <img src="assets/img/شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
             </div>
 
             <div class="header-text">
@@ -66,6 +69,7 @@
      </div>
     </header>
 
+    
 
     <div id="search-bar-container" style="display: none; background-color: var(--main-bg-color); padding: 15px; border-bottom: 1px solid var(--border-color);"> 
         <div class="search-controls" style="max-width: 1200px; margin: auto; display: flex; gap: 10px; align-items: center;">
@@ -104,7 +108,7 @@
 
         <!-- السكربتات الصحيحة والموحدة -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="search.js"></script>
+    <script src="js/search.js"></script>
 
     <!-- حدد الجدول الصحيح للنشرات المترجمة -->
     <script>
@@ -142,15 +146,18 @@
             }
         });
     </script>
-</body>
-
+    <div class="join-fixed-bottom" aria-hidden="false">
+        <a href="join.html" aria-label="انضم إلينا">انضم إلينا</a>
+    </div>
 
 </body>
 
 <footer>
     <div class="footer-bottom">
-        &copy; 2025 نشرة الحاسوبي. جميع الحقوق محفوظة.
+        &copy; <span class="footer-year">2025</span> نشرة الحاسوبي. جميع الحقوق محفوظة.
     </div>
 </footer>
+
+<script src="js/footer-year.js"></script>
 
 </html>
