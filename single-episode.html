@@ -115,143 +115,106 @@
     </main>
 
 
-    <!-- Supabase: تحميل النشرة والتعليقات -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const { createClient } = supabase;
-    const SUPABASE_URL = "https://txldnqhqsgtqttpzbkeq.supabase.co";
-    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4bGRucWhxc2d0cXR0cHpia2VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4ODAxNDksImV4cCI6MjA3OTQ1NjE0OX0.HfTR4pvi8dxar-_oCwd0ngAqnC3--6ypeZip8rm0Ebw";
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+    <!-- Supabase: load newsletter by id and render localized content -->
+    <script type="module">
+      import { supabasePublic, youtubeThumbnailFromUrl } from '/js/supabase-public.js';
 
-    function getParamsFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const issueParam = params.get("issue");
-        const issueNumber = issueParam ? parseInt(issueParam, 10) : null;
-        const lang = params.get("lang"); // لو موجود → إنجليزي، لو لا → عربي
-        const tableName = lang === "en" ? "issues_en" : "issues";
+      const sb = supabasePublic;
 
-        return {
-            issueNumber: Number.isNaN(issueNumber) ? null : issueNumber,
-            lang: lang || "ar",
-            tableName
-        };
-    }
+      function getParams() {
+        const p = new URLSearchParams(location.search);
+        return { id: p.get('id'), lang: p.get('lang') || 'ar' };
+      }
 
-    async function loadEpisode(issueNumber, tableName, lang) {
-        const container = document.getElementById("dynamic-episode-details");
+      function el(tag, cls, text) {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text) e.textContent = text;
+        return e;
+      }
 
-        if (!tableName || !issueNumber) {
-            container.innerHTML = '<h1 style="text-align:center;margin-top:80px;">لم يتم تحديد عدد صحيح أو لغة.</h1>';
-            return;
+      function renderNewsletter(nl, localeRow, lang) {
+        const container = document.getElementById('dynamic-episode-details');
+        container.innerHTML = '';
+
+        const hero = el('section', 'hero');
+        hero.append(el('div', 'welcome', localeRow.welcome_text || ''));
+        hero.append(el('div', 'issue', `العدد ${nl.issue_number}`));
+        if (localeRow.read_time_minutes) hero.append(el('div','readtime', `${localeRow.read_time_minutes} دقائق`));
+        container.appendChild(hero);
+
+        const article = el('article', 'main-article');
+        article.append(el('h2', 'article-title', localeRow.article_title || ''));
+        article.append(el('p', 'article-content', localeRow.article_content || ''));
+        article.append(el('div', 'article-author', localeRow.article_author || ''));
+        container.appendChild(article);
+
+        // News items
+        const newsItems = localeRow.news_items || [];
+        if (Array.isArray(newsItems) && newsItems.length) {
+          const newsSec = el('section', 'news-section');
+          newsItems.forEach((it, idx) => {
+            const item = el('div', 'news-item');
+            item.append(el('div','news-text', it.news_text || ''));
+            if (Array.isArray(it.sources) && it.sources.length) item.append(el('div','news-sources', it.sources.join(' - ')));
+            newsSec.appendChild(item);
+            if (idx < newsItems.length -1) newsSec.append(el('hr'));
+          });
+          container.appendChild(newsSec);
         }
 
-        const { data: issue, error } = await sb
-            .from(tableName)
-            .select('*')
-            .eq('issue_number', issueNumber)
-            .maybeSingle();
-
-        if (error || !issue) {
-            console.error("خطأ في جلب النشرة:", error);
-            container.innerHTML = '<h1 style="text-align:center;margin-top:80px;color:#e74c3c;">تعذّر تحميل النشرة.</h1>';
-            return;
+        // Podcast
+        if (localeRow.podcast_description || localeRow.podcast_youtube_url) {
+          const pod = el('section','podcast');
+          if (localeRow.podcast_description) pod.append(el('p','', localeRow.podcast_description));
+          const thumb = youtubeThumbnailFromUrl(localeRow.podcast_youtube_url);
+          if (thumb) { const img = document.createElement('img'); img.src = thumb; img.alt='podcast'; pod.appendChild(img); }
+          container.appendChild(pod);
         }
 
-        let html = '';
-        if (issue.title) html += `<h1 style="margin-bottom:16px;text-align:center;">${issue.title}</h1>`;
-
-        if (issue.content_html) {
-            html += `<div class="episode-body">${issue.content_html}</div>`;
-        } else {
-            html += '<p style="text-align:center;color:#999;padding:40px;">لا يوجد محتوى نصي لهذا العدد حتى الآن.</p>';
+        // Spotlight
+        if (localeRow.spotlight_content) {
+          const spot = el('section','spotlight');
+          spot.append(el('h4','', localeRow.spotlight_title || ''));
+          spot.append(el('p','', localeRow.spotlight_content));
+          spot.append(el('div','spot-author', localeRow.spotlight_author || ''));
+          container.appendChild(spot);
         }
 
-        if (issue.pdf_url) {
-            html += `
-                <div style="text-align:center;margin:40px 0;">
-                    <a href="${issue.pdf_url}" target="_blank" rel="noopener"
-                       style="display:inline-block;padding:12px 24px;background:#075e7c;color:white;border-radius:999px;text-decoration:none;">
-                       تحميل النشرة كملف PDF
-                    </a>
-                </div>`;
-        }
+        // Credits
+        const credits = el('section','credits');
+        credits.append(el('h3','credits-title','أســــماء مـــعدي النــــشرة'));
+        const parts = ['credits_writer','credits_news_hunters','credits_content_writers','credits_designers','credits_member_affairs','credits_leader','credits_co_leader'];
+        parts.forEach(k => { if (localeRow[k]) credits.append(el('div','credit-line', localeRow[k].split(',').join(' - '))); });
+        container.appendChild(credits);
 
-        container.innerHTML = html;
-    }
+        container.append(el('footer','footer', `العدد ${nl.issue_number}`));
+      }
 
-    async function loadComments(issueNumber) {
-        const list = document.getElementById("comments-list");
-        if (!list || !issueNumber) return;
-
-        list.innerHTML = '<p style="text-align:center;color:#999;">جاري تحميل التعليقات...</p>';
-
-        const { data, error } = await sb
-            .from("comments")
-            .select("*")
-            .eq("issue_number", issueNumber)
-            .order("created_at", { ascending: true });
-
-        if (error || !data || data.length === 0) {
-            list.innerHTML = '<p style="text-align:center;color:#999;">لا توجد تعليقات بعد. كن أول من يعلّق</p>';
-            return;
-        }
-
-        list.innerHTML = "";
-        data.forEach(c => {
-            const div = document.createElement("div");
-            div.style = "padding:12px 0;border-bottom:1px solid #eee;";
-            div.innerHTML = `
-                <strong>${c.author || 'مجهول'}</strong>
-                <p style="margin:8px 0;">${c.content}</p>
-                <small style="color:#999;">${new Date(c.created_at).toLocaleString('ar-SA')}</small>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    async function handleCommentSubmit(e, issueNumber) {
-        e.preventDefault();
-        const content = document.getElementById("comment-content").value.trim();
-        const author = document.getElementById("comment-author").value.trim() || null;
-        const status = document.getElementById("comment-status");
-
-        if (!content) {
-            status.textContent = "اكتب تعليق أولاً!";
-            return;
-        }
-
-        status.textContent = "جاري الإرسال...";
-
-        const { error } = await sb.from("comments").insert({
-            issue_number: issueNumber,
-            author,
-            content
-        });
-
-        if (error) {
-            status.textContent = "فشل الإرسال، حاول مرة أخرى.";
-        } else {
-            status.textContent = "تم إرسال التعليق بنجاح!";
-            document.getElementById("comment-content").value = "";
-            loadComments(issueNumber);
-        }
-    }
-
-    document.addEventListener("DOMContentLoaded", async () => {
-        const { issueNumber, lang, tableName } = getParamsFromURL();
-
-        // تغيير لغة الصفحة
-        document.documentElement.lang = lang;
+      async function load() {
+        const { id, lang } = getParams();
+        document.documentElement.lang = lang === 'en' ? 'en' : 'ar';
         document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
 
-        await loadEpisode(issueNumber, tableName, lang);
-        if (issueNumber) await loadComments(issueNumber);
+        if (!id) {
+          document.getElementById('dynamic-episode-details').innerHTML = '<h2 style="text-align:center">معرف النشرة مفقود</h2>';
+          return;
+        }
 
-        document.getElementById("comment-form")?.addEventListener("submit", e => 
-            handleCommentSubmit(e, issueNumber)
-        );
-    });
-</script>
+        const { data, error } = await sb.from('newsletters').select('*, newsletter_locales(*)').eq('id', id).maybeSingle();
+        if (error || !data) {
+          console.error('خطأ في جلب النشرة', error);
+          document.getElementById('dynamic-episode-details').innerHTML = '<h2 style="text-align:center;color:#e74c3c">تعذّر تحميل النشرة</h2>';
+          return;
+        }
+
+        const nl = data;
+        const localeRow = (nl.newsletter_locales || []).find(r => r.locale === lang) || (nl.newsletter_locales || [])[0] || {};
+        renderNewsletter(nl, localeRow, lang);
+      }
+
+      load();
+    </script>
 
 <script>
   // تفعيل وضع الليل في صفحة عرض النشرة فقط

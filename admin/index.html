@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="ar">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>نشرة الحاسوبي - Admin</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/admin/css/styles.css" />
+  </head>
+  <body>
+    <main id="admin-app"></main>
+    <div style="max-width:1000px;margin:12px auto;text-align:center;">
+      <a href="/" style="text-decoration:none;color:inherit;">الذهاب إلى الموقع العام</a>
+    </div>
+    <script>
+      // Load environment for admin from /admin/env.json and expose as globals
+      (async function(){
+        try {
+          const res = await fetch('/admin/env.json');
+          if (res.ok) {
+            const e = await res.json();
+            window.__SUPABASE_URL = e.VITE_SUPABASE_URL;
+            window.__SUPABASE_ANON_KEY = e.VITE_SUPABASE_ANON_KEY;
+          }
+        } catch (err) {
+          console.warn('Could not load admin env.json', err);
+        }
+      })();
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="/admin/js/admin.js"></script>
+  </body>
+</html>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 
 <!-- Google tag (gtag.js) -->
@@ -106,46 +106,11 @@
     </main>
 
 
-        <!-- السكربتات الصحيحة والموحدة -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/search.js"></script>
-
-    <!-- حدد الجدول الصحيح للنشرات المترجمة -->
-    <script>
-        document.body.dataset.table = "issues_en";
-    </script>
-
-    <!-- تفعيل كل شيء + دعم البحث من الـ URL (مثلما طلبنا قبل) -->
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const query = urlParams.get('q');
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // تفعيل الوضع الليلي والبحث
-            setupModeToggle();
-            setupSearchToggle();
-
-            // إذا جاء من الصفحة الرئيسية بكلمة بحث → نعبي الحقل ونبحث تلقائي
-            if (query) {
-                const inputs = document.querySelectorAll('#search-input');
-                inputs.forEach(input => {
-                    if (input) input.value = decodeURIComponent(query);
-                });
-
-                // نفتح شريط البحث الكبير تلقائيًا
-                const bigBar = document.querySelector('#search-bar-container[style]');
-                if (bigBar) bigBar.style.display = 'block';
-            }
-
-            // نفعّل البحث (الجدول هنا issues_en بسبب data-table)
-            initializeSearch('issues_en');  // يشتغل عادي، بس dataset.table هو الأهم
-
-            // لو في كلمة بحث → نفذ البحث فورًا
-            if (query) {
-                performSearch('issues_en');
-            }
-        });
-    </script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script type="module">
+          window.NEWSLETTERS_LOCALE = 'en';
+          import '/js/newsletters-list.js';
+        </script>
     <div class="join-fixed-bottom" aria-hidden="false">
         <a href="join.html" aria-label="انضم إلينا">انضم إلينا</a>
     </div>
