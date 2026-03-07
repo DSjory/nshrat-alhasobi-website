@@ -64,9 +64,9 @@
     <main id="episode-page-container" class="main-content-area">
         
         <!-- محتوى النشرة الديناميكي -->
-        <div class="newsletter-card" style="max-width: 900px; margin: 20px auto 24px;">
+        <div class="newsletter-card container">
             <article id="dynamic-episode-details">
-                <p style="text-align: center; color: gray;">جاري تحميل النشرة...</p>
+                <p class="center muted">جاري تحميل النشرة...</p>
             </article>
 
             <!-- Action bar (Like, Comment, Save, Report) -->
@@ -86,29 +86,29 @@
             </div>
         </div>
         
-        <hr class="separator" style="margin: 30px auto; width: 80%;">
+        <hr class="separator centered">
         
         <!-- قسم التعليقات -->
-        <section id="comments-section" class="comments-area" style="max-width: 900px; margin: 20px auto 60px; padding: 0 16px;">
-            <h2 class="comments-title" style="margin-bottom: 15px;">شاركنا برأيك وتعليقك</h2>
+        <section id="comments-section" class="comments-area container">
+            <h2 class="comments-title mb-15">شاركنا برأيك وتعليقك</h2>
 
-            <div id="comments-list" style="margin-bottom: 20px;">
+            <div id="comments-list" class="mb-20">
                 <!-- سيتم تحميل التعليقات هنا -->
             </div>
 
-            <form id="comment-form" style="display: flex; flex-direction: column; gap: 10px;">
+            <form id="comment-form" class="form-vertical gap-10">
                 <label>
                     الاسم (اختياري)
-                    <input type="text" id="comment-author" style="width:100%; padding:8px;">
+                    <input type="text" id="comment-author" class="form-input">
                 </label>
 
                 <label>
                     التعليق
-                    <textarea id="comment-content" required rows="4" style="width:100%; padding:8px;"></textarea>
+                    <textarea id="comment-content" required rows="4" class="form-textarea"></textarea>
                 </label>
 
-                <button type="submit" style="align-self:flex-start; padding:8px 16px;">إرسال التعليق</button>
-                <p id="comment-status" style="color:#666; font-size:0.9rem;"></p>
+                <button type="submit" class="btn btn-primary">إرسال التعليق</button>
+                <p id="comment-status" class="muted small"></p>
             </form>
         </section>
         
@@ -138,7 +138,8 @@
         container.innerHTML = '';
 
         const hero = el('section', 'hero');
-        hero.append(el('div', 'welcome', localeRow.welcome_text || ''));
+          hero.append(el('div', 'welcome', localeRow.welcome_text || ''));
+          if (nl.category_label) hero.append(el('div','category','التصنيف: ' + nl.category_label));
         hero.append(el('div', 'issue', `العدد ${nl.issue_number}`));
         if (localeRow.read_time_minutes) hero.append(el('div','readtime', `${localeRow.read_time_minutes} دقائق`));
         container.appendChild(hero);
@@ -197,19 +198,21 @@
         document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
 
         if (!id) {
-          document.getElementById('dynamic-episode-details').innerHTML = '<h2 style="text-align:center">معرف النشرة مفقود</h2>';
+          document.getElementById('dynamic-episode-details').innerHTML = '<h2 class="center">معرف النشرة مفقود</h2>';
           return;
         }
 
-        const { data, error } = await sb.from('newsletters').select('*, newsletter_locales(*)').eq('id', id).maybeSingle();
+        const { data, error } = await sb.from('newsletters').select('*, categories(label), newsletter_locales(*)').eq('id', id).maybeSingle();
         if (error || !data) {
           console.error('خطأ في جلب النشرة', error);
-          document.getElementById('dynamic-episode-details').innerHTML = '<h2 style="text-align:center;color:#e74c3c">تعذّر تحميل النشرة</h2>';
+          document.getElementById('dynamic-episode-details').innerHTML = '<h2 class="center error">تعذّر تحميل النشرة</h2>';
           return;
         }
 
         const nl = data;
         const localeRow = (nl.newsletter_locales || []).find(r => r.locale === lang) || (nl.newsletter_locales || [])[0] || {};
+        // attach category label if available
+        nl.category_label = (nl.categories && nl.categories.label) || nl.category || '';
         renderNewsletter(nl, localeRow, lang);
       }
 

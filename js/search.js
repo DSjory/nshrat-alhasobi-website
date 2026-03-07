@@ -13,7 +13,7 @@ function getTable() {
 // عرض البطاقات
 function displayResults(episodes, container) {
     container.innerHTML = episodes.length === 0
-        ? '<p style="text-align:center;padding:50px;color:#999;font-size:1.1rem;">لا توجد نتائج مطابقة.</p>'
+        ? '<p class="center muted padded large">لا توجد نتائج مطابقة.</p>'
         : '';
 
     episodes.forEach(ep => {
@@ -69,7 +69,7 @@ async function performSearch() {
     const { data, error } = await query;
     if (error) {
         console.error('خطأ في البحث:', error);
-        container.innerHTML = '<p style="text-align:center;color:#e74c3c;">حدث خطأ، حاول مرة أخرى.</p>';
+        container.innerHTML = '<p class="center error">حدث خطأ، حاول مرة أخرى.</p>';
         return;
     }
     displayResults(data, container);
@@ -80,7 +80,7 @@ async function loadLatestEpisodes(limit = 3) {
     const container = document.getElementById('latest-episodes-grid');
     if (!container) return;
 
-    container.innerHTML = '<p style="text-align:center;padding:30px;color:#666;">جاري تحميل أحدث النشرات...</p>';
+    container.innerHTML = '<p class="center muted padded">جاري تحميل أحدث النشرات...</p>';
 
     // نجيب من جدول issues فقط (العربي) + نضمن إنه عربي بالـ language إذا كان موجود
     const { data, error } = await sb
@@ -91,7 +91,7 @@ async function loadLatestEpisodes(limit = 3) {
 
     if (error) {
         console.error('خطأ في تحميل أحدث النشرات:', error);
-        container.innerHTML = '<p style="text-align:center;color:#e74c3c;">فشل تحميل النشرات.</p>';
+        container.innerHTML = '<p class="center error">فشل تحميل النشرات.</p>';
         return;
     }
 
@@ -157,14 +157,14 @@ function setupSearchToggle() {
 async function loadLatestNewsFromAPI() {
     const container = document.getElementById('latest-news-grid');
     if (!container) return;
-    container.innerHTML = '<p style="text-align:center;padding:20px;color:#666;">جاري جلب أحدث الأخبار...</p>';
+    container.innerHTML = '<p class="center muted padded">جاري جلب أحدث الأخبار...</p>';
 
     try {
         const res = await fetch('https://c3ziz.github.io/saudi-news-ai-rss/api/latest.json');
         if (!res.ok) throw new Error('Network response not ok');
         const data = await res.json();
         if (!Array.isArray(data) || data.length === 0) {
-            container.innerHTML = '<p style="text-align:center;color:#999;">لا توجد أخبار حالياً.</p>';
+            container.innerHTML = '<p class="center muted">لا توجد أخبار حالياً.</p>';
             return;
         }
 
@@ -229,7 +229,7 @@ async function loadLatestNewsFromAPI() {
 
     } catch (err) {
         console.error('خطأ في جلب أحدث الأخبار:', err);
-        container.innerHTML = '<p style="text-align:center;color:#e74c3c;">فشل جلب الأخبار.</p>';
+        container.innerHTML = '<p class="center error">فشل جلب الأخبار.</p>';
     }
 }
 

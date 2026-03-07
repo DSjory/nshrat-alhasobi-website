@@ -1,10 +1,12 @@
-// Admin supabase client — uses the global `createClient` provided by Supabase CDN
-const url = window.__SUPABASE_URL || import.meta.env?.VITE_SUPABASE_URL || '';
-const key = window.__SUPABASE_ANON_KEY || import.meta.env?.VITE_SUPABASE_ANON_KEY || '';
+import { createClient } from '@supabase/supabase-js';
+
+// Prefer Vite-provided env (`import.meta.env`) when available, fall back to window globals.
+const url = import.meta.env?.VITE_SUPABASE_URL || window.__SUPABASE_URL || '';
+const key = import.meta.env?.VITE_SUPABASE_ANON_KEY || window.__SUPABASE_ANON_KEY || '';
 
 if (!url || !key) console.warn('VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is missing in environment');
 
-export const supabase = (typeof createClient === 'function') ? createClient(url, key) : null;
+export const supabase = createClient(url, key);
 
 export function youtubeThumbnailFromUrl(url) {
   if (!url) return null;

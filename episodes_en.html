@@ -71,29 +71,28 @@
 
     
 
-    <div id="search-bar-container" style="display: none; background-color: var(--main-bg-color); padding: 15px; border-bottom: 1px solid var(--border-color);"> 
-        <div class="search-controls" style="max-width: 1200px; margin: auto; display: flex; gap: 10px; align-items: center;">
+    <div id="search-bar-container" class="search-bar-container hidden"> 
+        <div class="search-controls container">
             
-            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد أو التصنيف..." 
-                style="flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد أو التصنيف..." class="form-input">
             
-            <select id="category-filter" style="padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+            <select id="category-filter" class="form-select">
                 <option value="all">جميع التصنيفات</option>
                 <option value="هندسة">هندسة</option>
                 <option value="برمجة">برمجة</option>
                 <option value="بيانات">علم البيانات</option>
             </select>
             
-            <button id="search-execute-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: var(--primary-color); color: white; cursor: pointer;">بحث</button>
+            <button id="search-execute-btn" class="btn btn-primary">بحث</button>
 
-            <button id="close-search-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: #f44336; color: white; cursor: pointer;">إغلاق</button>
+            <button id="close-search-btn" class="btn btn-danger">إغلاق</button>
         </div>
     </div>
 
     <main id="main-content">
         
         <section id="all-episodes-section">
-            <div style="padding-top: 130px;"></div> 
+            <div class="spacer-top"></div>
             
             <h2 class="section-title">أرشيف النشرات المترجمة</h2>
             <p class="section-description">تصفح جميع الأعداد السابقة التي قمنا بترجمتها.</p>
