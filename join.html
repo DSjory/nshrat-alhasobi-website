@@ -223,5 +223,79 @@
                 &copy; <span class="footer-year">2025</span> نشرة الحاسوبي. جميع الحقوق محفوظة.
             </div>
         </footer>
+                <script>
+                // Join form submission to Supabase
+                (function(){
+                    // Ensure you set these window globals in your deployment environment
+                    const url = window.__SUPABASE_URL;
+                    const key = window.__SUPABASE_ANON_KEY;
+                    if (!url || !key) {
+                        console.warn('Supabase URL/KEY missing. Define window.__SUPABASE_URL and window.__SUPABASE_ANON_KEY before this script to enable form submissions.');
+                        return;
+                    }
+                    if (!window.supabase || typeof window.supabase.createClient !== 'function') {
+                        console.warn('Supabase client not found. Ensure the CDN script for @supabase/supabase-js is loaded.');
+                        return;
+                    }
+                    const sb = window.supabase.createClient(url, key);
+                    const form = document.querySelector('.recruitment-form');
+                    if (!form) return;
+                    form.addEventListener('submit', async function(e){
+                        e.preventDefault();
+                        const formData = new FormData(form);
+                        const toArray = name => Array.from(form.querySelectorAll(`input[name="${name}"]:checked`)).map(i=>i.value);
+                        const payload = {
+                            name: formData.get('full_name') || null,
+                            phone: formData.get('phone_number') || null,
+                            email: formData.get('email') || null,
+                            club_member: formData.get('club_member') || null,
+                            committee: formData.get('committee') || null,
+                            tech_interest: formData.get('tech_interest') || null,
+                            read_newsletter: formData.get('read_newsletter') || null,
+                            attraction: toArray('attraction[]'),
+                            skills: toArray('skills[]'),
+                            commitment: formData.get('commitment') || null,
+                            motivation: formData.get('motivation') || null,
+                            tech_field: formData.get('tech_field') || null,
+                            suggestion: formData.get('suggestion') || null
+                        };
+                        try {
+                            const { data, error } = await sb.from('join_requests').insert([payload]);
+                            if (error) {
+                                showFormToast('حدث خطأ أثناء الإرسال: ' + (error.message||error), 'error');
+                                return;
+                            }
+                            showFormSuccess();
+                            form.reset();
+                        } catch (err) {
+                            console.error(err);
+                            showFormToast('تعذر الاتصال بالخادم. حاول لاحقاً.', 'error');
+                        }
+                    });
+                })();
+                </script>
+
+                <script>
+                // lightweight modal / toast helpers for join page (avoid alert())
+                function showFormToast(message, type = 'success'){
+                    let c = document.getElementById('join-toast');
+                    if (!c){ c = document.createElement('div'); c.id = 'join-toast'; c.style.position='fixed'; c.style.bottom='20px'; c.style.left='20px'; c.style.zIndex='9999'; document.body.appendChild(c); }
+                    const t = document.createElement('div'); t.textContent = message; t.style.padding='10px 14px'; t.style.borderRadius='8px'; t.style.marginTop='8px'; t.style.boxShadow='0 6px 18px rgba(0,0,0,0.08)';
+                    if (type === 'error'){ t.style.background='#ffecec'; t.style.color='#9b1c1c'; } else { t.style.background='#e8f7ef'; t.style.color='#0b6b4a'; }
+                    c.appendChild(t);
+                    setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); }, 3500);
+                }
+
+                function showFormSuccess(){
+                    // create overlay modal
+                    const overlay = document.createElement('div'); overlay.style.position='fixed'; overlay.style.inset='0'; overlay.style.background='rgba(0,0,0,0.36)'; overlay.style.display='flex'; overlay.style.alignItems='center'; overlay.style.justifyContent='center'; overlay.style.zIndex='10000';
+                    const modal = document.createElement('div'); modal.style.background='#fff'; modal.style.borderRadius='10px'; modal.style.padding='22px'; modal.style.maxWidth='520px'; modal.style.width='90%'; modal.style.textAlign='right';
+                    const h = document.createElement('h3'); h.textContent='تم إرسال طلبك بنجاح'; h.style.marginBottom='10px';
+                    const p = document.createElement('p'); p.textContent='شكرًا لتقديم طلب الانضمام. سنراجع طلبك وسنوافيك برسائل القبول عند الحاجة.';
+                    const ok = document.createElement('button'); ok.className='submit-button'; ok.textContent='حسناً'; ok.style.marginTop='14px';
+                    ok.addEventListener('click', ()=> overlay.remove());
+                    modal.appendChild(h); modal.appendChild(p); modal.appendChild(ok); overlay.appendChild(modal); document.body.appendChild(overlay);
+                }
+                </script>
     </body>
     </html>

@@ -126,6 +126,9 @@ async function renderDashboard() {
   let activeCategory = 'all';
   // cache categories locally for reuse
   let categoriesCache = [];
+  // filters for join requests (admin-side)
+  let filterCommittee = null;
+  let filterSkills = [];
   let currentSection = 'newsletters';
   async function loadCategories(){
     nav.innerHTML = '';
@@ -148,13 +151,15 @@ async function renderDashboard() {
         categoriesCache.forEach(cat => {
           const b = document.createElement('button');
           b.className = 'btn btn-secondary full';
-          b.innerHTML = `<span>${cat.label}</span> <span class='small muted'>(${counts[cat.id]||0})</span>`;
+          const labelAr = cat.name_ar || cat.name_en || '';
+          b.innerHTML = `<span>${labelAr}</span> <span class='small muted'>(${counts[cat.id]||0})</span>`;
           b.dataset.catId = cat.id;
           b.addEventListener('click', ()=>{
             activeCategory = cat.id; // filter by category_id
             Array.from(nav.children).forEach(ch=>ch.className='btn btn-secondary full');
             b.className = 'btn btn-primary full';
-            titleEl.textContent = `إدارة النشرات — ${cat.label}`;
+            const labelAr = cat.name_ar || cat.name_en || '';
+            titleEl.textContent = `إدارة النشرات — ${labelAr}`;
             renderTable();
           });
           nav.appendChild(b);
@@ -178,8 +183,50 @@ async function renderDashboard() {
       });
     }
   }
-  // do not append categories navigation to the sidebar — hide categories entirely
+  // append categories navigation to sidebar only if you want it visible; we will
+  // instead add admin-only filters below so join requests can be filtered from
+  // the dashboard main content.
   // sidebar.appendChild(nav);
+
+  // Filters section (admin-only) for join requests
+  const filtersSection = document.createElement('div'); filtersSection.className = 'sidebar-section';
+  const ftitle = el('h4','','تصفية الطلبات'); filtersSection.appendChild(ftitle);
+  // committee select
+  const committeeLabel = el('div','','اللجنة');
+  const committeeSelect = document.createElement('select'); committeeSelect.className='input'; committeeSelect.appendChild(new Option('كل اللجان',''));
+  committeeSelect.addEventListener('change', ()=>{ filterCommittee = committeeSelect.value || null; renderSubscribers(); });
+  filtersSection.appendChild(committeeLabel); filtersSection.appendChild(committeeSelect);
+  // skills list (populated dynamically)
+  const skillsLabel = el('div','','المهارات');
+  const skillsWrap = document.createElement('div'); skillsWrap.className='locale-tabs';
+  filtersSection.appendChild(skillsLabel); filtersSection.appendChild(skillsWrap);
+  sidebar.appendChild(filtersSection);
+
+  // load available filter options from join_requests
+  async function loadFilters(){
+    try{
+      const res = await supabase.from('join_requests').select('committee, skills');
+      const rows = res.data || [];
+      const committees = Array.from(new Set(rows.map(r=>r.committee).filter(Boolean)));
+      committeeSelect.innerHTML = '';
+      committeeSelect.appendChild(new Option('كل اللجان',''));
+      committees.forEach(c=> committeeSelect.appendChild(new Option(c, c)));
+      // skills
+      const skillSet = new Set();
+      rows.forEach(r=> (r.skills||[]).forEach(s=> skillSet.add(s)));
+      skillsWrap.innerHTML = '';
+      Array.from(skillSet).forEach(s=>{
+        const lbl = document.createElement('label'); lbl.style.display = 'block'; lbl.style.marginBottom='6px';
+        const chk = document.createElement('input'); chk.type='checkbox'; chk.value = s; chk.addEventListener('change', ()=>{
+          if (chk.checked) { filterSkills.push(s); } else { filterSkills = filterSkills.filter(x=>x!==s); }
+          renderSubscribers();
+        });
+        lbl.appendChild(chk); lbl.append(' ' + s);
+        skillsWrap.appendChild(lbl);
+      });
+    }catch(e){ /* ignore */ }
+  }
+  loadFilters();
 
   // switch view helper
   function setActiveViewButtons(){
@@ -192,9 +239,7 @@ async function renderDashboard() {
   }
   newsViewBtn.addEventListener('click', ()=>{ currentSection = 'newsletters'; setActiveViewButtons(); titleEl && (titleEl.textContent='إدارة النشرات'); renderTable(); addBtn.textContent='إضافة عدد جديد'; });
   catsViewBtn.addEventListener('click', ()=>{ currentSection = 'categories'; setActiveViewButtons(); titleEl && (titleEl.textContent='إدارة التصنيفات'); renderCategories(); addBtn.textContent='إضافة تصنيف'; });
-  // hide the categories button — categories are not shown in the sidebar
-  catsViewBtn.style.display = 'none';
-  subsViewBtn.addEventListener('click', ()=>{ currentSection = 'subscribers'; setActiveViewButtons(); titleEl && (titleEl.textContent='إدارة المشتركين'); renderSubscribers(); addBtn.textContent='إضافة مشترك'; });
+  subsViewBtn.addEventListener('click', ()=>{ currentSection = 'subscribers'; setActiveViewButtons(); titleEl && (titleEl.textContent='طلبات الانضمام'); renderSubscribers(); addBtn.textContent='إضافة طلب انضمام'; });
 
   // divider
   const hr = document.createElement('div'); hr.className='divider'; sidebar.appendChild(hr);
@@ -238,7 +283,7 @@ async function renderDashboard() {
 
   async function updateCategory(id, label){
     try{
-      const { error } = await supabase.from('categories').update({ label }).eq('id', id);
+      const { error } = await supabase.from('categories').update({ name_ar: label }).eq('id', id);
       if (error) throw error;
       await loadCategories(); renderCategories();
     }catch(e){ showToast('خطأ تحديث التصنيف: ' + (e.message||e), 'error'); }
@@ -272,7 +317,7 @@ async function renderDashboard() {
   async function renderTable(){
     renderNewslettersHeader();
     const tbody = document.getElementById('admin-issues-body'); tbody.innerHTML = '';
-    const res = await supabase.from('newsletters').select('*, categories(label), newsletter_locales(*)').order('created_at', { ascending: false });
+    const res = await supabase.from('newsletters').select('*, categories(name_ar,name_en), newsletter_locales(*)').order('created_at', { ascending: false });
     const rows = res.data || [];
     const filtered = rows.filter(nl=>{
       if (activeCategory && activeCategory!=='all'){
@@ -290,7 +335,7 @@ async function renderDashboard() {
       const titleTd = document.createElement('td'); titleTd.className='td-pad col-title'; titleTd.textContent = `العدد ${nl.issue_number || '-'} - ${ (nl.newsletter_locales||[])[0]?.article_title || 'بدون عنوان' }`;
       const catTd = document.createElement('td'); catTd.className='td-pad col-cat';
       // prefer joined category label from categories relationship, fall back to category text
-      const catLabel = (nl.categories && nl.categories.label) || nl.category || '-';
+      const catLabel = (nl.categories && (nl.categories.name_ar || nl.categories.name_en)) || nl.category || '-';
       catTd.textContent = catLabel;
       const transTd = document.createElement('td'); transTd.className='td-pad col-trans';
       const transBadge = document.createElement('span');
@@ -329,8 +374,14 @@ async function renderDashboard() {
     `;
     const tbody = document.getElementById('admin-subs-body'); tbody.innerHTML = '';
     try{
-      const res = await supabase.from('subscribers').select('*').order('created_at', { ascending: false });
-      const rows = res.data || [];
+      const res = await supabase.from('join_requests').select('*').order('created_at', { ascending: false });
+      let rows = res.data || [];
+      // apply admin filters if set
+      if (filterCommittee) rows = rows.filter(r => (r.committee || '') === filterCommittee);
+      if (filterSkills && filterSkills.length) rows = rows.filter(r => {
+        const sSkills = r.skills || [];
+        return filterSkills.every(fs => sSkills.includes(fs));
+      });
       rows.forEach(s => {
         const tr = document.createElement('tr'); tr.className='table-row';
         tr.classList.add('admin-animate-row');
@@ -338,23 +389,41 @@ async function renderDashboard() {
         const emailTd = document.createElement('td'); emailTd.className='td-pad col-cat'; emailTd.textContent = s.email || '-';
         const dateTd = document.createElement('td'); dateTd.className='td-pad col-date'; dateTd.textContent = new Date(s.created_at).toLocaleString();
         const actionsTd = document.createElement('td'); actionsTd.className='td-pad col-actions';
+        const viewBtn = document.createElement('button'); viewBtn.className='btn btn-primary small mx-1'; viewBtn.textContent='عرض';
+        viewBtn.addEventListener('click', ()=>{
+          const content = document.createElement('div');
+          const parts = [];
+          parts.push(`<p><strong>الاسم:</strong> ${s.name||'-'}</p>`);
+          parts.push(`<p><strong>الجوال:</strong> ${s.phone||'-'}</p>`);
+          parts.push(`<p><strong>الإيميل:</strong> ${s.email||'-'}</p>`);
+          parts.push(`<p><strong>اللجنة:</strong> ${s.committee||'-'}</p>`);
+          parts.push(`<p><strong>المهارات:</strong> ${(s.skills||[]).join(', ') || '-'}</p>`);
+          parts.push(`<p><strong>الاهتمامات:</strong> ${(s.attraction||[]).join(', ') || '-'}</p>`);
+          parts.push(`<p><strong>الالتزام:</strong> ${s.commitment||'-'}</p>`);
+          parts.push(`<p><strong>الدافع:</strong> ${s.motivation||'-'}</p>`);
+          parts.push(`<p><strong>المجال:</strong> ${s.tech_field||'-'}</p>`);
+          parts.push(`<p><strong>الاقتراح:</strong> ${s.suggestion||'-'}</p>`);
+          parts.push(`<p class='muted small'>تاريخ الإرسال: ${s.created_at ? new Date(s.created_at).toLocaleString() : '-'}</p>`);
+          content.innerHTML = parts.join('');
+          showModal({ title: 'تفاصيل طلب الانضمام', content, confirmText: 'إغلاق', cancelText: 'إلغاء' });
+        });
         const del = document.createElement('button'); del.className='btn btn-danger small mx-1'; del.textContent='حذف';
         del.addEventListener('click', async ()=>{
-          const ok = await confirmModal('حذف المشترك؟');
+          const ok = await confirmModal('حذف الطلب؟');
           if (!ok) return;
-          const { error } = await supabase.from('subscribers').delete().eq('id', s.id);
+          const { error } = await supabase.from('join_requests').delete().eq('id', s.id);
           if (error) return showToast(error.message, 'error');
-          showToast('تم حذف المشترك');
+          showToast('تم حذف الطلب');
           renderSubscribers();
         });
-        actionsTd.appendChild(del);
+        actionsTd.append(viewBtn, del);
         tr.append(nameTd, emailTd, dateTd, actionsTd);
         tbody.appendChild(tr);
       });
     }catch(e){ tbody.innerHTML = `<tr><td colspan='4' class='td-pad small muted'>خطأ في جلب المشتركين أو جدول غير موجود.</td></tr>`; }
   }
 
-  // render categories in the main table area (like subscribers)
+  // render categories in the main table area (like join requests)
   async function renderCategories(){
     table.innerHTML = `
       <thead class='table-head'><tr>
@@ -373,7 +442,7 @@ async function renderDashboard() {
       (newsRes.data || []).forEach(n => { if (n.category_id) counts[n.category_id] = (counts[n.category_id]||0)+1; });
       (catsRes.data || []).forEach(cat => {
         const tr = document.createElement('tr'); tr.className='table-row admin-animate-row';
-        const lblTd = document.createElement('td'); lblTd.className='td-pad col-title'; lblTd.textContent = cat.label;
+        const lblTd = document.createElement('td'); lblTd.className='td-pad col-title'; lblTd.textContent = cat.name_ar || cat.name_en || '';
         const dateTd = document.createElement('td'); dateTd.className='td-pad col-date'; dateTd.textContent = cat.created_at ? new Date(cat.created_at).toLocaleString() : '-';
         const countTd = document.createElement('td'); countTd.className='td-pad col-cat'; countTd.textContent = counts[cat.id] || 0;
         const actionsTd = document.createElement('td'); actionsTd.className='td-pad col-actions';
@@ -467,16 +536,16 @@ function confirmModal(message, confirmText = 'تأكيد', cancelText = 'إلغ�
 
 // Category modal: add or edit
 async function openCategoryModal(existing){
-  const input = document.createElement('input'); input.className='input'; input.placeholder='اسم التصنيف'; input.value = existing ? existing.label : '';
+  const input = document.createElement('input'); input.className='input'; input.placeholder='اسم التصنيف'; input.value = existing ? (existing.name_ar || existing.name_en || '') : '';
   const container = document.createElement('div'); container.appendChild(input);
   const m = showModal({ title: existing ? 'تعديل التصنيف' : 'إضافة تصنيف', content: container, confirmText: existing ? 'تحديث' : 'إضافة', cancelText: 'إلغاء', onConfirm: async ()=>{
     const v = input.value.trim(); if (!v) return showToast('أدخل اسم التصنيف', 'error');
     if (existing){
-      const { error } = await supabase.from('categories').update({ label: v }).eq('id', existing.id);
+      const { error } = await supabase.from('categories').update({ name_ar: v }).eq('id', existing.id);
       if (error) return showToast(error.message, 'error');
       showToast('تم تحديث التصنيف');
     } else {
-      const { error } = await supabase.from('categories').insert({ label: v });
+      const { error } = await supabase.from('categories').insert({ name_ar: v, name_en: v });
       if (error) return showToast(error.message, 'error');
       showToast('تم إضافة التصنيف');
     }
@@ -540,12 +609,12 @@ async function showForm(existing = null) {
     if (!categoriesCache || !categoriesCache.length){
       try{ const { data } = await supabase.from('categories').select('*').order('created_at',{ascending:true}); categoriesCache = data||[]; }catch(e){}
     }
-    categoriesCache.forEach(c=> categorySelect.appendChild(new Option(c.label, c.id)));
+    categoriesCache.forEach(c=> categorySelect.appendChild(new Option(c.name_ar || c.name_en || c.label || '', c.id)));
     // set selected value if editing
     if (existing){
       if (existing.category_id) categorySelect.value = existing.category_id;
       else if (existing.category){ // fallback if older rows use enum
-        const found = categoriesCache.find(x=>x.label===existing.category);
+        const found = categoriesCache.find(x=> (x.name_ar===existing.category || x.name_en===existing.category || x.label===existing.category));
         if (found) categorySelect.value = found.id;
       }
     }
@@ -655,7 +724,7 @@ async function showForm(existing = null) {
 async function openSubscriberForm(existing=null){
   root.innerHTML = '';
   const card = el('div','newsletter-card');
-  card.append(el('h2','', existing ? 'تحرير مشترك' : 'إضافة مشترك'));
+  card.append(el('h2','', existing ? 'تحرير طلب' : 'إضافة طلب انضمام'));
   const name = document.createElement('input'); name.className='input'; name.placeholder='الاسم'; name.value = existing?.name||'';
   const email = document.createElement('input'); email.className='input'; email.placeholder='البريد الإلكتروني'; email.type='email'; email.value = existing?.email||'';
   const save = el('button','submit-button','حفظ');
@@ -664,9 +733,9 @@ async function openSubscriberForm(existing=null){
     const payload = { name: name.value.trim(), email: email.value.trim() };
     try{
       if (!existing){
-        const { data, error } = await supabase.from('subscribers').insert(payload).select().maybeSingle(); if (error) throw error;
+        const { data, error } = await supabase.from('join_requests').insert(payload).select().maybeSingle(); if (error) throw error;
       } else {
-        const { error } = await supabase.from('subscribers').update(payload).eq('id', existing.id); if (error) throw error;
+        const { error } = await supabase.from('join_requests').update(payload).eq('id', existing.id); if (error) throw error;
       }
       showToast('تم الحفظ'); renderDashboard();
     }catch(e){ showToast('خطأ: '+(e.message||e), 'error'); }

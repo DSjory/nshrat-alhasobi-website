@@ -1983,7 +1983,7 @@ body.dark-mode #close-search-btn {
 #admin-app .card-actions .submit-button{padding:8px 10px;border-radius:8px}
 #admin-app .card-actions .action-btn{width:40px;height:40px;border-radius:8px}
 
-# Admin dashboard: two-column layout */
+#Admin dashboard: two-column layout */
 #admin-app .admin-layout{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
 #admin-app .admin-main{min-height:300px}
 #admin-app .admin-sidebar{background:var(--card-bg);border-radius:12px;padding:18px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 6px 18px rgba(4,62,82,0.04)}

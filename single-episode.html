@@ -202,7 +202,7 @@
           return;
         }
 
-        const { data, error } = await sb.from('newsletters').select('*, categories(label), newsletter_locales(*)').eq('id', id).maybeSingle();
+        const { data, error } = await sb.from('newsletters').select('*, categories(name_ar,name_en), newsletter_locales(*)').eq('id', id).maybeSingle();
         if (error || !data) {
           console.error('خطأ في جلب النشرة', error);
           document.getElementById('dynamic-episode-details').innerHTML = '<h2 class="center error">تعذّر تحميل النشرة</h2>';
@@ -212,7 +212,7 @@
         const nl = data;
         const localeRow = (nl.newsletter_locales || []).find(r => r.locale === lang) || (nl.newsletter_locales || [])[0] || {};
         // attach category label if available
-        nl.category_label = (nl.categories && nl.categories.label) || nl.category || '';
+        nl.category_label = (nl.categories && (nl.categories.name_ar || nl.categories.name_en)) || nl.category || '';
         renderNewsletter(nl, localeRow, lang);
       }
 
