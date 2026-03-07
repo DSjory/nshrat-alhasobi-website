@@ -178,7 +178,8 @@ async function renderDashboard() {
       });
     }
   }
-  sidebar.appendChild(nav);
+  // do not append categories navigation to the sidebar — hide categories entirely
+  // sidebar.appendChild(nav);
 
   // switch view helper
   function setActiveViewButtons(){
@@ -191,6 +192,8 @@ async function renderDashboard() {
   }
   newsViewBtn.addEventListener('click', ()=>{ currentSection = 'newsletters'; setActiveViewButtons(); titleEl && (titleEl.textContent='إدارة النشرات'); renderTable(); addBtn.textContent='إضافة عدد جديد'; });
   catsViewBtn.addEventListener('click', ()=>{ currentSection = 'categories'; setActiveViewButtons(); titleEl && (titleEl.textContent='إدارة التصنيفات'); renderCategories(); addBtn.textContent='إضافة تصنيف'; });
+  // hide the categories button — categories are not shown in the sidebar
+  catsViewBtn.style.display = 'none';
   subsViewBtn.addEventListener('click', ()=>{ currentSection = 'subscribers'; setActiveViewButtons(); titleEl && (titleEl.textContent='إدارة المشتركين'); renderSubscribers(); addBtn.textContent='إضافة مشترك'; });
 
   // divider
@@ -241,20 +244,20 @@ async function renderDashboard() {
     }catch(e){ showToast('خطأ تحديث التصنيف: ' + (e.message||e), 'error'); }
   }
 
-  // table wrapper
-  const tableWrap = document.createElement('div'); tableWrap.className='card panel';
-  const table = document.createElement('table'); table.className='admin-table full';
-  tableWrap.appendChild(table);
-  main.appendChild(tableWrap);
+  // table container (no horizontal wrapper) — table sits directly in a card
+  const tableCard = document.createElement('div'); tableCard.className = 'card panel';
+  const table = document.createElement('table'); table.className = 'admin-table full';
+  tableCard.appendChild(table);
+  main.appendChild(tableCard);
   // helper to render a standard table header for newsletters
   function renderNewslettersHeader(){
     table.innerHTML = `
       <thead class='table-head'><tr>
-        <th class='td-pad'>حالة النشر</th>
-        <th class='td-pad'>رقم العدد / العنوان</th>
-        <th class='td-pad'>التصنيف</th>
-        <th class='td-pad'>الترجمة</th>
-        <th class='td-pad'>الإجراءات</th>
+        <th class='td-pad col-status'>حالة النشر</th>
+        <th class='td-pad col-title'>رقم العدد / العنوان</th>
+        <th class='td-pad col-cat'>التصنيف</th>
+        <th class='td-pad col-trans'>الترجمة</th>
+        <th class='td-pad col-actions'>الإجراءات</th>
       </tr></thead>
       <tbody id='admin-issues-body'></tbody>
     `;
@@ -280,22 +283,22 @@ async function renderDashboard() {
     });
     filtered.forEach(nl=>{
       const tr = document.createElement('tr'); tr.className='table-row admin-animate-row';
-      const statusTd = document.createElement('td'); statusTd.className='td-pad';
+      const statusTd = document.createElement('td'); statusTd.className='td-pad col-status';
       const status = document.createElement('span'); status.className = nl.is_published ? 'badge badge-success' : 'badge badge-muted';
       status.textContent = nl.is_published ? 'منشور' : 'مسودة'; statusTd.appendChild(status);
 
-      const titleTd = document.createElement('td'); titleTd.className='td-pad'; titleTd.textContent = `العدد ${nl.issue_number || '-'} - ${ (nl.newsletter_locales||[])[0]?.article_title || 'بدون عنوان' }`;
-      const catTd = document.createElement('td'); catTd.className='td-pad';
+      const titleTd = document.createElement('td'); titleTd.className='td-pad col-title'; titleTd.textContent = `العدد ${nl.issue_number || '-'} - ${ (nl.newsletter_locales||[])[0]?.article_title || 'بدون عنوان' }`;
+      const catTd = document.createElement('td'); catTd.className='td-pad col-cat';
       // prefer joined category label from categories relationship, fall back to category text
       const catLabel = (nl.categories && nl.categories.label) || nl.category || '-';
       catTd.textContent = catLabel;
-      const transTd = document.createElement('td'); transTd.className='td-pad';
+      const transTd = document.createElement('td'); transTd.className='td-pad col-trans';
       const transBadge = document.createElement('span');
       if (hasEnglish(nl)) { transBadge.className='badge badge-success-outline'; transBadge.textContent='✓ EN'; }
       else { transBadge.className='badge badge-danger-outline'; transBadge.textContent='- EN'; }
       transTd.appendChild(transBadge);
 
-      const actionsTd = document.createElement('td'); actionsTd.className='td-pad';
+      const actionsTd = document.createElement('td'); actionsTd.className='td-pad col-actions';
         const editBtn = document.createElement('button'); editBtn.className='btn btn-secondary small mx-1'; editBtn.textContent='تحرير المحتوى'; editBtn.addEventListener('click', ()=> showForm(nl));
         const transBtn = document.createElement('button'); transBtn.className='btn btn-secondary small mx-1'; transBtn.textContent='ترجمة (EN)'; transBtn.addEventListener('click', ()=> showToast('فتح محرر الترجمة (مؤقت)'));
         const delBtn = document.createElement('button'); delBtn.className='btn btn-danger small mx-1'; delBtn.textContent='حذف'; delBtn.addEventListener('click', async ()=>{
@@ -331,10 +334,10 @@ async function renderDashboard() {
       rows.forEach(s => {
         const tr = document.createElement('tr'); tr.className='table-row';
         tr.classList.add('admin-animate-row');
-        const nameTd = document.createElement('td'); nameTd.className='td-pad'; nameTd.textContent = s.name || '-';
-        const emailTd = document.createElement('td'); emailTd.className='td-pad'; emailTd.textContent = s.email || '-';
-        const dateTd = document.createElement('td'); dateTd.className='td-pad'; dateTd.textContent = new Date(s.created_at).toLocaleString();
-        const actionsTd = document.createElement('td'); actionsTd.className='td-pad';
+        const nameTd = document.createElement('td'); nameTd.className='td-pad col-title'; nameTd.textContent = s.name || '-';
+        const emailTd = document.createElement('td'); emailTd.className='td-pad col-cat'; emailTd.textContent = s.email || '-';
+        const dateTd = document.createElement('td'); dateTd.className='td-pad col-date'; dateTd.textContent = new Date(s.created_at).toLocaleString();
+        const actionsTd = document.createElement('td'); actionsTd.className='td-pad col-actions';
         const del = document.createElement('button'); del.className='btn btn-danger small mx-1'; del.textContent='حذف';
         del.addEventListener('click', async ()=>{
           const ok = await confirmModal('حذف المشترك؟');
@@ -370,10 +373,10 @@ async function renderDashboard() {
       (newsRes.data || []).forEach(n => { if (n.category_id) counts[n.category_id] = (counts[n.category_id]||0)+1; });
       (catsRes.data || []).forEach(cat => {
         const tr = document.createElement('tr'); tr.className='table-row admin-animate-row';
-        const lblTd = document.createElement('td'); lblTd.className='td-pad'; lblTd.textContent = cat.label;
-        const dateTd = document.createElement('td'); dateTd.className='td-pad'; dateTd.textContent = cat.created_at ? new Date(cat.created_at).toLocaleString() : '-';
-        const countTd = document.createElement('td'); countTd.className='td-pad'; countTd.textContent = counts[cat.id] || 0;
-        const actionsTd = document.createElement('td'); actionsTd.className='td-pad';
+        const lblTd = document.createElement('td'); lblTd.className='td-pad col-title'; lblTd.textContent = cat.label;
+        const dateTd = document.createElement('td'); dateTd.className='td-pad col-date'; dateTd.textContent = cat.created_at ? new Date(cat.created_at).toLocaleString() : '-';
+        const countTd = document.createElement('td'); countTd.className='td-pad col-cat'; countTd.textContent = counts[cat.id] || 0;
+        const actionsTd = document.createElement('td'); actionsTd.className='td-pad col-actions';
         const edit = document.createElement('button'); edit.className='btn btn-secondary small mx-1'; edit.textContent='تحرير';
         const del = document.createElement('button'); del.className='btn btn-danger small mx-1'; del.textContent='حذف';
         edit.addEventListener('click', ()=>{ openCategoryModal(cat); });
