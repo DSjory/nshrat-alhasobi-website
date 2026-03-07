@@ -117,7 +117,7 @@ async function renderDashboard() {
   const viewNav = document.createElement('div'); viewNav.className = 'view-nav';
   const newsViewBtn = document.createElement('button'); newsViewBtn.className = 'btn btn-primary full'; newsViewBtn.textContent = 'الأعداد';
   const catsViewBtn = document.createElement('button'); catsViewBtn.className = 'btn btn-secondary full'; catsViewBtn.textContent = 'التصنيفات';
-  const subsViewBtn = document.createElement('button'); subsViewBtn.className = 'btn btn-secondary full'; subsViewBtn.textContent = 'المشتركين';
+  const subsViewBtn = document.createElement('button'); subsViewBtn.className = 'btn btn-secondary full'; subsViewBtn.textContent = 'طلبات الانضمام';
   viewNav.append(newsViewBtn, catsViewBtn, subsViewBtn);
   sidebar.appendChild(viewNav);
 
@@ -239,7 +239,7 @@ async function renderDashboard() {
   }
   newsViewBtn.addEventListener('click', ()=>{ currentSection = 'newsletters'; setActiveViewButtons(); titleEl && (titleEl.textContent='إدارة النشرات'); renderTable(); addBtn.textContent='إضافة عدد جديد'; });
   catsViewBtn.addEventListener('click', ()=>{ currentSection = 'categories'; setActiveViewButtons(); titleEl && (titleEl.textContent='إدارة التصنيفات'); renderCategories(); addBtn.textContent='إضافة تصنيف'; });
-  subsViewBtn.addEventListener('click', ()=>{ currentSection = 'subscribers'; setActiveViewButtons(); titleEl && (titleEl.textContent='طلبات الانضمام'); renderSubscribers(); addBtn.textContent='إضافة طلب انضمام'; });
+  subsViewBtn.addEventListener('click', ()=>{ currentSection = 'subscribers'; setActiveViewButtons(); titleEl && (titleEl.textContent='طلبات الانضمام'); renderSubscribers(); addBtn.textContent='إضافة طلب جديد'; });
 
   // divider
   const hr = document.createElement('div'); hr.className='divider'; sidebar.appendChild(hr);
@@ -311,7 +311,7 @@ async function renderDashboard() {
 
   // fetch data and render rows
   function hasEnglish(nl){
-    return (nl.newsletter_locales||[]).some(x=>x.locale==='en' && (x.article_title||x.welcome_text));
+    return (nl.newsletter_locales||[]).some(x=>x.locale==='en' && (x.article_main_title||x.welcome_text));
   }
 
   async function renderTable(){
@@ -332,7 +332,7 @@ async function renderDashboard() {
       const status = document.createElement('span'); status.className = nl.is_published ? 'badge badge-success' : 'badge badge-muted';
       status.textContent = nl.is_published ? 'منشور' : 'مسودة'; statusTd.appendChild(status);
 
-      const titleTd = document.createElement('td'); titleTd.className='td-pad col-title'; titleTd.textContent = `العدد ${nl.issue_number || '-'} - ${ (nl.newsletter_locales||[])[0]?.article_title || 'بدون عنوان' }`;
+      const titleTd = document.createElement('td'); titleTd.className='td-pad col-title'; titleTd.textContent = `العدد ${nl.issue_number || '-'} - ${ (nl.newsletter_locales||[])[0]?.article_main_title || 'بدون عنوان' }`;
       const catTd = document.createElement('td'); catTd.className='td-pad col-cat';
       // prefer joined category label from categories relationship, fall back to category text
       const catLabel = (nl.categories && (nl.categories.name_ar || nl.categories.name_en)) || nl.category || '-';
@@ -367,7 +367,8 @@ async function renderDashboard() {
       <thead class='table-head'><tr>
         <th class='td-pad'>الاسم</th>
         <th class='td-pad'>البريد الإلكتروني</th>
-        <th class='td-pad'>تاريخ الاشتراك</th>
+        <th class='td-pad'>التخصص/المجال</th>
+        <th class='td-pad'>تاريخ الطلب</th>
         <th class='td-pad'>الإجراءات</th>
       </tr></thead>
       <tbody id='admin-subs-body'></tbody>
@@ -387,9 +388,10 @@ async function renderDashboard() {
         tr.classList.add('admin-animate-row');
         const nameTd = document.createElement('td'); nameTd.className='td-pad col-title'; nameTd.textContent = s.name || '-';
         const emailTd = document.createElement('td'); emailTd.className='td-pad col-cat'; emailTd.textContent = s.email || '-';
-        const dateTd = document.createElement('td'); dateTd.className='td-pad col-date'; dateTd.textContent = new Date(s.created_at).toLocaleString();
+        const fieldTd = document.createElement('td'); fieldTd.className='td-pad col-cat'; fieldTd.textContent = s.tech_field || '-';
+        const dateTd = document.createElement('td'); dateTd.className='td-pad col-date'; dateTd.textContent = new Date(s.created_at).toLocaleString('ar-SA');
         const actionsTd = document.createElement('td'); actionsTd.className='td-pad col-actions';
-        const viewBtn = document.createElement('button'); viewBtn.className='btn btn-primary small mx-1'; viewBtn.textContent='عرض';
+        const viewBtn = document.createElement('button'); viewBtn.className='btn btn-primary small mx-1'; viewBtn.textContent='عرض التفاصيل';
         viewBtn.addEventListener('click', ()=>{
           const content = document.createElement('div');
           const parts = [];
@@ -417,7 +419,7 @@ async function renderDashboard() {
           renderSubscribers();
         });
         actionsTd.append(viewBtn, del);
-        tr.append(nameTd, emailTd, dateTd, actionsTd);
+        tr.append(nameTd, emailTd, fieldTd, dateTd, actionsTd);
         tbody.appendChild(tr);
       });
     }catch(e){ tbody.innerHTML = `<tr><td colspan='4' class='td-pad small muted'>خطأ في جلب المشتركين أو جدول غير موجود.</td></tr>`; }
@@ -558,7 +560,7 @@ function localeTabControls(localeData = {}) {
   const arWrap = el('div', 'locale ar');
   arWrap.append(el('h4', '', 'Arabic (ar)'));
   const arWelcome = document.createElement('textarea'); arWelcome.placeholder = 'welcome_text'; arWelcome.value = localeData.ar?.welcome_text || ''; arWelcome.className = 'input';
-  const arArticleTitle = document.createElement('input'); arArticleTitle.placeholder = 'article_title'; arArticleTitle.value = localeData.ar?.article_title || ''; arArticleTitle.className = 'input';
+  const arArticleTitle = document.createElement('input'); arArticleTitle.placeholder = 'article_main_title'; arArticleTitle.value = localeData.ar?.article_main_title || ''; arArticleTitle.className = 'input';
   const arArticleContent = document.createElement('textarea'); arArticleContent.placeholder = 'article_content'; arArticleContent.value = localeData.ar?.article_content || ''; arArticleContent.className = 'input';
   const arAuthor = document.createElement('input'); arAuthor.placeholder = 'article_author'; arAuthor.value = localeData.ar?.article_author || ''; arAuthor.className = 'input';
   const arNews = newsItemInputs(localeData.ar?.news_items || []);
@@ -567,7 +569,7 @@ function localeTabControls(localeData = {}) {
   const enWrap = el('div', 'locale en');
   enWrap.append(el('h4', '', 'English (en)'));
   const enWelcome = document.createElement('textarea'); enWelcome.placeholder = 'welcome_text'; enWelcome.value = localeData.en?.welcome_text || ''; enWelcome.className = 'input';
-  const enArticleTitle = document.createElement('input'); enArticleTitle.placeholder = 'article_title'; enArticleTitle.value = localeData.en?.article_title || ''; enArticleTitle.className = 'input';
+  const enArticleTitle = document.createElement('input'); enArticleTitle.placeholder = 'article_main_title'; enArticleTitle.value = localeData.en?.article_main_title || ''; enArticleTitle.className = 'input';
   const enArticleContent = document.createElement('textarea'); enArticleContent.placeholder = 'article_content'; enArticleContent.value = localeData.en?.article_content || ''; enArticleContent.className = 'input';
   const enAuthor = document.createElement('input'); enAuthor.placeholder = 'article_author'; enAuthor.value = localeData.en?.article_author || ''; enAuthor.className = 'input';
   const enNews = newsItemInputs(localeData.en?.news_items || []);
@@ -696,7 +698,7 @@ async function showForm(existing = null) {
         newsletter_id: nlId,
         locale,
         welcome_text: f.welcome.value,
-        article_title: f.title.value,
+        article_main_title: f.title.value,
         article_content: f.content.value,
         article_author: f.author.value,
         news_items: JSON.stringify(collectNewsItems(f.newsWrap))

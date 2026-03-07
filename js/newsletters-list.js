@@ -30,7 +30,7 @@ export async function renderNewslettersGrid(targetSelector, locale = 'ar') {
         <img src="${nl.cover_image_url || 'assets/img/placeholder.png'}" alt="غلاف العدد ${nl.issue_number}" loading="lazy">
       </div>
       <div class="card-details">
-        <h4 class="card-title">${(localeRow.article_title) ? escapeHtml(localeRow.article_title) : 'بدون عنوان'}</h4>
+        <h4 class="card-title">${(localeRow.article_main_title) ? escapeHtml(localeRow.article_main_title) : 'بدون عنوان'}</h4>
         <div class="card-footer">
           <span class="episode-number">العدد ${nl.issue_number}</span>
           <span class="publisher-name">${escapeHtml((nl.categories && (nl.categories.name_ar || nl.categories.name_en)) || nl.category || 'غير مصنف')}</span>

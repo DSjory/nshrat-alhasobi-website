@@ -145,7 +145,7 @@
         container.appendChild(hero);
 
         const article = el('article', 'main-article');
-        article.append(el('h2', 'article-title', localeRow.article_title || ''));
+        article.append(el('h2', 'article-title', localeRow.article_main_title || ''));
         article.append(el('p', 'article-content', localeRow.article_content || ''));
         article.append(el('div', 'article-author', localeRow.article_author || ''));
         container.appendChild(article);
