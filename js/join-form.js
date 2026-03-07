@@ -138,10 +138,21 @@
    */
   function validateForm() {
     const requiredFields = ['full_name', 'phone_number', 'email', 'club_member', 'committee', 'tech_interest', 'read_newsletter', 'motivation'];
+    const fieldLabels = {
+      full_name: 'الاسم الثلاثي',
+      phone_number: 'رقم الجوال',
+      email: 'البريد الإلكتروني',
+      club_member: 'عضوية النادي',
+      committee: 'اللجنة',
+      tech_interest: 'مدى الاهتمام بالتقنية',
+      read_newsletter: 'متابعة النشرات',
+      motivation: 'دافع الانضمام'
+    };
     for (const field of requiredFields) {
       const value = form.elements[field]?.value || form.querySelector(`input[name="${field}"]:checked`)?.value;
       if (!value || !value.trim()) {
-        showToast(`يرجى ملء الحقل المطلوب: ${field}`, 'error');
+        const label = fieldLabels[field] || field;
+        showToast(`يرجى ملء الحقل المطلوب: ${label}`, 'error');
         return false;
       }
     }

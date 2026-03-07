@@ -39,7 +39,7 @@ function loginForm() {
 
   const grp1 = el('div', 'form-group');
   const emailLabel = el('label', '', 'البريد الإلكتروني');
-  const email = document.createElement('input'); email.placeholder = 'you@example.com'; email.type = 'email'; email.className = 'input';
+  const email = document.createElement('input'); email.placeholder = 'name@مثال.com'; email.type = 'email'; email.className = 'input';
   grp1.append(emailLabel, email);
 
   const grp2 = el('div', 'form-group');
@@ -265,6 +265,14 @@ async function renderDashboard() {
   const titleEl = document.createElement('h1'); titleEl.className='admin-page-title'; titleEl.textContent='إدارة النشرات';
   headerLeft.appendChild(breadcrumbs); headerLeft.appendChild(titleEl);
   const headerRight = document.createElement('div'); headerRight.className='header-actions';
+  // mobile sidebar toggle
+  const sidebarToggle = document.createElement('button');
+  sidebarToggle.className = 'btn btn-secondary sidebar-toggle';
+  sidebarToggle.textContent = 'القائمة';
+  sidebarToggle.addEventListener('click', () => {
+    document.body.classList.toggle('drawer-open');
+  });
+  headerRight.append(sidebarToggle);
   const addBtn = document.createElement('button'); addBtn.className='btn btn-primary'; addBtn.textContent='إضافة عدد جديد';
   addBtn.classList.add('admin-pulse');
   const saveLocal = document.createElement('button'); saveLocal.className='btn btn-secondary'; saveLocal.textContent='حفظ محلي';
@@ -307,7 +315,6 @@ async function renderDashboard() {
       <tbody id='admin-issues-body'></tbody>
     `;
   }
-  layout.appendChild(main);
 
   // fetch data and render rows
   function hasEnglish(nl){
@@ -388,26 +395,82 @@ async function renderDashboard() {
         tr.classList.add('admin-animate-row');
         const nameTd = document.createElement('td'); nameTd.className='td-pad col-title'; nameTd.textContent = s.name || '-';
         const emailTd = document.createElement('td'); emailTd.className='td-pad col-cat'; emailTd.textContent = s.email || '-';
-        const fieldTd = document.createElement('td'); fieldTd.className='td-pad col-cat'; fieldTd.textContent = s.tech_field || '-';
+        const fieldTd = document.createElement('td'); fieldTd.className='td-pad col-cat';
+        // primary field
+        const fieldMain = document.createElement('div'); fieldMain.textContent = s.tech_field || '-';
+        fieldTd.appendChild(fieldMain);
+        // skills as badges (if present)
+        if (Array.isArray(s.skills) && s.skills.length) {
+          const badges = document.createElement('div'); badges.className = 'join-request-badges';
+          s.skills.forEach(sk => {
+            const b = document.createElement('span'); b.className = 'join-request-badge'; b.textContent = sk; badges.appendChild(b);
+          });
+          fieldTd.appendChild(badges);
+        }
         const dateTd = document.createElement('td'); dateTd.className='td-pad col-date'; dateTd.textContent = new Date(s.created_at).toLocaleString('ar-SA');
         const actionsTd = document.createElement('td'); actionsTd.className='td-pad col-actions';
         const viewBtn = document.createElement('button'); viewBtn.className='btn btn-primary small mx-1'; viewBtn.textContent='عرض التفاصيل';
         viewBtn.addEventListener('click', ()=>{
           const content = document.createElement('div');
-          const parts = [];
-          parts.push(`<p><strong>الاسم:</strong> ${s.name||'-'}</p>`);
-          parts.push(`<p><strong>الجوال:</strong> ${s.phone||'-'}</p>`);
-          parts.push(`<p><strong>الإيميل:</strong> ${s.email||'-'}</p>`);
-          parts.push(`<p><strong>اللجنة:</strong> ${s.committee||'-'}</p>`);
-          parts.push(`<p><strong>المهارات:</strong> ${(s.skills||[]).join(', ') || '-'}</p>`);
-          parts.push(`<p><strong>الاهتمامات:</strong> ${(s.attraction||[]).join(', ') || '-'}</p>`);
-          parts.push(`<p><strong>الالتزام:</strong> ${s.commitment||'-'}</p>`);
-          parts.push(`<p><strong>الدافع:</strong> ${s.motivation||'-'}</p>`);
-          parts.push(`<p><strong>المجال:</strong> ${s.tech_field||'-'}</p>`);
-          parts.push(`<p><strong>الاقتراح:</strong> ${s.suggestion||'-'}</p>`);
-          parts.push(`<p class='muted small'>تاريخ الإرسال: ${s.created_at ? new Date(s.created_at).toLocaleString() : '-'}</p>`);
-          content.innerHTML = parts.join('');
-          showModal({ title: 'تفاصيل طلب الانضمام', content, confirmText: 'إغلاق', cancelText: 'إلغاء' });
+          content.style.cssText = 'display:flex; flex-direction:column; gap:14px; direction:rtl; text-align:right;';
+          
+          // Helper to create detail items
+          const addDetail = (label, value, isArray = false) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:grid; grid-template-columns:140px 1fr; gap:12px; padding:10px 0; border-bottom:1px solid #f0f2f3;';
+            const labelEl = document.createElement('div');
+            labelEl.style.cssText = 'font-weight:700; color:#043E52;';
+            labelEl.textContent = label;
+            
+            let valueEl;
+            if (isArray && Array.isArray(value) && value.length > 0) {
+              valueEl = document.createElement('div');
+              valueEl.style.cssText = 'display:flex; flex-wrap:wrap; gap:6px;';
+              value.forEach(v => {
+                const badge = document.createElement('span');
+                badge.className = 'join-request-badge';
+                badge.textContent = v;
+                valueEl.appendChild(badge);
+              });
+            } else {
+              valueEl = document.createElement('div');
+              valueEl.style.cssText = 'color:' + (value || value === 0 ? '#043E52' : '#6c757d') + ';';
+              valueEl.textContent = value || '-';
+            }
+            
+            row.appendChild(labelEl);
+            row.appendChild(valueEl);
+            content.appendChild(row);
+          };
+          
+          // Add all details
+          addDetail('الاسم', s.name);
+          addDetail('الجوال', s.phone);
+          addDetail('الإيميل', s.email);
+          addDetail('عضو نادي', s.club_member);
+          addDetail('اللجنة', s.committee);
+          addDetail('اهتمام بالتقنية', s.tech_interest);
+          addDetail('متابعة نشرات', s.read_newsletter);
+          addDetail('ما يجذبك', s.attraction, true);
+          addDetail('المهارات', s.skills, true);
+          addDetail('الالتزام', s.commitment);
+          addDetail('الدافع', s.motivation);
+          addDetail('التخصص', s.tech_field);
+          addDetail('الاقتراح', s.suggestion);
+          
+          // Add timestamp
+          const timeRow = document.createElement('div');
+          timeRow.style.cssText = 'display:grid; grid-template-columns:140px 1fr; gap:12px; padding-top:10px; border-top:1px solid #f0f2f3; color:#6c757d; font-size:0.9rem;';
+          const timeLabel = document.createElement('div');
+          timeLabel.style.fontWeight = '700';
+          timeLabel.textContent = 'تاريخ الإرسال';
+          const timeValue = document.createElement('div');
+          timeValue.textContent = s.created_at ? new Date(s.created_at).toLocaleString('ar-SA') : '-';
+          timeRow.appendChild(timeLabel);
+          timeRow.appendChild(timeValue);
+          content.appendChild(timeRow);
+          
+          showModal({ title: 'تفاصيل طلب الانضمام', content, confirmText: 'إغلاق', cancelText: null, showCancel: false });
         });
         const del = document.createElement('button'); del.className='btn btn-danger small mx-1'; del.textContent='حذف';
         del.addEventListener('click', async ()=>{
@@ -475,38 +538,76 @@ async function renderDashboard() {
 
   // initial render based on currentSection
   renderTable();
+
+  // Add footer with link back to main site
+  const footer = document.createElement('footer');
+  footer.style.cssText = `
+    text-align: center;
+    padding: 20px;
+    border-top: 1px solid #f0f2f3;
+    margin-top: 40px;
+    color: var(--muted-color);
+    font-size: 0.9rem;
+  `;
+  footer.innerHTML = `<a href="/" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">← العودة إلى الموقع العام</a>`;
+  wrapper.appendChild(footer);
 }
 
 // --- Modal + Toast utilities ---
-function showToast(msg, type = 'success', timeout = 3000){
+function showToast(msg, type = 'success', timeout = 3500){
   let container = document.getElementById('admin-toast-container');
   if (!container){
-    container = document.createElement('div'); container.id = 'admin-toast-container';
-    container.style.position = 'fixed'; container.style.top = '18px'; container.style.left = '18px'; container.style.zIndex = '9999';
+    container = document.createElement('div');
+    container.id = 'admin-toast-container';
     document.body.appendChild(container);
   }
-  const t = document.createElement('div'); t.className = `admin-toast admin-toast-${type}`; t.textContent = msg;
-  t.style.marginBottom = '8px'; t.style.padding = '10px 14px'; t.style.borderRadius = '8px'; t.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
-  if (type === 'error') t.style.background = '#ffecec', t.style.color = '#9b1c1c';
-  else t.style.background = '#e8f7ef', t.style.color = '#0b6b4a';
+  const t = document.createElement('div');
+  t.className = `admin-toast admin-toast-${type}`;
+  t.textContent = msg;
   container.appendChild(t);
-  setTimeout(()=>{ t.style.opacity = '0'; setTimeout(()=> t.remove(), 300); }, timeout);
+  setTimeout(()=>{ 
+    t.style.opacity = '0'; 
+    t.style.transition = 'opacity 0.3s ease-out';
+    setTimeout(()=> t.remove(), 300); 
+  }, timeout);
 }
 
-function showModal({ title = '', content = null, onConfirm = null, confirmText = 'حفظ', cancelText = 'إلغاء' } = {}){
-  const overlay = document.createElement('div'); overlay.className='admin-modal-overlay';
-  overlay.style.position = 'fixed'; overlay.style.inset = '0'; overlay.style.background = 'rgba(0,0,0,0.36)'; overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center'; overlay.style.zIndex = '10000';
-  const modal = document.createElement('div'); modal.className='admin-modal newsletter-card'; modal.style.maxWidth = '560px'; modal.style.width = '100%';
-  const h = document.createElement('h3'); h.className='card-title'; h.textContent = title;
-  const body = document.createElement('div'); body.className='admin-modal-body'; if (content) body.appendChild(content);
-  const foot = document.createElement('div'); foot.className='controls';
-  const cancel = document.createElement('button'); cancel.className='btn btn-secondary'; cancel.textContent = cancelText;
-  const ok = document.createElement('button'); ok.className='btn btn-primary'; ok.textContent = confirmText;
-  foot.append(cancel, ok);
+function showModal({ title = '', content = null, onConfirm = null, confirmText = 'حفظ', cancelText = 'إلغاء', showCancel = true } = {}){
+  const overlay = document.createElement('div'); 
+  overlay.className='admin-modal-overlay';
+  
+  const modal = document.createElement('div'); 
+  modal.className='admin-modal newsletter-card';
+  
+  const h = document.createElement('h3'); 
+  h.className='card-title'; 
+  h.textContent = title;
+  
+  const body = document.createElement('div'); 
+  body.className='admin-modal-body'; 
+  if (content) body.appendChild(content);
+  
+  const foot = document.createElement('div'); 
+  foot.className='controls';
+  
+  let cancel, ok;
+  if (showCancel) {
+    cancel = document.createElement('button'); 
+    cancel.className='btn btn-secondary'; 
+    cancel.textContent = cancelText;
+    foot.appendChild(cancel);
+  }
+  
+  ok = document.createElement('button'); 
+  ok.className='btn btn-primary'; 
+  ok.textContent = confirmText;
+  foot.appendChild(ok);
+  
   modal.append(h, body, foot);
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
-  cancel.addEventListener('click', ()=> overlay.remove());
+  
+  if (cancel) cancel.addEventListener('click', ()=> overlay.remove());
   ok.addEventListener('click', async ()=>{
     if (onConfirm) {
       try {
@@ -515,6 +616,7 @@ function showModal({ title = '', content = null, onConfirm = null, confirmText =
     }
     overlay.remove();
   });
+  
   return { overlay, modal, body };
 }
 
@@ -558,20 +660,20 @@ async function openCategoryModal(existing){
 function localeTabControls(localeData = {}) {
   const wrapper = el('div', 'locale-tabs');
   const arWrap = el('div', 'locale ar');
-  arWrap.append(el('h4', '', 'Arabic (ar)'));
-  const arWelcome = document.createElement('textarea'); arWelcome.placeholder = 'welcome_text'; arWelcome.value = localeData.ar?.welcome_text || ''; arWelcome.className = 'input';
-  const arArticleTitle = document.createElement('input'); arArticleTitle.placeholder = 'article_main_title'; arArticleTitle.value = localeData.ar?.article_main_title || ''; arArticleTitle.className = 'input';
-  const arArticleContent = document.createElement('textarea'); arArticleContent.placeholder = 'article_content'; arArticleContent.value = localeData.ar?.article_content || ''; arArticleContent.className = 'input';
-  const arAuthor = document.createElement('input'); arAuthor.placeholder = 'article_author'; arAuthor.value = localeData.ar?.article_author || ''; arAuthor.className = 'input';
+  arWrap.append(el('h4', '', 'العربية (ar)'));
+  const arWelcome = document.createElement('textarea'); arWelcome.placeholder = 'نص الترحيب'; arWelcome.value = localeData.ar?.welcome_text || ''; arWelcome.className = 'input';
+  const arArticleTitle = document.createElement('input'); arArticleTitle.placeholder = 'عنوان المقال'; arArticleTitle.value = localeData.ar?.article_main_title || ''; arArticleTitle.className = 'input';
+  const arArticleContent = document.createElement('textarea'); arArticleContent.placeholder = 'محتوى المقال'; arArticleContent.value = localeData.ar?.article_content || ''; arArticleContent.className = 'input';
+  const arAuthor = document.createElement('input'); arAuthor.placeholder = 'اسم المؤلف'; arAuthor.value = localeData.ar?.article_author || ''; arAuthor.className = 'input';
   const arNews = newsItemInputs(localeData.ar?.news_items || []);
   arWrap.append(arWelcome, arArticleTitle, arArticleContent, arAuthor, arNews);
 
   const enWrap = el('div', 'locale en');
-  enWrap.append(el('h4', '', 'English (en)'));
-  const enWelcome = document.createElement('textarea'); enWelcome.placeholder = 'welcome_text'; enWelcome.value = localeData.en?.welcome_text || ''; enWelcome.className = 'input';
-  const enArticleTitle = document.createElement('input'); enArticleTitle.placeholder = 'article_main_title'; enArticleTitle.value = localeData.en?.article_main_title || ''; enArticleTitle.className = 'input';
-  const enArticleContent = document.createElement('textarea'); enArticleContent.placeholder = 'article_content'; enArticleContent.value = localeData.en?.article_content || ''; enArticleContent.className = 'input';
-  const enAuthor = document.createElement('input'); enAuthor.placeholder = 'article_author'; enAuthor.value = localeData.en?.article_author || ''; enAuthor.className = 'input';
+  enWrap.append(el('h4', '', 'الإنجليزية (en)'));
+  const enWelcome = document.createElement('textarea'); enWelcome.placeholder = 'Welcome text (EN)'; enWelcome.value = localeData.en?.welcome_text || ''; enWelcome.className = 'input';
+  const enArticleTitle = document.createElement('input'); enArticleTitle.placeholder = 'Article title (EN)'; enArticleTitle.value = localeData.en?.article_main_title || ''; enArticleTitle.className = 'input';
+  const enArticleContent = document.createElement('textarea'); enArticleContent.placeholder = 'Article content (EN)'; enArticleContent.value = localeData.en?.article_content || ''; enArticleContent.className = 'input';
+  const enAuthor = document.createElement('input'); enAuthor.placeholder = 'Author (EN)'; enAuthor.value = localeData.en?.article_author || ''; enAuthor.className = 'input';
   const enNews = newsItemInputs(localeData.en?.news_items || []);
   enWrap.append(enWelcome, enArticleTitle, enArticleContent, enAuthor, enNews);
 
@@ -640,7 +742,7 @@ async function showForm(existing = null) {
     fr.readAsDataURL(f);
   });
   const ispub = document.createElement('input'); ispub.type = 'checkbox'; ispub.checked = existing?.is_published || false; ispub.id = 'ispub';
-  const pubLabel = el('label','', 'Published'); pubLabel.htmlFor = 'ispub';
+  const pubLabel = el('label','', 'منشور'); pubLabel.htmlFor = 'ispub';
   meta.append(issue, categorySelect, coverFile, coverPreview, pubLabel, ispub);
   formGrid.appendChild(meta);
 
@@ -652,7 +754,7 @@ async function showForm(existing = null) {
   formGrid.appendChild(wrapper);
   container.appendChild(formGrid);
 
-  const save = el('button', 'submit-button', 'Save');
+  const save = el('button', 'submit-button', 'حفظ');
   save.classList.add('admin-pulse');
   save.addEventListener('click', async () => {
     if (!supabase) return showToast('Supabase client not initialized', 'error');
@@ -692,6 +794,7 @@ async function showForm(existing = null) {
     }
 
     // upsert locales
+    // prepare locales payloads (news_items as actual arrays)
     const localesToUpsert = ['ar','en'].map(locale => {
       const f = fields[locale];
       return {
@@ -701,14 +804,19 @@ async function showForm(existing = null) {
         article_main_title: f.title.value,
         article_content: f.content.value,
         article_author: f.author.value,
-        news_items: JSON.stringify(collectNewsItems(f.newsWrap))
+        news_items: collectNewsItems(f.newsWrap)
       };
     });
 
+    // Insert or update each locale row explicitly (multi-step: ensure newsletter exists, then locale rows)
     for (const l of localesToUpsert) {
-      // try update first
-      const { error: upErr } = await supabase.from('newsletter_locales').upsert(l, { onConflict: 'newsletter_id,locale' });
-      if (upErr) console.error(upErr);
+      try {
+        // use upsert with onConflict to be idempotent
+        const { error: upErr } = await supabase.from('newsletter_locales').upsert(l, { onConflict: 'newsletter_id,locale' });
+        if (upErr) console.error('Locale upsert error', upErr);
+      } catch (err) {
+        console.error('Locale upsert unexpected', err);
+      }
     }
     showToast('تم الحفظ');
     renderDashboard();
