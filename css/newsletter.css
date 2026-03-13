@@ -27,6 +27,17 @@
 .newsletter-section      { padding:32px 0; border-bottom:1px solid #e5e7eb; }
 .newsletter-section:last-child { border-bottom:none; }
 .section-header { display:flex; align-items:center; gap:8px; margin-bottom:20px; }
+.section-toggle-btn {
+  margin-inline-start: auto;
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: #fff;
+  color: #374151;
+  font-size: 12px;
+  cursor: pointer;
+}
+.section-toggle-btn:hover { background:#f9fafb; }
 .section-icon   { font-size:20px; }
 .section-title  { font-size:22px; font-weight:700; margin:0; }
 .section-hero-img { width:100%; border-radius:12px; margin-bottom:20px; object-fit:cover; }
@@ -70,3 +81,5 @@
 }
 
 .nl-error { text-align:center; color:#dc2626; padding:40px; font-size:15px; }
+
+.newsletter-section.collapsed .section-header { margin-bottom: 0; }

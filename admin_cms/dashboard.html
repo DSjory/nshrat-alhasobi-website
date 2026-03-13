@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin CMS — Dashboard</title>
+  <link rel="stylesheet" href="/admin_cms/styles.css">
+</head>
+<body class="admin-cms-page">
+  <div class="admin-wrapper">
+    <header class="dashboard-header">
+      <h1 id="page-title">لوحة التحكم</h1>
+      <div class="header-actions">
+        <button id="nav-news" class="btn">الأعداد</button>
+        <button id="nav-categories" class="btn">التصنيفات</button>
+        <button id="nav-join" class="btn">طلبات الانضمام</button>
+      </div>
+    </header>
+
+    <div class="admin-layout">
+      <main class="admin-main">
+        <div id="content-area"><p class="muted">اختر لوحة من الشريط الجانبي أو اضغط على "الأعداد" للبدء.</p></div>
+      </main>
+      <aside class="admin-sidebar">
+        <nav class="nav-list">
+          <button id="nav-news-2" class="btn">الأعداد</button>
+          <button id="nav-categories-2" class="btn">التصنيفات</button>
+          <button id="nav-join-2" class="btn">طلبات الانضمام</button>
+        </nav>
+      </aside>
+    </div>
+
+    <script type="module" src="/admin_cms/main.js"></script>
+  </div>
+  <footer>
+    <div class="footer-bottom">
+      &copy; <span class="footer-year">2026</span> نشرة الحاسوبي. جميع الحقوق محفوظة.
+    </div>
+  </footer>
+  <script src="/js/footer-year.js"></script>
+</body>
+</html>

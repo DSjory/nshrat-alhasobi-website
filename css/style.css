@@ -352,42 +352,40 @@ body.dark-mode .developer-card .social-links a {
 }
 
 .episode-card {
-    /* 🛑 التعديل: جعل البطاقة حاوية Flex عمودية لمرونة التوزيع الرأسي */
+    /* Legacy card shape (previous version style) */
     display: flex;
-    flex-direction: column; 
-    height: 100%; /* مهم لضمان تساوي الارتفاع في الـ Grid */
-    
+    flex-direction: column;
+    height: 100%;
     background-color: #ffffff;
-    border-radius: 12px;
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-align: right;
-    border: 1px solid #e0e0e0;
+    border: 1px solid #e7ecef;
 }
 
 .episode-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
 }
 
 .card-image-container {
     width: 100%;
-    /* 🛑 التعديل: استبدال الارتفاع الثابت بنسبة العرض إلى الارتفاع (16:9) */
-    height: auto; 
-    padding-top: 56.25%; 
+    /* Back to previous fixed-card image shape */
+    height: 190px;
     position: relative;
     overflow: hidden;
+    background: #f1f5f9;
 }
 
 .card-image-container img {
-    position: absolute; 
-    top: 0;
-    left: 0;
+    position: absolute;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
+    transition: transform 0.45s ease;
 }
 
 .episode-card:hover .card-image-container img {
@@ -395,12 +393,25 @@ body.dark-mode .developer-card .social-links a {
 }
 
 .card-details {
-    /* 🛑 التعديل: هذا الجزء سيأخذ المساحة المتبقية ويدفع الـ footer للأسفل */
-    padding: 15px 20px 15px 20px; 
-    flex-grow: 1; /* يستهلك المساحة الرأسية المتبقية */
+    padding: 16px 18px;
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* يبدأ العناصر من الأعلى */
+    justify-content: flex-start;
+}
+
+.card-title {
+    margin-bottom: 12px;
+    line-height: 1.45;
+    min-height: 2.9em;
+}
+
+.card-footer {
+    margin-top: auto;
+}
+
+@media (max-width: 768px) {
+    .card-image-container { height: 210px; }
 }
 
 .card-category {
@@ -1193,6 +1204,16 @@ body.dark-mode footer {
     margin-top: 5px;
     border-top: 1px dashed #e9ecef;
     color: #6c757d;
+}
+
+.footer-bottom .ahhh-credit {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.footer-bottom .ahhh-credit:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
 }
 
 body.dark-mode .footer-bottom {

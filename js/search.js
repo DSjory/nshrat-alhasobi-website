@@ -5,9 +5,40 @@ const SUPABASE_URL = 'https://txldnqhqsgtqttpzbkeq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_FfSXeg7MY_fQvuot_uIdWQ_eot3x8jr';
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+function resolveCoverUrl(value) {
+    if (!value) return '/assets/img/شعار نشرة الحاسوبي باللون الازرق.png';
+    if (/^https?:\/\//i.test(value)) return value;
+    let path = String(value).replace(/^\/+/, '');
+    path = path.replace(/^newsletter-media\//, '');
+    const encoded = path.split('/').map((s) => encodeURIComponent(s)).join('/');
+    return `${SUPABASE_URL}/storage/v1/object/public/newsletter-media/${encoded}`;
+}
+
+function getLocale() {
+    if (document.documentElement.lang === 'en') return 'en';
+    return 'ar';
+}
+
+function normalizeNewsletterRecord(nl) {
+    const locale = getLocale();
+    const title = locale === 'en'
+        ? (nl.title_en || nl.title_ar || 'Untitled')
+        : (nl.title_ar || nl.title_en || 'بدون عنوان');
+    const category = locale === 'en'
+        ? (nl.categories?.name_en || nl.categories?.name_ar || 'Uncategorized')
+        : (nl.categories?.name_ar || nl.categories?.name_en || 'غير مصنف');
+    return {
+        id: nl.id,
+        issue_number: nl.edition_number,
+        title,
+        category,
+        cover_url: resolveCoverUrl(nl.cover_image_url)
+    };
+}
+
 // دالة لتحديد الجدول الحالي (الأهم في الملف كله!)
 function getTable() {
-    return document.body.dataset.table || 'issues'; // issues = عربي، issues_en = إنجليزي
+    return 'newsletters';
 }
 
 // عرض البطاقات
@@ -18,17 +49,17 @@ function displayResults(episodes, container) {
 
     episodes.forEach(ep => {
         const card = document.createElement('a');
-        card.href = `single-episode.html?issue=${ep.issue_number}${ep.language && ep.language === 'en' ? '&lang=en' : ''}`;
+        card.href = `single-episode.html?id=${ep.id}&lang=${getLocale()}`;
         card.className = 'episode-card';
 
         card.innerHTML = `
             <div class="card-image-container">
-                <img src="${ep.cover_url || 'episode_cover_placeholder.jpg'}" alt="غلاف العدد ${ep.issue_number}" loading="lazy">
+                <img src="${ep.cover_url || 'assets/img/placeholder.png'}" alt="غلاف العدد ${ep.issue_number || '-'}" loading="lazy">
             </div>
             <div class="card-details">
                 <h4 class="card-title">${ep.title || 'بدون عنوان'}</h4>
                 <div class="card-footer">
-                    <span class="episode-number">العدد ${ep.issue_number}</span>
+                    <span class="episode-number">العدد ${ep.issue_number || '-'}</span>
                     <span class="publisher-name">${ep.category || 'غير مصنف'}</span>
                 </div>
             </div>
@@ -55,14 +86,17 @@ async function performSearch() {
     const container = document.getElementById('episodes-grid') || document.getElementById('latest-episodes-grid');
     if (!container) return;
 
-    let query = sb.from(getTable()).select('*').order('issue_number', { ascending: false });
+    let query = sb
+        .from(getTable())
+        .select('id,edition_number,title_ar,title_en,cover_image_url,status,categories(name_ar,name_en),created_at')
+        .eq('status', 'published')
+        .order('edition_number', { ascending: false });
 
-    if (category !== 'all') query = query.eq('category', category);
     if (term) {
         if (!isNaN(term) && term !== '') {
-            query = query.eq('issue_number', parseInt(term));
+            query = query.eq('edition_number', parseInt(term));
         } else {
-            query = query.or(`title.ilike.%${term}%,category.ilike.%${term}%`);
+            query = query.or(`title_ar.ilike.%${term}%,title_en.ilike.%${term}%`);
         }
     }
 
@@ -72,7 +106,11 @@ async function performSearch() {
         container.innerHTML = '<p class="center error">حدث خطأ، حاول مرة أخرى.</p>';
         return;
     }
-    displayResults(data, container);
+    let rows = (data || []).map(normalizeNewsletterRecord);
+    if (category !== 'all') {
+        rows = rows.filter((r) => String(r.category || '').trim() === String(category).trim());
+    }
+    displayResults(rows, container);
 }
 
 // تحميل أحدث النشرات (للصفحة الرئيسية)
@@ -82,11 +120,12 @@ async function loadLatestEpisodes(limit = 3) {
 
     container.innerHTML = '<p class="center muted padded">جاري تحميل أحدث النشرات...</p>';
 
-    // نجيب من جدول issues فقط (العربي) + نضمن إنه عربي بالـ language إذا كان موجود
+    // المخطط الحالي يعتمد newsletters
     const { data, error } = await sb
-        .from('issues')  // ← جدول العربي فقط
-        .select('*')
-        .order('issue_number', { ascending: false })
+        .from('newsletters')
+        .select('id,edition_number,title_ar,title_en,cover_image_url,status,categories(name_ar,name_en),created_at')
+        .eq('status', 'published')
+        .order('edition_number', { ascending: false })
         .limit(limit);
 
     if (error) {
@@ -96,7 +135,7 @@ async function loadLatestEpisodes(limit = 3) {
     }
 
     // نعرض البيانات مهما كان
-    displayResults(data || [], container);
+    displayResults((data || []).map(normalizeNewsletterRecord), container);
 }
 
 // تفعيل كل شيء عند تحميل الصفحة

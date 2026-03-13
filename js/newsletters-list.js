@@ -1,17 +1,78 @@
 import { supabasePublic } from './supabase-public.js';
 
 const sb = supabasePublic;
+const SUPABASE_URL = 'https://txldnqhqsgtqttpzbkeq.supabase.co';
+
+function resolveCoverUrl(value) {
+  if (!value) return '/assets/img/شعار نشرة الحاسوبي باللون الازرق.png';
+  if (/^https?:\/\//i.test(value)) return value;
+  let path = String(value).replace(/^\/+/, '');
+  path = path.replace(/^newsletter-media\//, '');
+  const encoded = path.split('/').map((s) => encodeURIComponent(s)).join('/');
+  return `${SUPABASE_URL}/storage/v1/object/public/newsletter-media/${encoded}`;
+}
+
+function normalizeNewsletter(nl, locale) {
+  const isEn = locale === 'en';
+  return {
+    id: nl.id,
+    number: nl.edition_number ?? nl.issue_number ?? '-',
+    title: isEn
+      ? (nl.title_en || nl.title_ar || 'Untitled')
+      : (nl.title_ar || nl.title_en || 'بدون عنوان'),
+    category: isEn
+      ? ((nl.categories && (nl.categories.name_en || nl.categories.name_ar)) || 'Uncategorized')
+      : ((nl.categories && (nl.categories.name_ar || nl.categories.name_en)) || 'غير مصنف'),
+    cover: resolveCoverUrl(nl.cover_image_url)
+  };
+}
+
+async function fetchNewsletters(locale) {
+  // Primary query: current schema
+  let res = await sb
+    .from('newsletters')
+    .select('id,edition_number,title_ar,title_en,cover_image_url,status,categories(name_ar,name_en),created_at')
+    .eq('status', 'published')
+    .order('created_at', { ascending: false });
+
+  // Fallback query: legacy schema compatibility
+  if (res.error) {
+    res = await sb
+      .from('newsletters')
+      .select('id,issue_number,cover_image_url,is_published,categories(name_ar,name_en),newsletter_locales(*)')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false });
+
+    if (!res.error) {
+      const mapped = (res.data || []).map((nl) => {
+        const localeRow = (nl.newsletter_locales || []).find((r) => r.locale === locale) || (nl.newsletter_locales || [])[0] || {};
+        return {
+          id: nl.id,
+          number: nl.issue_number ?? '-',
+          title: localeRow.article_main_title || (locale === 'en' ? 'Untitled' : 'بدون عنوان'),
+          category: (nl.categories && (nl.categories.name_ar || nl.categories.name_en)) || (locale === 'en' ? 'Uncategorized' : 'غير مصنف'),
+          cover: resolveCoverUrl(nl.cover_image_url)
+        };
+      });
+      return { data: mapped, error: null };
+    }
+  }
+
+  if (res.error) return { data: null, error: res.error };
+  return { data: (res.data || []).map((nl) => normalizeNewsletter(nl, locale)), error: null };
+}
 
 export async function renderNewslettersGrid(targetSelector, locale = 'ar') {
   const container = document.querySelector(targetSelector);
   if (!container) return;
   container.innerHTML = '<p class="center muted padded">جاري تحميل النشرات...</p>';
 
-  const { data, error } = await sb
-     .from('newsletters')
-    .select('id,issue_number,category_id,cover_image_url,categories(name_ar,name_en),newsletter_locales(*)')
-    .eq('is_published', true)
-    .order('created_at', { ascending: false });
+  if (!sb) {
+    container.innerHTML = '<p class="center error">تعذر تهيئة عميل قاعدة البيانات.</p>';
+    return;
+  }
+
+  const { data, error } = await fetchNewsletters(locale);
 
   if (error) {
     console.error('خطأ في جلب النشرات:', error);
@@ -21,19 +82,18 @@ export async function renderNewslettersGrid(targetSelector, locale = 'ar') {
 
   container.innerHTML = '';
   (data || []).forEach(nl => {
-    const localeRow = (nl.newsletter_locales || []).find(r => r.locale === locale) || (nl.newsletter_locales || [])[0] || {};
     const card = document.createElement('a');
     card.className = 'episode-card';
     card.href = `single-episode.html?id=${nl.id}&lang=${locale}`;
     card.innerHTML = `
       <div class="card-image-container">
-        <img src="${nl.cover_image_url || 'assets/img/placeholder.png'}" alt="غلاف العدد ${nl.issue_number}" loading="lazy">
+        <img src="${nl.cover}" alt="غلاف العدد ${nl.number}" loading="lazy">
       </div>
       <div class="card-details">
-        <h4 class="card-title">${(localeRow.article_main_title) ? escapeHtml(localeRow.article_main_title) : 'بدون عنوان'}</h4>
+        <h4 class="card-title">${escapeHtml(nl.title)}</h4>
         <div class="card-footer">
-          <span class="episode-number">العدد ${nl.issue_number}</span>
-          <span class="publisher-name">${escapeHtml((nl.categories && (nl.categories.name_ar || nl.categories.name_en)) || nl.category || 'غير مصنف')}</span>
+          <span class="episode-number">العدد ${nl.number}</span>
+          <span class="publisher-name">${escapeHtml(nl.category)}</span>
         </div>
       </div>
     `;
