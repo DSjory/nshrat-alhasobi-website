@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>النشرات — لوحة التحكم</title>
+  <link rel="stylesheet" href="css/editor.css">
+</head>
+<body>
+
+<div class="admin-page">
+  <header class="topbar">
+    <span class="topbar-title">النشرات</span>
+    <a href="newsletter-editor.html" class="btn btn-primary">+ نشرة جديدة</a>
+  </header>
+
+  <main class="page-main">
+    <div id="list-wrap">
+      <table class="nl-table" id="nl-table">
+        <thead>
+          <tr>
+            <th>العدد</th>
+            <th>العنوان</th>
+            <th>التاريخ</th>
+            <th>الحالة</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="nl-tbody">
+          <tr><td colspan="5" class="loading-cell">جاري التحميل…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<div id="toast" class="toast hidden"></div>
+
+<!-- Script order: supabase → data helpers → auth → page logic -->
+<script type="module">
+  import '/js/supabase-client.js';
+</script>
+<script src="/js/newsletter-data.js"></script>
+<script src="/admin/js/admin-auth.js" type="module"></script>
+<script src="newsletter-list.js"></script>
+</body>
+</html>

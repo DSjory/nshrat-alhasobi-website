@@ -8,6 +8,11 @@ if (!url || !key) console.warn('VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY is m
 
 export const supabase = createClient(url, key);
 
+// Expose for other scripts that expect a global `window.supabase`
+window.supabase = supabase;
+window.__SUPABASE_URL = window.__SUPABASE_URL || url;
+window.__SUPABASE_ANON_KEY = window.__SUPABASE_ANON_KEY || key;
+
 export function youtubeThumbnailFromUrl(url) {
   if (!url) return null;
   try {

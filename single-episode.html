@@ -62,161 +62,26 @@
                             
 
     <main id="episode-page-container" class="main-content-area">
-        
-        <!-- محتوى النشرة الديناميكي -->
-        <div class="newsletter-card container">
-            <article id="dynamic-episode-details">
-                <p class="center muted">جاري تحميل النشرة...</p>
-            </article>
 
-            <!-- Action bar (Like, Comment, Save, Report) -->
-            <div class="action-bar" id="article-action-bar" aria-hidden="false">
-                <button class="action-btn" id="like-btn" title="أعجبني">
-                    <i class="fa fa-heart"></i>
-                </button>
-                <button class="action-btn" id="comment-btn" title="تعليق">
-                    <i class="fa fa-comment"></i>
-                </button>
-                <button class="action-btn" id="save-btn" title="حفظ">
-                    <i class="fa fa-bookmark"></i>
-                </button>
-                <button class="action-btn" id="report-btn" title="الإبلاغ عن مشكلة">
-                    <i class="fa fa-flag"></i>
-                </button>
-            </div>
+        <!-- Newsletter content region — replaced by agent -->
+        <div class="nl-page" dir="rtl">
+          <img id="nl-cover" class="newsletter-cover hidden" alt="">
+          <h1 class="newsletter-title"></h1>
+          <div class="filter-bar"></div>
+          <nav class="newsletter-nav" role="tablist" aria-label="أقسام النشرة"></nav>
+          <div id="newsletter-sections"></div>
         </div>
-        
-        <hr class="separator centered">
-        
-        <!-- قسم التعليقات -->
-        <section id="comments-section" class="comments-area container">
-            <h2 class="comments-title mb-15">شاركنا برأيك وتعليقك</h2>
 
-            <div id="comments-list" class="mb-20">
-                <!-- سيتم تحميل التعليقات هنا -->
-            </div>
-
-            <form id="comment-form" class="form-vertical gap-10">
-                <label>
-                    الاسم (اختياري)
-                    <input type="text" id="comment-author" class="form-input">
-                </label>
-
-                <label>
-                    التعليق
-                    <textarea id="comment-content" required rows="4" class="form-textarea"></textarea>
-                </label>
-
-                <button type="submit" class="btn btn-primary">إرسال التعليق</button>
-                <p id="comment-status" class="muted small"></p>
-            </form>
-        </section>
-        
     </main>
 
-
-    <!-- Supabase: load newsletter by id and render localized content -->
+    <link rel="stylesheet" href="/css/newsletter.css">
     <script type="module">
-      import { supabasePublic, youtubeThumbnailFromUrl } from '/js/supabase-public.js';
-
-      const sb = supabasePublic;
-
-      function getParams() {
-        const p = new URLSearchParams(location.search);
-        return { id: p.get('id'), lang: p.get('lang') || 'ar' };
-      }
-
-      function el(tag, cls, text) {
-        const e = document.createElement(tag);
-        if (cls) e.className = cls;
-        if (text) e.textContent = text;
-        return e;
-      }
-
-      function renderNewsletter(nl, localeRow, lang) {
-        const container = document.getElementById('dynamic-episode-details');
-        container.innerHTML = '';
-
-        const hero = el('section', 'hero');
-          hero.append(el('div', 'welcome', localeRow.welcome_text || ''));
-          if (nl.category_label) hero.append(el('div','category','التصنيف: ' + nl.category_label));
-        hero.append(el('div', 'issue', `العدد ${nl.issue_number}`));
-        if (localeRow.read_time_minutes) hero.append(el('div','readtime', `${localeRow.read_time_minutes} دقائق`));
-        container.appendChild(hero);
-
-        const article = el('article', 'main-article');
-        article.append(el('h2', 'article-title', localeRow.article_main_title || ''));
-        article.append(el('p', 'article-content', localeRow.article_content || ''));
-        article.append(el('div', 'article-author', localeRow.article_author || ''));
-        container.appendChild(article);
-
-        // News items
-        const newsItems = localeRow.news_items || [];
-        if (Array.isArray(newsItems) && newsItems.length) {
-          const newsSec = el('section', 'news-section');
-          newsItems.forEach((it, idx) => {
-            const item = el('div', 'news-item');
-            item.append(el('div','news-text', it.news_text || ''));
-            if (Array.isArray(it.sources) && it.sources.length) item.append(el('div','news-sources', it.sources.join(' - ')));
-            newsSec.appendChild(item);
-            if (idx < newsItems.length -1) newsSec.append(el('hr'));
-          });
-          container.appendChild(newsSec);
-        }
-
-        // Podcast
-        if (localeRow.podcast_description || localeRow.podcast_youtube_url) {
-          const pod = el('section','podcast');
-          if (localeRow.podcast_description) pod.append(el('p','', localeRow.podcast_description));
-          const thumb = youtubeThumbnailFromUrl(localeRow.podcast_youtube_url);
-          if (thumb) { const img = document.createElement('img'); img.src = thumb; img.alt='podcast'; pod.appendChild(img); }
-          container.appendChild(pod);
-        }
-
-        // Spotlight
-        if (localeRow.spotlight_content) {
-          const spot = el('section','spotlight');
-          spot.append(el('h4','', localeRow.spotlight_title || ''));
-          spot.append(el('p','', localeRow.spotlight_content));
-          spot.append(el('div','spot-author', localeRow.spotlight_author || ''));
-          container.appendChild(spot);
-        }
-
-        // Credits
-        const credits = el('section','credits');
-        credits.append(el('h3','credits-title','أســــماء مـــعدي النــــشرة'));
-        const parts = ['credits_writer','credits_news_hunters','credits_content_writers','credits_designers','credits_member_affairs','credits_leader','credits_co_leader'];
-        parts.forEach(k => { if (localeRow[k]) credits.append(el('div','credit-line', localeRow[k].split(',').join(' - '))); });
-        container.appendChild(credits);
-
-        container.append(el('footer','footer', `العدد ${nl.issue_number}`));
-      }
-
-      async function load() {
-        const { id, lang } = getParams();
-        document.documentElement.lang = lang === 'en' ? 'en' : 'ar';
-        document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
-
-        if (!id) {
-          document.getElementById('dynamic-episode-details').innerHTML = '<h2 class="center">معرف النشرة مفقود</h2>';
-          return;
-        }
-
-        const { data, error } = await sb.from('newsletters').select('*, categories(name_ar,name_en), newsletter_locales(*)').eq('id', id).maybeSingle();
-        if (error || !data) {
-          console.error('خطأ في جلب النشرة', error);
-          document.getElementById('dynamic-episode-details').innerHTML = '<h2 class="center error">تعذّر تحميل النشرة</h2>';
-          return;
-        }
-
-        const nl = data;
-        const localeRow = (nl.newsletter_locales || []).find(r => r.locale === lang) || (nl.newsletter_locales || [])[0] || {};
-        // attach category label if available
-        nl.category_label = (nl.categories && (nl.categories.name_ar || nl.categories.name_en)) || nl.category || '';
-        renderNewsletter(nl, localeRow, lang);
-      }
-
-      load();
+      import '/js/supabase-client.js';
+    </script>
+    <script src="/js/newsletter-data.js"></script>
+    <script src="/js/newsletter-render.js"></script>
+    <script>
+      initNewsletterPage('id');
     </script>
 
 <script>
