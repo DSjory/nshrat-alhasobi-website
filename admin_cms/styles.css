@@ -35,7 +35,7 @@ a{color:var(--primary-color)}
 
 /* Dashboard layout */
 .admin-wrapper{max-width:1200px;margin:18px auto;padding:16px}
-.dashboard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.dashboard-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap;position:relative}
 .header-actions{display:flex;gap:8px;flex-wrap:wrap}
 .admin-layout{display:grid;grid-template-columns:1fr 280px;gap:16px}
 .admin-sidebar{background:var(--card-bg);padding:14px;border-radius:10px}
@@ -92,7 +92,10 @@ footer{background:transparent;padding:20px 16px;text-align:center;color:var(--mu
 .footer-bottom .ahhh-credit{color:var(--primary-color);font-weight:700}
 
 .editor-back-bottom{display:flex;justify-content:center;margin:8px auto 14px}
-.back-dashboard-btn{min-width:240px;padding:11px 18px;border-radius:999px;box-shadow:0 8px 22px rgba(1,106,109,.24)}
+.back-dashboard-btn{min-width:240px;padding:10px 14px;border-radius:8px;border:1px solid var(--primary-color);background:var(--primary-color);color:#fff;font-weight:700;box-shadow:0 8px 22px rgba(1,106,109,.18);display:inline-flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;line-height:1}
+
+/* Center the dashboard title while keeping header actions in place */
+.dashboard-header h1{position:absolute;left:50%;transform:translateX(-50%);text-align:center}
 
 /* Simple entrance animation across admin pages */
 .auth-card,.dashboard-header,.admin-main,.admin-sidebar,.editor-main,.editor-aside{animation:fadeInUp .45s ease both}
