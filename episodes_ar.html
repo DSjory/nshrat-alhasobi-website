@@ -19,12 +19,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<script>
-    // هذا السطر يحدد أي جدول يستخدم (مهم جدًا!)
-    document.body.dataset.table = "issues";        // في episodes_ar.html و index.html
-    
-</script>
-
 <body>
     <div class="top-cta-bar">
         <a href="join.html">انضم كمستفيد — كن جزءًا من نشرة الحاسوبي</a>
@@ -108,13 +102,12 @@
 
     </main>
     
-    <!-- ترتيب السكربتات الصحيح -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/search.js"></script>
-
-    <script>
-        initializeSearch('issues');
-    </script>
+        <!-- Load newsletters (new schema) -->
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script type="module">
+            window.NEWSLETTERS_LOCALE = 'ar';
+            import '/js/newsletters-list.js';
+        </script>
 
 </body>
 

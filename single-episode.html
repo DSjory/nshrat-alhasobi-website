@@ -62,196 +62,27 @@
                             
 
     <main id="episode-page-container" class="main-content-area">
-        
-        <!-- محتوى النشرة الديناميكي -->
-        <div class="newsletter-card" style="max-width: 900px; margin: 20px auto 24px;">
-            <article id="dynamic-episode-details">
-                <p style="text-align: center; color: gray;">جاري تحميل النشرة...</p>
-            </article>
 
-            <!-- Action bar (Like, Comment, Save, Report) -->
-            <div class="action-bar" id="article-action-bar" aria-hidden="false">
-                <button class="action-btn" id="like-btn" title="أعجبني">
-                    <i class="fa fa-heart"></i>
-                </button>
-                <button class="action-btn" id="comment-btn" title="تعليق">
-                    <i class="fa fa-comment"></i>
-                </button>
-                <button class="action-btn" id="save-btn" title="حفظ">
-                    <i class="fa fa-bookmark"></i>
-                </button>
-                <button class="action-btn" id="report-btn" title="الإبلاغ عن مشكلة">
-                    <i class="fa fa-flag"></i>
-                </button>
-            </div>
+        <!-- Newsletter content region — replaced by agent -->
+        <div class="nl-page" dir="rtl">
+          <img id="nl-cover" class="newsletter-cover hidden" alt="">
+          <h1 class="newsletter-title"></h1>
+          <div class="filter-bar"></div>
+          <nav class="newsletter-nav" role="tablist" aria-label="أقسام النشرة"></nav>
+          <div id="newsletter-sections"></div>
         </div>
-        
-        <hr class="separator" style="margin: 30px auto; width: 80%;">
-        
-        <!-- قسم التعليقات -->
-        <section id="comments-section" class="comments-area" style="max-width: 900px; margin: 20px auto 60px; padding: 0 16px;">
-            <h2 class="comments-title" style="margin-bottom: 15px;">شاركنا برأيك وتعليقك</h2>
 
-            <div id="comments-list" style="margin-bottom: 20px;">
-                <!-- سيتم تحميل التعليقات هنا -->
-            </div>
-
-            <form id="comment-form" style="display: flex; flex-direction: column; gap: 10px;">
-                <label>
-                    الاسم (اختياري)
-                    <input type="text" id="comment-author" style="width:100%; padding:8px;">
-                </label>
-
-                <label>
-                    التعليق
-                    <textarea id="comment-content" required rows="4" style="width:100%; padding:8px;"></textarea>
-                </label>
-
-                <button type="submit" style="align-self:flex-start; padding:8px 16px;">إرسال التعليق</button>
-                <p id="comment-status" style="color:#666; font-size:0.9rem;"></p>
-            </form>
-        </section>
-        
     </main>
 
-
-    <!-- Supabase: تحميل النشرة والتعليقات -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-    const { createClient } = supabase;
-    const SUPABASE_URL = "https://txldnqhqsgtqttpzbkeq.supabase.co";
-    const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4bGRucWhxc2d0cXR0cHpia2VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4ODAxNDksImV4cCI6MjA3OTQ1NjE0OX0.HfTR4pvi8dxar-_oCwd0ngAqnC3--6ypeZip8rm0Ebw";
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
-
-    function getParamsFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        const issueParam = params.get("issue");
-        const issueNumber = issueParam ? parseInt(issueParam, 10) : null;
-        const lang = params.get("lang"); // لو موجود → إنجليزي، لو لا → عربي
-        const tableName = lang === "en" ? "issues_en" : "issues";
-
-        return {
-            issueNumber: Number.isNaN(issueNumber) ? null : issueNumber,
-            lang: lang || "ar",
-            tableName
-        };
-    }
-
-    async function loadEpisode(issueNumber, tableName, lang) {
-        const container = document.getElementById("dynamic-episode-details");
-
-        if (!tableName || !issueNumber) {
-            container.innerHTML = '<h1 style="text-align:center;margin-top:80px;">لم يتم تحديد عدد صحيح أو لغة.</h1>';
-            return;
-        }
-
-        const { data: issue, error } = await sb
-            .from(tableName)
-            .select('*')
-            .eq('issue_number', issueNumber)
-            .maybeSingle();
-
-        if (error || !issue) {
-            console.error("خطأ في جلب النشرة:", error);
-            container.innerHTML = '<h1 style="text-align:center;margin-top:80px;color:#e74c3c;">تعذّر تحميل النشرة.</h1>';
-            return;
-        }
-
-        let html = '';
-        if (issue.title) html += `<h1 style="margin-bottom:16px;text-align:center;">${issue.title}</h1>`;
-
-        if (issue.content_html) {
-            html += `<div class="episode-body">${issue.content_html}</div>`;
-        } else {
-            html += '<p style="text-align:center;color:#999;padding:40px;">لا يوجد محتوى نصي لهذا العدد حتى الآن.</p>';
-        }
-
-        if (issue.pdf_url) {
-            html += `
-                <div style="text-align:center;margin:40px 0;">
-                    <a href="${issue.pdf_url}" target="_blank" rel="noopener"
-                       style="display:inline-block;padding:12px 24px;background:#075e7c;color:white;border-radius:999px;text-decoration:none;">
-                       تحميل النشرة كملف PDF
-                    </a>
-                </div>`;
-        }
-
-        container.innerHTML = html;
-    }
-
-    async function loadComments(issueNumber) {
-        const list = document.getElementById("comments-list");
-        if (!list || !issueNumber) return;
-
-        list.innerHTML = '<p style="text-align:center;color:#999;">جاري تحميل التعليقات...</p>';
-
-        const { data, error } = await sb
-            .from("comments")
-            .select("*")
-            .eq("issue_number", issueNumber)
-            .order("created_at", { ascending: true });
-
-        if (error || !data || data.length === 0) {
-            list.innerHTML = '<p style="text-align:center;color:#999;">لا توجد تعليقات بعد. كن أول من يعلّق</p>';
-            return;
-        }
-
-        list.innerHTML = "";
-        data.forEach(c => {
-            const div = document.createElement("div");
-            div.style = "padding:12px 0;border-bottom:1px solid #eee;";
-            div.innerHTML = `
-                <strong>${c.author || 'مجهول'}</strong>
-                <p style="margin:8px 0;">${c.content}</p>
-                <small style="color:#999;">${new Date(c.created_at).toLocaleString('ar-SA')}</small>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    async function handleCommentSubmit(e, issueNumber) {
-        e.preventDefault();
-        const content = document.getElementById("comment-content").value.trim();
-        const author = document.getElementById("comment-author").value.trim() || null;
-        const status = document.getElementById("comment-status");
-
-        if (!content) {
-            status.textContent = "اكتب تعليق أولاً!";
-            return;
-        }
-
-        status.textContent = "جاري الإرسال...";
-
-        const { error } = await sb.from("comments").insert({
-            issue_number: issueNumber,
-            author,
-            content
-        });
-
-        if (error) {
-            status.textContent = "فشل الإرسال، حاول مرة أخرى.";
-        } else {
-            status.textContent = "تم إرسال التعليق بنجاح!";
-            document.getElementById("comment-content").value = "";
-            loadComments(issueNumber);
-        }
-    }
-
-    document.addEventListener("DOMContentLoaded", async () => {
-        const { issueNumber, lang, tableName } = getParamsFromURL();
-
-        // تغيير لغة الصفحة
-        document.documentElement.lang = lang;
-        document.documentElement.dir = lang === 'en' ? 'ltr' : 'rtl';
-
-        await loadEpisode(issueNumber, tableName, lang);
-        if (issueNumber) await loadComments(issueNumber);
-
-        document.getElementById("comment-form")?.addEventListener("submit", e => 
-            handleCommentSubmit(e, issueNumber)
-        );
-    });
-</script>
+    <link rel="stylesheet" href="/css/newsletter.css">
+    <script type="module">
+      import '/js/supabase-client.js';
+    </script>
+    <script src="/js/newsletter-data.js"></script>
+    <script src="/js/newsletter-render.js"></script>
+    <script>
+      initNewsletterPage('id');
+    </script>
 
 <script>
   // تفعيل وضع الليل في صفحة عرض النشرة فقط
