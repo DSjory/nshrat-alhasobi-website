@@ -1,6 +1,7 @@
 // admin_cms/main.js — Full CRUD handlers (categories, join_requests, newsletters) + uploads
 import { initSupabase, uploadFileWithProgress, uploadFileToBucket } from './supabase-client.js';
 import { showToast, showConfirm, showPrompt, showMessage } from './ui.js';
+import { loadAuditLog, destroyAuditLog } from './js/audit-log.js';
 
 await initSupabase();
 const supabase = window.supabase;
@@ -42,19 +43,25 @@ function showProgress(message = ''){
   };
 }
 
-// Navigation wiring (buttons exist in dashboard.html)
-document.getElementById('nav-news').addEventListener('click', () => loadNewsletters());
-document.getElementById('nav-categories').addEventListener('click', () => loadCategories());
-document.getElementById('nav-join').addEventListener('click', () => loadJoinRequests());
+// Navigation wiring (single sidebar now)
+const navButtons = {
+  news: document.getElementById('nav-news-2'),
+  categories: document.getElementById('nav-categories-2'),
+  join: document.getElementById('nav-join-2'),
+  audit: document.getElementById('nav-audit-2')
+};
 
-// Also wire sidebar duplicates if present
-[ 'nav-news-2','nav-categories-2','nav-join-2' ].forEach(id=>{
-  const el = document.getElementById(id);
-  if (!el) return;
-  if (id.startsWith('nav-news')) el.addEventListener('click', ()=> loadNewsletters());
-  if (id.startsWith('nav-categories')) el.addEventListener('click', ()=> loadCategories());
-  if (id.startsWith('nav-join')) el.addEventListener('click', ()=> loadJoinRequests());
-});
+function setActiveNav(activeKey) {
+  Object.values(navButtons).forEach(btn => {
+    if(btn) btn.classList.remove('active');
+  });
+  if(navButtons[activeKey]) navButtons[activeKey].classList.add('active');
+}
+
+if(navButtons.news) navButtons.news.addEventListener('click', () => { setActiveNav('news'); destroyAuditLog(); loadNewsletters(); });
+if(navButtons.categories) navButtons.categories.addEventListener('click', () => { setActiveNav('categories'); destroyAuditLog(); loadCategories(); });
+if(navButtons.join) navButtons.join.addEventListener('click', () => { setActiveNav('join'); destroyAuditLog(); loadJoinRequests(); });
+if(navButtons.audit) navButtons.audit.addEventListener('click', () => { setActiveNav('audit'); loadAuditLog(content, pageTitle); });
 
 // Generic table renderer
 function renderTable(columns, rows) {
@@ -102,12 +109,22 @@ async function loadCategories() {
           if (error) return showToast(error.message,'error');
           loadCategories();
         });
-        const wrap = document.createElement('div'); wrap.append(edit, del); return wrap;
+        const wrap = document.createElement('div'); 
+        wrap.style.display = 'flex'; 
+        wrap.style.gap = '8px'; 
+        wrap.style.justifyContent = 'center';
+        wrap.append(edit, del); 
+        return wrap;
       })()
     ]);
     content.innerHTML = '';
-    const add = document.createElement('button'); add.className = 'btn btn-primary'; add.textContent = '+ إضافة تصنيف'; add.addEventListener('click', () => addCategory());
-    content.append(add, renderTable(['اسم التصنيف', 'أنشئ في', 'إجراءات'], rows));
+    const headerActions = document.querySelector('.header-actions');
+    if(headerActions) {
+      headerActions.innerHTML = '';
+      const add = document.createElement('button'); add.className = 'btn btn-primary'; add.textContent = 'إضافة تصنيف'; add.addEventListener('click', () => addCategory());
+      headerActions.appendChild(add);
+    }
+    content.append(renderTable(['اسم التصنيف', 'أنشئ في', 'إجراءات'], rows));
     prog.done();
   } catch (e) {
     content.innerHTML = `<p class="muted">${e.message || e}</p>`;
@@ -157,10 +174,18 @@ async function loadJoinRequests() {
           if (error) return showToast(error.message,'error');
           loadJoinRequests();
         });
-        const wrap = document.createElement('div'); wrap.append(view, del); return wrap;
+        const wrap = document.createElement('div'); 
+        wrap.style.display = 'flex'; 
+        wrap.style.gap = '8px'; 
+        wrap.style.justifyContent = 'center';
+        wrap.append(view, del); 
+        return wrap;
       })()
     ]);
     content.innerHTML = '';
+    const headerActions = document.querySelector('.header-actions');
+    if(headerActions) headerActions.innerHTML = ''; // Clear actions for join requests
+    
     content.append(renderTable(['الاسم', 'الإيميل', 'اللجنة', 'تاريخ', 'إجراءات'], rows));
     prog.done();
   } catch (e) {
@@ -207,12 +232,22 @@ async function loadNewsletters() {
           p.set(1); p.done();
           loadNewsletters();
         });
-        const wrap = document.createElement('div'); wrap.append(edit, del); return wrap;
+        const wrap = document.createElement('div'); 
+        wrap.style.display = 'flex'; 
+        wrap.style.gap = '8px'; 
+        wrap.style.justifyContent = 'center';
+        wrap.append(edit, del); 
+        return wrap;
       })()
     ]);
     content.innerHTML = '';
-    const add = document.createElement('button'); add.className = 'btn btn-primary'; add.textContent = '+ إنشاء عدد جديد'; add.addEventListener('click', () => createNewsletter());
-    content.append(add, renderTable(['الصورة', 'العدد', 'العنوان', 'الحالة', 'إجراءات'], rows));
+    const headerActions = document.querySelector('.header-actions');
+    if(headerActions) {
+      headerActions.innerHTML = '';
+      const add = document.createElement('button'); add.className = 'btn btn-primary'; add.textContent = 'إنشاء عدد جديد'; add.addEventListener('click', () => createNewsletter());
+      headerActions.appendChild(add);
+    }
+    content.append(renderTable(['الصورة', 'العدد', 'العنوان', 'الحالة', 'إجراءات'], rows));
     prog.done();
   } catch (e) {
     content.innerHTML = `<p class="muted">${e.message || e}</p>`;

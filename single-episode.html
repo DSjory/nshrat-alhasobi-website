@@ -76,12 +76,23 @@
 
     <link rel="stylesheet" href="/css/newsletter.css">
     <script type="module">
-      import '/js/supabase-client.js';
+      import supabase from '/js/supabase-client.js';
+      // Store globally for data scripts to pick up
+      window.supabase = supabase;
     </script>
-    <script src="/js/newsletter-data.js"></script>
-    <script src="/js/newsletter-render.js"></script>
-    <script>
-      initNewsletterPage('id');
+    <script type="module">
+      // Load dependencies as modules to enforce execution order after supabase initializes
+      import '/js/newsletter-data.js';
+      import '/js/newsletter-render.js';
+      
+      // Delay initialization slightly to ensure all exports are mapped
+      window.addEventListener('DOMContentLoaded', () => {
+         setTimeout(() => {
+           if (window.initNewsletterPage) {
+             window.initNewsletterPage('id');
+           }
+         }, 50);
+      });
     </script>
 
 <script>
@@ -112,16 +123,7 @@
 </script>
 
 
-    <footer>
-        <div class="footer-bottom">
-            &copy; <span class="footer-year">2025</span> نشرة الحاسوبي. جميع الحقوق محفوظة.
-        </div>
-    </footer>
-
-    <div class="join-fixed-bottom" aria-hidden="false">
-        <a href="join.html" aria-label="انضم إلينا">انضم إلينا</a>
-    </div>
-
     <script src="js/footer-year.js"></script>
+    <script type="module" src="js/layout.js"></script>
 </body>
 </html>

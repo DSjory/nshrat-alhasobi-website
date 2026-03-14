@@ -5,10 +5,13 @@
 async function initNewsletterPage(idParam = 'id') {
   const params        = new URLSearchParams(location.search);
   const newsletterId  = params.get(idParam);
+  const lang          = params.get('lang') || 'ar';
+  window._nlLang      = lang; // globally available for rendering
   const container     = document.getElementById('newsletter-sections');
 
-  if (!newsletterId) {
-    if (container) container.innerHTML = '<p class="nl-error">لم يتم تحديد النشرة.</p>';
+  const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newsletterId);
+  if (!newsletterId || !isValidUUID) {
+    if (container) container.innerHTML = '<p class="nl-error">رابط النشرة غير صحيح (404).</p>';
     return;
   }
 
@@ -21,10 +24,11 @@ async function initNewsletterPage(idParam = 'id') {
 
     const { newsletter, sections } = result;
 
-    document.title = newsletter.title_ar || document.title;
+    const displayTitle = lang === 'en' && newsletter.title_en ? newsletter.title_en : newsletter.title_ar;
+    document.title = displayTitle || document.title;
 
     const h1 = document.querySelector('.newsletter-title');
-    if (h1) h1.textContent = newsletter.title_ar;
+    if (h1) h1.textContent = displayTitle;
 
     const cover = document.querySelector('.newsletter-cover');
     if (cover) {
