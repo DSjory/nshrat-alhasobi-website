@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin CMS — Dashboard</title>
+  <script type="module" src="/admin_cms/js/auth-guard.js"></script>
+  <link rel="stylesheet" href="/admin_cms/styles.css">
+</head>
+<body class="admin-cms-page">
+  <div class="admin-wrapper">
+
+    <div class="admin-layout">
+      
+      <!-- Right Sidebar Area -->
+      <aside class="admin-sidebar">
+        <div class="sidebar-logo">
+           <img src="/assets/img/شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار النشرة">
+        </div>
+        <nav class="nav-list" id="sidebar-nav">
+          <button id="nav-news-2" class="btn active">الأعداد</button>
+          <button id="nav-categories-2" class="btn">التصنيفات</button>
+          <button id="nav-join-2" class="btn">طلبات الانضمام</button>
+          <button id="nav-audit-2" class="btn">سجل التدقيق</button>
+        </nav>
+        
+        <!-- User block injected dynamically via auth-guard -->
+        <div class="sidebar-user-block" id="user-profile-widget">
+        </div>
+      </aside>
+
+      <!-- Left Main Content Area -->
+      <main class="admin-main">
+        <header class="dashboard-header">
+           <div class="header-titles" style="text-align: right;">
+              <p style="color: var(--muted-color); font-size: 0.9rem; margin: 0;">لوحة التحكم</p>
+              <h1 id="page-title" style="margin: 0;">الأعداد</h1>
+           </div>
+
+           <div class="header-actions">
+              <!-- Replaced dynamically by JS based on current view -->
+           </div>
+        </header>
+
+        <div id="content-area"><p class="muted">يتم تحميل البيانات...</p></div>
+      </main>
+
+    </div>
+
+    <script type="module" src="/admin_cms/main.js"></script>
+  </div>
+  
+  <script src="/js/footer-year.js"></script>
+  <script type="module" src="/js/layout.js"></script>
+</body>
+</html>

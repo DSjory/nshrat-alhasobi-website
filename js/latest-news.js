@@ -26,14 +26,14 @@
     async function loadLatestNewsFromAPI() {
         const container = document.getElementById('latest-news-grid');
         if (!container) return;
-        container.innerHTML = '<p style="text-align:center;padding:20px;color:#666;">جاري جلب أحدث الأخبار...</p>';
+        container.innerHTML = '<p class="center muted padded">جاري جلب أحدث الأخبار...</p>';
 
         try {
             const res = await fetch('https://c3ziz.github.io/saudi-news-ai-rss/api/latest.json');
             if (!res.ok) throw new Error('Network response not ok');
             const data = await res.json();
-            if (!Array.isArray(data) || data.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#999;">لا توجد أخبار حالياً.</p>';
+                if (!Array.isArray(data) || data.length === 0) {
+                container.innerHTML = '<p class="center muted">لا توجد أخبار حالياً.</p>';
                 return;
             }
 
@@ -86,7 +86,7 @@
 
         } catch (err) {
             console.error('خطأ في جلب أحدث الأخبار:', err);
-            container.innerHTML = '<p style="text-align:center;color:#e74c3c;">فشل جلب الأخبار.</p>';
+            container.innerHTML = '<p class="center error">فشل جلب الأخبار.</p>';
         }
     }
 

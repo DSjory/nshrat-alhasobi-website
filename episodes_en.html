@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 
 <!-- Google tag (gtag.js) -->
@@ -71,29 +71,28 @@
 
     
 
-    <div id="search-bar-container" style="display: none; background-color: var(--main-bg-color); padding: 15px; border-bottom: 1px solid var(--border-color);"> 
-        <div class="search-controls" style="max-width: 1200px; margin: auto; display: flex; gap: 10px; align-items: center;">
+    <div id="search-bar-container" class="search-bar-container hidden"> 
+        <div class="search-controls container">
             
-            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد أو التصنيف..." 
-                style="flex-grow: 1; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد أو التصنيف..." class="form-input">
             
-            <select id="category-filter" style="padding: 10px; border: 1px solid var(--border-color); border-radius: 5px;">
+            <select id="category-filter" class="form-select">
                 <option value="all">جميع التصنيفات</option>
                 <option value="هندسة">هندسة</option>
                 <option value="برمجة">برمجة</option>
                 <option value="بيانات">علم البيانات</option>
             </select>
             
-            <button id="search-execute-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: var(--primary-color); color: white; cursor: pointer;">بحث</button>
+            <button id="search-execute-btn" class="btn btn-primary">بحث</button>
 
-            <button id="close-search-btn" style="padding: 10px 15px; border: none; border-radius: 5px; background-color: #f44336; color: white; cursor: pointer;">إغلاق</button>
+            <button id="close-search-btn" class="btn btn-danger">إغلاق</button>
         </div>
     </div>
 
     <main id="main-content">
         
         <section id="all-episodes-section">
-            <div style="padding-top: 130px;"></div> 
+            <div class="spacer-top"></div>
             
             <h2 class="section-title">أرشيف النشرات المترجمة</h2>
             <p class="section-description">تصفح جميع الأعداد السابقة التي قمنا بترجمتها.</p>
@@ -106,58 +105,18 @@
     </main>
 
 
-        <!-- السكربتات الصحيحة والموحدة -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/search.js"></script>
-
-    <!-- حدد الجدول الصحيح للنشرات المترجمة -->
-    <script>
-        document.body.dataset.table = "issues_en";
-    </script>
-
-    <!-- تفعيل كل شيء + دعم البحث من الـ URL (مثلما طلبنا قبل) -->
-    <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const query = urlParams.get('q');
-
-        document.addEventListener('DOMContentLoaded', () => {
-            // تفعيل الوضع الليلي والبحث
-            setupModeToggle();
-            setupSearchToggle();
-
-            // إذا جاء من الصفحة الرئيسية بكلمة بحث → نعبي الحقل ونبحث تلقائي
-            if (query) {
-                const inputs = document.querySelectorAll('#search-input');
-                inputs.forEach(input => {
-                    if (input) input.value = decodeURIComponent(query);
-                });
-
-                // نفتح شريط البحث الكبير تلقائيًا
-                const bigBar = document.querySelector('#search-bar-container[style]');
-                if (bigBar) bigBar.style.display = 'block';
-            }
-
-            // نفعّل البحث (الجدول هنا issues_en بسبب data-table)
-            initializeSearch('issues_en');  // يشتغل عادي، بس dataset.table هو الأهم
-
-            // لو في كلمة بحث → نفذ البحث فورًا
-            if (query) {
-                performSearch('issues_en');
-            }
-        });
-    </script>
+        <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <script type="module">
+          window.NEWSLETTERS_LOCALE = 'en';
+          import '/js/newsletters-list.js';
+        </script>
     <div class="join-fixed-bottom" aria-hidden="false">
         <a href="join.html" aria-label="انضم إلينا">انضم إلينا</a>
     </div>
 
 </body>
 
-<footer>
-    <div class="footer-bottom">
-        &copy; <span class="footer-year">2025</span> نشرة الحاسوبي. جميع الحقوق محفوظة.
-    </div>
-</footer>
-
-<script src="js/footer-year.js"></script>
+    <script src="js/footer-year.js"></script>
+    <script type="module" src="js/layout.js"></script>
 
 </html>
