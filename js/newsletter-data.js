@@ -100,9 +100,21 @@ async function fetchSectionContent(sectionId, slug) {
 }
 
 async function fetchPublishedNewsletter(newsletterId) {
-  const newsletter = await fetchNewsletterById(newsletterId);
-  if (newsletter.status !== 'published') return null;
+  // Step A: fetch the newsletter row
+  const { data: newsletter, error: nlErr } = await window.supabase
+    .from('newsletters')
+    .select('*')
+    .eq('id', newsletterId)
+    .eq('status', 'published')
+    .maybeSingle();
 
+  if (nlErr) {
+    console.error("Supabase Error fetching newsletter:", nlErr);
+    throw nlErr;
+  }
+  if (!newsletter) return null;
+
+  // Step B & C
   const sections          = await fetchSectionsForNewsletter(newsletterId, true);
   const sectionsWithContent = await Promise.all(
     sections.map(async sec => ({
