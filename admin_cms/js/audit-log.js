@@ -42,7 +42,7 @@ export async function loadAuditLog(contentArea, pageTitle) {
       
       <div class="audit-stats" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-bottom:16px;">
         <div class="stat-card" style="background:var(--card-bg); padding:16px; border-radius:8px; border:1px solid var(--border-color); text-align:center;">
-          <div class="muted">إجمالي معروض</div>
+          <div class="muted">إجمالي المعروض</div>
           <div id="stat-total" style="font-size:24px; font-weight:bold; color:var(--primary-color);">0</div>
         </div>
         <div class="stat-card" style="background:var(--card-bg); padding:16px; border-radius:8px; border:1px solid var(--border-color); text-align:center;">
@@ -54,7 +54,7 @@ export async function loadAuditLog(contentArea, pageTitle) {
           <div id="stat-updates" style="font-size:24px; font-weight:bold; color:#eab308;">0</div>
         </div>
         <div class="stat-card" style="background:var(--card-bg); padding:16px; border-radius:8px; border:1px solid var(--border-color); text-align:center;">
-          <div class="muted">حذوفات اليوم</div>
+          <div class="muted">محذوفات اليوم</div>
           <div id="stat-deletes" style="font-size:24px; font-weight:bold; color:#dc2626;">0</div>
         </div>
       </div>
