@@ -107,7 +107,7 @@
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'حسناً';
     closeBtn.style.cssText = `
-      background-color: #0066cc;
+      background-color: #043E52;
       color: white;
       border: none;
       padding: 10px 24px;
