@@ -168,17 +168,12 @@ async function loadJoinRequests() {
           const d = JSON.stringify(r, null, 2);
           showMessage(d, 'تفاصيل طلب الانضمام');
         });
-        const del = document.createElement('button'); del.className='btn'; del.textContent='حذف'; del.addEventListener('click', async () => {
-          const ok = await showConfirm('حذف الطلب؟'); if (!ok) return;
-          const { error } = await supabase.from('join_requests').delete().eq('id', r.id);
-          if (error) return showToast(error.message,'error');
-          loadJoinRequests();
-        });
-        const wrap = document.createElement('div'); 
-        wrap.style.display = 'flex'; 
-        wrap.style.gap = '8px'; 
+        // Only allow viewing join requests from the admin UI — do not expose a delete action here.
+        const wrap = document.createElement('div');
+        wrap.style.display = 'flex';
+        wrap.style.gap = '8px';
         wrap.style.justifyContent = 'center';
-        wrap.append(view, del); 
+        wrap.append(view);
         return wrap;
       })()
     ]);
