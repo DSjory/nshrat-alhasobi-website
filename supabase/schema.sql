@@ -871,7 +871,7 @@ BEGIN
   -- Public: INSERT only (form submission). Admins: full access.
   BEGIN
     CREATE POLICY "join_requests_public_insert"
-      ON public.join_requests FOR INSERT WITH CHECK (true);
+      ON public.join_requests FOR INSERT TO PUBLIC WITH CHECK (true);
   EXCEPTION WHEN duplicate_object THEN NULL; END;
 
   BEGIN

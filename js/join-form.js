@@ -7,12 +7,22 @@
   const supabaseUrl = window.__SUPABASE_URL || 'https://txldnqhqsgtqttpzbkeq.supabase.co';
   const supabaseAnonKey = window.__SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR4bGRucWhxc2d0cXR0cHpia2VxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4ODAxNDksImV4cCI6MjA3OTQ1NjE0OX0.HfTR4pvi8dxar-_oCwd0ngAqnC3--6ypeZip8rm0Ebw';
 
-  if (!window.supabase || typeof window.supabase.createClient !== 'function') {
-    console.error('Supabase client library not found. Ensure @supabase/supabase-js is loaded from CDN.');
+  // Initialize supabase client:
+  // - If a Supabase client instance already exists on `window.supabase` (has `from`), reuse it.
+  // - Else if the Supabase library is loaded on `window.supabase` (has `createClient`), create a client.
+  // - Else try a global `createClient` (rare) before failing.
+  let supabaseClient;
+  if (window.supabase && typeof window.supabase.from === 'function') {
+    supabaseClient = window.supabase; // already-initialized client
+  } else if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+  } else if (typeof createClient === 'function') {
+    // some builds expose createClient globally
+    supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  } else {
+    console.error('Supabase client library not found. Ensure @supabase/supabase-js is loaded before this script.');
     return;
   }
-
-  const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
   const form = document.querySelector('.recruitment-form');
 
   if (!form) {
