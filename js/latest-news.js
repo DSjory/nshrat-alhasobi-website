@@ -5,7 +5,7 @@
     // Category mapping to Arabic labels
     const CATEGORY_MAP = {
         'saudi_business_tech': 'أعمال وتقنية سعودية',
-        'saudi_general': 'عام سعودي',
+        'saudi_general': 'أخبار السعودية',
         'global_tech': 'تقنية عالمية'
     };
 
@@ -19,8 +19,16 @@
             .replace(/'/g, '&#039;');
     }
 
-    function hostname(u) {
-        try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
+    function pickBestSummary(item) {
+        const candidates = [item.content, item.description, item.summary, item.summary_ai]
+            .map((v) => (v == null ? '' : String(v).trim()))
+            .filter(Boolean);
+        if (!candidates.length) return '';
+
+        // Prefer non-truncated and richer text first.
+        const nonTruncated = candidates.filter((t) => !t.endsWith('...') && !t.endsWith('…'));
+        const pool = nonTruncated.length ? nonTruncated : candidates;
+        return pool.sort((a, b) => b.length - a.length)[0];
     }
 
     async function loadLatestNewsFromAPI() {
@@ -44,7 +52,7 @@
 
                 const title = item.title || '';
                 const link = item.link || item.url || item.id || '#';
-                const summary = item.summary_ai || item.summary || item.description || '';
+                const summary = pickBestSummary(item);
                 const publishedRaw = item.published || item.pubDate || '';
                 let published = '';
                 try {
@@ -55,21 +63,21 @@
                 } catch (e) { published = publishedRaw; }
 
                 const sourceUrl = item.source || item.link || '';
-                const sourceHost = hostname(sourceUrl);
                 const category = item.category || '';
                 const categoryLabel = CATEGORY_MAP[category] || category;
 
                 card.innerHTML = `\
-                    ${item.image ? `<img class="news-image" src="${item.image}" alt="${escapeHtml(title)}" loading="lazy">` : ''}\
                     <div class="news-body">\
-                        <div class="news-top">\
+                        <header class="news-meta-row">\
                             ${category ? `<span class="news-category">${escapeHtml(categoryLabel)}</span>` : ''}\
-                            ${sourceHost ? `<span class="news-source">${escapeHtml(sourceHost)}</span>` : ''}\
-                        </div>\
+                            ${sourceUrl ? `<a class="news-source" href="${escapeHtml(sourceUrl)}" target="_blank" rel="noopener">المصدر</a>` : ''}\
+                        </header>\
                         <h4 class="news-title">${escapeHtml(title)}</h4>\
                         ${published ? `<div class="news-date">${escapeHtml(published)}</div>` : ''}\
                         <p class="news-snippet">${escapeHtml(summary)}</p>\
-                        <div class="news-footer"><a class="read-more" href="${link}" target="_blank" rel="noopener">اقرأ أكثر</a></div>\
+                        <footer class="news-footer">\
+                            <a class="read-more" href="${link}" target="_blank" rel="noopener">اقرأ التفاصيل</a>\
+                        </footer>\
                     </div>\
                 `;
 
