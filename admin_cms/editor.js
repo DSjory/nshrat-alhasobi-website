@@ -1,8 +1,8 @@
-import { initSupabase, uploadFileWithProgress } from './supabase-client.js';
+import { initSupabase, reinitSupabase, uploadFileWithProgress } from './supabase-client.js';
 import { showToast, showConfirm } from './ui.js';
 
 await initSupabase();
-const supabase = window.supabase;
+let supabase = window.supabase;
 
 // use UI utilities (showToast returns a handle)
 
@@ -39,6 +39,8 @@ let newsletter = null;
 let newsletterSections = [];
 
 async function init(){
+  // Reinitialize early so subsequent queries use the freshest schema metadata.
+  supabase = await reinitSupabase();
   await loadSectionTypes();
   await loadCategories();
   if (newsletterId) await loadNewsletter(newsletterId);
@@ -167,6 +169,55 @@ async function openSectionEditor(section){
   const container = document.createElement('div'); container.style.marginTop='12px';
   container.className = 'newsletter-card';
   const h = document.createElement('h4'); h.textContent = `تحرير: ${section.section_types?.name_ar || ''}`; container.append(h);
+  const slug = section.section_types?.slug;
+  const sectionName = section.section_types?.name_ar || 'غير معروف';
+  const sectionIcon = section.section_types?.icon || '📌';
+
+  async function saveSectionHeaderMeta(fields) {
+    const { error } = await supabase
+      .from('newsletter_sections')
+      .update(fields)
+      .eq('id', section.id);
+
+    if (!error) return;
+    if (error.code !== '42703') throw error;
+
+    // Compatibility fallback when newsletter_sections header columns do not exist yet.
+    let legacyTable = null;
+    if (slug === 'illumination') legacyTable = 'section_illumination';
+    else if (slug === 'inspiring') legacyTable = 'section_inspiring';
+    else if (slug === 'translation') legacyTable = 'section_translation';
+
+    if (!legacyTable) {
+      throw new Error('هذا القسم يتطلب تحديث قاعدة البيانات لحفظ صورة الهيدر.');
+    }
+
+    const legacyPayload = {};
+    if (Object.prototype.hasOwnProperty.call(fields, 'header_image_url')) {
+      legacyPayload.header_image_url = fields.header_image_url;
+    }
+
+    const { data: existing, error: findError } = await supabase
+      .from(legacyTable)
+      .select('id')
+      .eq('newsletter_section_id', section.id)
+      .maybeSingle();
+    if (findError) throw findError;
+
+    if (existing?.id) {
+      const { error: updateError } = await supabase
+        .from(legacyTable)
+        .update(legacyPayload)
+        .eq('id', existing.id);
+      if (updateError) throw updateError;
+      return;
+    }
+
+    const { error: insertError } = await supabase
+      .from(legacyTable)
+      .insert({ newsletter_section_id: section.id, ...legacyPayload });
+    if (insertError) throw insertError;
+  }
 
   // common controls
   const visLabel = document.createElement('label'); visLabel.innerHTML = `<input type='checkbox' ${section.is_visible ? 'checked' : ''}> مرئي`; visLabel.style.display='block'; visLabel.style.marginBottom='8px';
@@ -187,7 +238,7 @@ async function openSectionEditor(section){
   headerLabel.style.display = 'block';
   headerLabel.style.marginBottom = '8px';
   headerLabel.style.fontWeight = '600';
-  headerLabel.textContent = 'صورة رأس القسم (تظهر فوق المحتوى)';
+  headerLabel.innerHTML = `<strong>صورة هيدر القسم "${sectionName}" ${sectionIcon}</strong><br><span style="font-weight: normal; font-size: 0.9em; color: #666;">صورة بانر تظهر فوق محتوى هذا القسم</span>`;
   
   const headerFileInput = document.createElement('input');
   headerFileInput.type = 'file';
@@ -200,6 +251,7 @@ async function openSectionEditor(section){
   if (section.header_image_url) {
     headerPreview.innerHTML = `<img src="${section.header_image_url}" style="max-width: 100%; height: auto; border-radius: 4px; max-height: 200px;">`;
   }
+
   
   const clearHeaderBtn = document.createElement('button');
   clearHeaderBtn.type = 'button';
@@ -208,12 +260,11 @@ async function openSectionEditor(section){
   clearHeaderBtn.style.fontSize = '0.85rem';
   clearHeaderBtn.addEventListener('click', async () => {
     try {
-      const { error } = await supabase.from('newsletter_sections').update({ header_image_url: null, header_image_alt_ar: null }).eq('id', section.id);
-      if (error) throw error;
+      await saveSectionHeaderMeta({ header_image_url: null });
       headerPreview.innerHTML = '';
       headerFileInput.value = '';
       section.header_image_url = null;
-      showToast('تم حذف صورة رأس القسم');
+      showToast('تم حذف صورة هيدر القسم');
     } catch(e) { showToast(e.message || e, 'error'); }
   });
   
@@ -232,22 +283,20 @@ async function openSectionEditor(section){
       prog.value = 0;
       headerPreview.appendChild(prog);
       
-      const note = showToast('جاري رفع صورة رأس القسم…', 'pending', 0);
+      const note = showToast('جاري رفع صورة هيدر القسم…', 'pending', 0);
       const publicUrl = await uploadFileWithProgress(file, `sections/${section.id}`, (r) => {
         if (r >= 0) prog.value = r;
       });
       prog.value = 1;
       note.dismiss();
       
-      // Save to newsletter_sections
-      const { error } = await supabase.from('newsletter_sections').update({ header_image_url: publicUrl, header_image_alt_ar: '' }).eq('id', section.id);
-      if (error) throw error;
+      await saveSectionHeaderMeta({ header_image_url: publicUrl });
       
       // Update section object and preview
       section.header_image_url = publicUrl;
       headerPreview.innerHTML = `<img src="${publicUrl}" style="max-width: 100%; height: auto; border-radius: 4px; max-height: 200px;">`;
       headerFileInput.value = '';
-      showToast('تم رفع صورة رأس القسم بنجاح');
+      showToast('تم رفع صورة هيدر القسم بنجاح');
     } catch(e) {
       showToast(e.message || e, 'error');
     } finally {
@@ -256,27 +305,17 @@ async function openSectionEditor(section){
   });
 
   // switch by section type
-  const slug = section.section_types?.slug;
   if (slug === 'illumination' || slug === 'inspiring'){
     // fetch existing content
     const table = slug === 'illumination' ? 'section_illumination' : 'section_inspiring';
     const { data } = await supabase.from(table).select('*').eq('newsletter_section_id', section.id).maybeSingle();
-    const headerFile = document.createElement('input'); headerFile.type='file'; headerFile.accept='image/*';
-    const headerPreview = document.createElement('div'); if (data?.header_image_url) headerPreview.innerHTML = `<img src='${data.header_image_url}' style='max-width:320px'>`;
     const textarea = document.createElement('textarea'); textarea.className='input'; textarea.rows=8; textarea.value = data?.body_ar || '';
     const saveBtn = document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='حفظ القسم';
     saveBtn.addEventListener('click', async ()=>{
       setLoading(saveBtn, true);
       try{
-        let headerUrl = data?.header_image_url || null;
-        const f = headerFile.files && headerFile.files[0];
-        if (f){
-          const prog = document.createElement('progress'); prog.max = 1; prog.value = 0; headerPreview.appendChild(prog);
-          const note = showToast('جاري رفع صورة القسم…', 'pending', 0);
-          const publicUrl = await uploadFileWithProgress(f, `sections/${section.id}`, (r)=>{ if (r>=0) prog.value = r; });
-          prog.value = 1; note.dismiss(); headerUrl = publicUrl;
-        }
-        const payload = { newsletter_section_id: section.id, header_image_url: headerUrl, header_image_alt_ar: '', body_ar: textarea.value };
+          // Section banner image is managed once in newsletter_sections (top uploader).
+          const payload = { newsletter_section_id: section.id, body_ar: textarea.value };
         // upsert: delete existing then insert (simpler)
         if (data) await supabase.from(table).update(payload).eq('id', data.id);
         else await supabase.from(table).insert(payload);
@@ -284,7 +323,7 @@ async function openSectionEditor(section){
       }catch(e){ showToast(e.message||e,'error'); }
       setLoading(saveBtn, false);
     });
-    container.append(headerFile, headerPreview, textarea, saveBtn);
+      container.append(textarea, saveBtn);
   } else if (slug === 'news'){
     // news items list
     const { data } = await supabase.from('section_news_items').select('*').eq('newsletter_section_id', section.id).order('sort_order',{ascending:true});
@@ -429,8 +468,42 @@ saveMetaBtn.addEventListener('click', async ()=>{
   setLoading(saveMetaBtn, true);
   try{
     const payload = { title_ar: titleAr.value.trim(), title_en: titleEn.value, edition_number: edition.value ? Number(edition.value) : null, issue_date: issueDate.value || null, reading_time: readingTime.value || null, welcome_message: welcomeMessage.value || null, has_translation: hasTranslation.checked, translated_content: hasTranslation.checked ? translatedContent.value : null, status: isPublished.checked ? 'published' : 'draft', category_id: categorySel.value || null, cover_image_url: newsletter?.cover_image_url || null };
-    if (newsletter && newsletter.id){ const { error } = await supabase.from('newsletters').update(payload).eq('id', newsletter.id); if (error) throw error; showToast('تم تحديث بيانات النشرة'); }
-    else { const { data, error } = await supabase.from('newsletters').insert(payload).select().maybeSingle(); if (error) throw error; newsletter = data; history.replaceState(null, '', `?id=${newsletter.id}`); showToast('تم إنشاء النشرة'); }
+    const fallbackPayload = { ...payload };
+    delete fallbackPayload.has_translation;
+    delete fallbackPayload.translated_content;
+
+    if (newsletter && newsletter.id){
+      const { error } = await supabase.from('newsletters').update(payload).eq('id', newsletter.id);
+      if (error) {
+        if (error.code === '42703') {
+          const { error: fallbackError } = await supabase.from('newsletters').update(fallbackPayload).eq('id', newsletter.id);
+          if (fallbackError) throw fallbackError;
+          showToast('تم تحديث بيانات النشرة (بدون حقول الترجمة - يلزم تشغيل ترحيل قاعدة البيانات)');
+        } else {
+          throw error;
+        }
+      } else {
+        showToast('تم تحديث بيانات النشرة');
+      }
+    }
+    else {
+      const { data, error } = await supabase.from('newsletters').insert(payload).select().maybeSingle();
+      if (error) {
+        if (error.code === '42703') {
+          const { data: fallbackData, error: fallbackError } = await supabase.from('newsletters').insert(fallbackPayload).select().maybeSingle();
+          if (fallbackError) throw fallbackError;
+          newsletter = fallbackData;
+          history.replaceState(null, '', `?id=${newsletter.id}`);
+          showToast('تم إنشاء النشرة (بدون حقول الترجمة - يلزم تشغيل ترحيل قاعدة البيانات)');
+        } else {
+          throw error;
+        }
+      } else {
+        newsletter = data;
+        history.replaceState(null, '', `?id=${newsletter.id}`);
+        showToast('تم إنشاء النشرة');
+      }
+    }
     await loadNewsletterSections(newsletter.id);
   }catch(e){ showToast(e.message||e,'error'); }
   setLoading(saveMetaBtn, false);

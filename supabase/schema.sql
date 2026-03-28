@@ -97,6 +97,13 @@ CREATE TABLE IF NOT EXISTS public.newsletters (
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
 
+-- Backfill columns for pre-existing databases (CREATE TABLE IF NOT EXISTS will not add new columns)
+ALTER TABLE public.newsletters
+  ADD COLUMN IF NOT EXISTS reading_time varchar(255),
+  ADD COLUMN IF NOT EXISTS welcome_message text DEFAULT 'Welcome to the Hasoobi newsletter... / اهلا بك في نشرة الحاسوبي',
+  ADD COLUMN IF NOT EXISTS has_translation boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS translated_content text;
+
 
 -- ── 4. newsletter_sections ────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.newsletter_sections (
@@ -111,6 +118,11 @@ CREATE TABLE IF NOT EXISTS public.newsletter_sections (
   updated_at      timestamptz NOT NULL DEFAULT now(),
   UNIQUE NULLS NOT DISTINCT (newsletter_id, section_type_id)
 );
+
+-- Backfill columns for pre-existing databases
+ALTER TABLE public.newsletter_sections
+  ADD COLUMN IF NOT EXISTS header_image_url text,
+  ADD COLUMN IF NOT EXISTS header_image_alt_ar text;
 
 
 -- ── 5. section_illumination ───────────────────────────────────────────────────

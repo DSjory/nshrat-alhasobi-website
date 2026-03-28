@@ -51,7 +51,7 @@ async function fetchSectionsForNewsletter(newsletterId, visibleOnly = false) {
   let query = window.supabase
     .from('newsletter_sections')
     .select(`
-      id, is_visible, sort_order, header_image_url, header_image_alt_ar,
+      id, is_visible, sort_order, header_image_url,
       section_type:section_types(id, slug, name_ar, name_en, icon, has_header_image, is_optional)
     `)
     .eq('newsletter_id', newsletterId)
@@ -60,8 +60,31 @@ async function fetchSectionsForNewsletter(newsletterId, visibleOnly = false) {
   if (visibleOnly) query = query.eq('is_visible', true);
 
   const { data, error } = await query;
-  if (error) throw error;
-  return data;
+  if (!error) return data;
+
+  // Handle stale schema cache / old DBs where section header columns do not exist yet.
+  if (error.code === '42703') {
+    let fallbackQuery = window.supabase
+      .from('newsletter_sections')
+      .select(`
+        id, is_visible, sort_order,
+        section_type:section_types(id, slug, name_ar, name_en, icon, has_header_image, is_optional)
+      `)
+      .eq('newsletter_id', newsletterId)
+      .order('sort_order');
+
+    if (visibleOnly) fallbackQuery = fallbackQuery.eq('is_visible', true);
+
+    const { data: fallbackData, error: fallbackError } = await fallbackQuery;
+    if (fallbackError) throw fallbackError;
+
+    return (fallbackData || []).map((row) => ({
+      ...row,
+      header_image_url: null,
+    }));
+  }
+
+  throw error;
 }
 
 const SINGLE_ROW_TABLE = {

@@ -22,7 +22,10 @@ async function initNewsletterPage(idParam = 'id') {
       return;
     }
 
-    const { newsletter, sections } = result;
+    const { newsletter } = result;
+    const sections = lang === 'ar'
+      ? (result.sections || []).filter((sec) => sec?.section_type?.slug !== 'translation')
+      : (result.sections || []);
 
     const displayTitle = lang === 'en' && newsletter.title_en ? newsletter.title_en : newsletter.title_ar;
     document.title = displayTitle || document.title;
@@ -155,7 +158,7 @@ function renderSection(sec) {
 
   // Render section header image (applies to all section types)
   if (sec.header_image_url) {
-    body.innerHTML += `<img src="${resolveMediaUrl(sec.header_image_url)}" alt="${htmlEsc(sec.header_image_alt_ar || '')}" class="section-header-banner" loading="lazy">`;
+    body.innerHTML += `<img src="${resolveMediaUrl(sec.header_image_url)}" alt="${htmlEsc(sec.section_type.name_ar || 'صورة هيدر القسم')}" class="section-header-banner" loading="lazy">`;
   }
 
   switch (slug) {
