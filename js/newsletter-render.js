@@ -41,27 +41,11 @@ async function initNewsletterPage(idParam = 'id') {
       ? (newsletter.welcome_message_en || newsletter.welcome_message)
       : newsletter.welcome_message;
 
-    // Render welcome message if available
-    if (container && welcomeText) {
-      const welcomeDiv = document.createElement('div');
-      welcomeDiv.className = 'newsletter-welcome';
-      welcomeDiv.style.marginBottom = '20px';
-      welcomeDiv.innerHTML = `<p style="font-style: italic; color: var(--muted-color);">${htmlEsc(welcomeText)}</p>`;
-      container.appendChild(welcomeDiv);
-    }
-
     const readingText = (lang === 'en' && newsletter.has_translation)
       ? (newsletter.reading_time_en || newsletter.reading_time)
       : newsletter.reading_time;
 
-    // Render reading time if available
-    if (container && readingText) {
-      const readingDiv = document.createElement('div');
-      readingDiv.className = 'newsletter-reading-time';
-      readingDiv.style.marginBottom = '20px';
-      readingDiv.innerHTML = `<p style="color: var(--muted-color); font-size: 0.9rem;">⏱️ ${htmlEsc(readingText)}</p>`;
-      container.appendChild(readingDiv);
-    }
+    mountNewsletterIntro(welcomeText, readingText, lang);
 
     buildNav(newsletter.nav_type || 'filter', sections);
     if (container) sections.forEach(sec => container.appendChild(renderSection(sec)));
@@ -108,11 +92,18 @@ function buildFilterNav(sections) {
   if (!bar) return;
   bar.innerHTML = '';
 
-  const allPill = makeEl('button', 'filter-pill active', 'الكل');
+  const allPill = document.createElement('button');
+  allPill.className = 'filter-pill active';
+  allPill.innerHTML = '<span class="filter-pill-icon" aria-hidden="true">✦</span><span class="filter-pill-label">الكل</span>';
   allPill.dataset.target = 'all';
   bar.appendChild(allPill);
+
   sections.forEach(s => {
-    const pill = makeEl('button', 'filter-pill', `${s.section_type.icon} ${s.section_type.name_ar}`);
+    const icon = htmlEsc(s?.section_type?.icon || '•');
+    const name = htmlEsc(s?.section_type?.name_ar || 'قسم');
+    const pill = document.createElement('button');
+    pill.className = 'filter-pill';
+    pill.innerHTML = `<span class="filter-pill-icon" aria-hidden="true">${icon}</span><span class="filter-pill-label">${name}</span>`;
     pill.dataset.target = s.id;
     bar.appendChild(pill);
   });
@@ -148,7 +139,10 @@ function renderSection(sec) {
     <div class="section-header">
       <span class="section-icon">${sec.section_type.icon}</span>
       <h2 class="section-title">${htmlEsc(sectionTitle)}</h2>
-      <button class="section-toggle-btn" type="button" aria-expanded="true">إخفاء</button>
+      <button class="section-toggle-btn" type="button" aria-expanded="true" aria-label="${lang === 'en' ? 'Hide section' : 'إخفاء القسم'}">
+        <span class="section-toggle-text">${lang === 'en' ? 'Hide' : 'إخفاء'}</span>
+        <span class="section-toggle-icon" aria-hidden="true">▾</span>
+      </button>
     </div>`;
 
   const body = document.createElement('div');
@@ -250,10 +244,18 @@ function renderSection(sec) {
   if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
       const isHidden = body.style.display === 'none';
-      body.style.display = isHidden ? '' : 'none';
-      toggleBtn.textContent = isHidden ? 'إخفاء' : 'إظهار';
-      toggleBtn.setAttribute('aria-expanded', String(isHidden));
-      el.classList.toggle('collapsed', !isHidden);
+      const willShow = isHidden;
+      const nextText = willShow
+        ? (lang === 'en' ? 'Hide' : 'إخفاء')
+        : (lang === 'en' ? 'Show' : 'إظهار');
+      body.style.display = willShow ? '' : 'none';
+
+      const textEl = toggleBtn.querySelector('.section-toggle-text');
+      if (textEl) textEl.textContent = nextText;
+
+      toggleBtn.setAttribute('aria-expanded', String(willShow));
+      toggleBtn.setAttribute('aria-label', `${nextText} ${lang === 'en' ? 'section' : 'القسم'}`);
+      el.classList.toggle('collapsed', !willShow);
     });
   }
   return el;
@@ -293,6 +295,31 @@ function makeEl(tag, className, text) {
   el.className   = className;
   el.textContent = text;
   return el;
+}
+
+function renderNewsletterIntro(welcomeText, readingText, lang = 'ar') {
+  const wrap = document.createElement('section');
+  wrap.className = 'newsletter-welcome';
+  const readingLabel = lang === 'en' ? 'Reading time' : 'وقت القراءة';
+
+  wrap.innerHTML = `
+    ${welcomeText ? `<p class="newsletter-welcome-text">${htmlEsc(welcomeText)}</p>` : ''}
+    ${readingText ? `<div class="newsletter-reading-time"><span class="newsletter-reading-time-label">⏱ ${htmlEsc(readingLabel)}:</span> ${htmlEsc(readingText)}</div>` : ''}`;
+
+  return wrap;
+}
+
+function mountNewsletterIntro(welcomeText, readingText, lang = 'ar') {
+  const page = document.querySelector('.nl-page');
+  const title = document.querySelector('.newsletter-title');
+  if (!page || !title) return;
+
+  const oldIntro = page.querySelector('.newsletter-welcome');
+  if (oldIntro) oldIntro.remove();
+  if (!welcomeText && !readingText) return;
+
+  const intro = renderNewsletterIntro(welcomeText, readingText, lang);
+  title.insertAdjacentElement('afterend', intro);
 }
 
 window.initNewsletterPage = initNewsletterPage;
