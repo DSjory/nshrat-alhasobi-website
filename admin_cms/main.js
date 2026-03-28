@@ -106,8 +106,8 @@ async function loadCategories() {
     }, {});
     const rows = (data || []).map(cat => [
       cat.name_ar || cat.name_en || '',
+      cat.name_en || cat.name_ar || '',
       usageByCategoryId[cat.id] || 0,
-      new Date(cat.created_at).toLocaleString(),
       (() => {
         const edit = document.createElement('button'); edit.className = 'btn'; edit.textContent = 'تحرير'; edit.addEventListener('click', () => editCategory(cat));
         const del = document.createElement('button'); del.className = 'btn'; del.textContent = 'حذف'; del.addEventListener('click', async () => {
@@ -134,7 +134,7 @@ async function loadCategories() {
       const add = document.createElement('button'); add.className = 'btn btn-primary'; add.textContent = 'إضافة تصنيف'; add.addEventListener('click', () => addCategory());
       headerActions.appendChild(add);
     }
-    content.append(renderTable(['اسم التصنيف', 'عدد الاستخدام', 'أنشئ في', 'إجراءات'], rows));
+    content.append(renderTable(['الاسم العربي', 'الاسم الإنجليزي', 'عدد الاستخدام', 'إجراءات'], rows));
     prog.done();
   } catch (e) {
     content.innerHTML = `<p class="muted">${e.message || e}</p>`;
@@ -144,17 +144,21 @@ async function loadCategories() {
 }
 
 async function addCategory() {
-  const name = await showPrompt('اسم التصنيف (عربي)');
-  if (!name) return;
-  const { error } = await supabase.from('categories').insert({ name_ar: name, name_en: name });
+  const nameAr = await showPrompt('اسم التصنيف (عربي)');
+  if (!nameAr || !nameAr.trim()) return;
+  const nameEn = await showPrompt('اسم التصنيف (EN)');
+  if (!nameEn || !nameEn.trim()) return;
+  const { error } = await supabase.from('categories').insert({ name_ar: nameAr.trim(), name_en: nameEn.trim() });
   if (error) return showToast(error.message,'error');
   loadCategories();
 }
 
 async function editCategory(cat) {
-  const name = await showPrompt('تعديل اسم التصنيف', cat.name_ar || cat.name_en || '');
-  if (!name) return;
-  const { error } = await supabase.from('categories').update({ name_ar: name, name_en: name }).eq('id', cat.id);
+  const nameAr = await showPrompt('تعديل الاسم العربي', cat.name_ar || '');
+  if (!nameAr || !nameAr.trim()) return;
+  const nameEn = await showPrompt('تعديل الاسم الإنجليزي', cat.name_en || '');
+  if (!nameEn || !nameEn.trim()) return;
+  const { error } = await supabase.from('categories').update({ name_ar: nameAr.trim(), name_en: nameEn.trim() }).eq('id', cat.id);
   if (error) return showToast(error.message,'error');
   loadCategories();
 }
