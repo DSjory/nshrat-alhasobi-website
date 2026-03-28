@@ -29,11 +29,17 @@ function normalizeNewsletter(nl, locale) {
 
 async function fetchNewsletters(locale) {
   // Primary query: current schema
-  let res = await sb
+  let query = sb
     .from('newsletters')
-    .select('id,edition_number,title_ar,title_en,cover_image_url,status,categories(name_ar,name_en),created_at')
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
+    .select('id,edition_number,title_ar,title_en,cover_image_url,status,has_translation,categories(name_ar,name_en),created_at')
+    .eq('status', 'published');
+
+  // Filter by has_translation=true for English locale
+  if (locale === 'en') {
+    query = query.eq('has_translation', true);
+  }
+
+  let res = await query.order('created_at', { ascending: false });
 
   // Fallback query: legacy schema compatibility
   if (res.error) {

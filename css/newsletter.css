@@ -40,6 +40,7 @@
 .section-toggle-btn:hover { background:#f9fafb; }
 .section-icon   { font-size:20px; }
 .section-title  { font-size:22px; font-weight:700; margin:0; }
+.section-header-banner { width:100%; max-width:100%; height:auto; border-radius:8px; margin-bottom:16px; object-fit:cover; display:block; }
 .section-hero-img { width:100%; border-radius:12px; margin-bottom:20px; object-fit:cover; }
 .section-text   { font-size:16px; line-height:1.9; }
 

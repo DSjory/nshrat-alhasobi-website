@@ -1,9 +1,10 @@
 // search.js - النسخة النهائية الرسمية (ديسمبر 2025) - مضمونة 100%
 
-const { createClient } = supabase;
+// Create Supabase client from the SDK (assumes @supabase/supabase-js CDN load)
+const { createClient } = window.supabase || {};
 const SUPABASE_URL = 'https://txldnqhqsgtqttpzbkeq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_FfSXeg7MY_fQvuot_uIdWQ_eot3x8jr';
-const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = createClient ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
 function resolveCoverUrl(value) {
     if (!value) return '/assets/img/شعار نشرة الحاسوبي باللون الازرق.png';

@@ -85,6 +85,10 @@ CREATE TABLE IF NOT EXISTS public.newsletters (
   edition_number  int,
   issue_date      date,
   cover_image_url text,
+  reading_time    varchar(255),
+  welcome_message text        DEFAULT 'Welcome to the Hasoobi newsletter... / اهلا بك في نشرة الحاسوبي',
+  has_translation boolean     NOT NULL DEFAULT false,
+  translated_content text,
   nav_type        text        NOT NULL DEFAULT 'filter'
                               CHECK (nav_type IN ('tabs', 'filter')),
   status          text        NOT NULL DEFAULT 'draft'
@@ -99,6 +103,8 @@ CREATE TABLE IF NOT EXISTS public.newsletter_sections (
   id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   newsletter_id   uuid        REFERENCES public.newsletters(id) ON DELETE CASCADE,
   section_type_id uuid        NOT NULL REFERENCES public.section_types(id),
+  header_image_url text,
+  header_image_alt_ar text,
   is_visible      boolean     NOT NULL DEFAULT true,
   sort_order      int         NOT NULL DEFAULT 0,
   created_at      timestamptz NOT NULL DEFAULT now(),
