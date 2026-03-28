@@ -51,7 +51,7 @@ async function fetchSectionsForNewsletter(newsletterId, visibleOnly = false) {
   let query = window.supabase
     .from('newsletter_sections')
     .select(`
-      id, is_visible, sort_order,
+      id, is_visible, sort_order, header_image_url, header_image_alt_ar,
       section_type:section_types(id, slug, name_ar, name_en, icon, has_header_image, is_optional)
     `)
     .eq('newsletter_id', newsletterId)
@@ -147,6 +147,10 @@ async function saveNewsletter(formData) {
         title_en:        formData.title_en        || null,
         edition_number:  formData.edition_number  || null,
         issue_date:      formData.issue_date       || null,
+        reading_time:    formData.reading_time     || null,
+        welcome_message: formData.welcome_message || null,
+        has_translation: formData.has_translation  || false,
+        translated_content: formData.translated_content || null,
         cover_image_url: formData.cover_image_url  || null,
         nav_type:        formData.nav_type         || 'filter',
         status:          'draft',
@@ -163,6 +167,10 @@ async function saveNewsletter(formData) {
         title_en:        formData.title_en        || null,
         edition_number:  formData.edition_number  || null,
         issue_date:      formData.issue_date       || null,
+        reading_time:    formData.reading_time     || null,
+        welcome_message: formData.welcome_message || null,
+        has_translation: formData.has_translation  || false,
+        translated_content: formData.translated_content || null,
         cover_image_url: formData.cover_image_url  || null,
         nav_type:        formData.nav_type         || 'filter',
       })

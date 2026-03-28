@@ -125,4 +125,36 @@ export function renderUnifiedLayout() {
 }
 
 // Ensure execution early
-window.addEventListener('DOMContentLoaded', renderUnifiedLayout);
+window.addEventListener('DOMContentLoaded', () => {
+  renderUnifiedLayout();
+  initializeDarkMode();
+});
+
+// Dark Mode initialization and toggle handler
+function initializeDarkMode() {
+  const modeToggleButton = document.getElementById('mode-toggle-button');
+  if (!modeToggleButton) return;
+
+  // Read saved theme preference from localStorage
+  const savedTheme = localStorage.getItem('theme') || 'light';
+  if (savedTheme === 'dark') {
+    document.documentElement.classList.add('dark-mode');
+    document.body.classList.add('dark-mode');
+    modeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
+  } else {
+    document.documentElement.classList.remove('dark-mode');
+    document.body.classList.remove('dark-mode');
+    modeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+  }
+
+  // Toggle dark mode on button click and persist preference
+  modeToggleButton.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark-mode');
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    modeToggleButton.innerHTML = isDark
+      ? '<i class="fas fa-sun"></i>'
+      : '<i class="fas fa-moon"></i>';
+  });
+}

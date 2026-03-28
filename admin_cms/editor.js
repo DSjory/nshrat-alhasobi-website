@@ -15,6 +15,11 @@ const titleAr = document.getElementById('title-ar');
 const titleEn = document.getElementById('title-en');
 const edition = document.getElementById('edition');
 const issueDate = document.getElementById('issue-date');
+const readingTime = document.getElementById('reading-time');
+const welcomeMessage = document.getElementById('welcome-message');
+const hasTranslation = document.getElementById('has-translation');
+const translationInputRow = document.getElementById('translation-input-row');
+const translatedContent = document.getElementById('translated-content');
 const categorySel = document.getElementById('category');
 const coverFile = document.getElementById('cover-file');
 const coverPreview = document.getElementById('cover-preview');
@@ -66,6 +71,11 @@ async function loadNewsletter(id){
     titleEn.value = newsletter.title_en || '';
     edition.value = newsletter.edition_number || '';
     issueDate.value = newsletter.issue_date || '';
+    readingTime.value = newsletter.reading_time || '';
+    welcomeMessage.value = newsletter.welcome_message || 'Welcome to the Hasoobi newsletter... / اهلا بك في نشرة الحاسوبي';
+    hasTranslation.checked = newsletter.has_translation || false;
+    translatedContent.value = newsletter.translated_content || '';
+    translationInputRow.style.display = hasTranslation.checked ? 'block' : 'none';
     isPublished.checked = newsletter.status === 'published';
     if (newsletter.category_id) categorySel.value = newsletter.category_id;
     if (newsletter.cover_image_url) {
@@ -165,6 +175,85 @@ async function openSectionEditor(section){
     if (error) return showToast(error.message,'error'); showToast('تم التحديث'); loadNewsletterSections(newsletter.id);
   });
   container.append(visLabel);
+
+  // Global section header image upload (applies to any section type)
+  const headerSection = document.createElement('div');
+  headerSection.style.marginBottom = '16px';
+  headerSection.style.padding = '8px';
+  headerSection.style.backgroundColor = 'rgba(0,0,0,0.02)';
+  headerSection.style.borderRadius = '4px';
+  
+  const headerLabel = document.createElement('label');
+  headerLabel.style.display = 'block';
+  headerLabel.style.marginBottom = '8px';
+  headerLabel.style.fontWeight = '600';
+  headerLabel.textContent = 'صورة رأس القسم (تظهر فوق المحتوى)';
+  
+  const headerFileInput = document.createElement('input');
+  headerFileInput.type = 'file';
+  headerFileInput.accept = 'image/*';
+  headerFileInput.className = 'input';
+  headerFileInput.style.marginBottom = '8px';
+  
+  const headerPreview = document.createElement('div');
+  headerPreview.style.marginBottom = '8px';
+  if (section.header_image_url) {
+    headerPreview.innerHTML = `<img src="${section.header_image_url}" style="max-width: 100%; height: auto; border-radius: 4px; max-height: 200px;">`;
+  }
+  
+  const clearHeaderBtn = document.createElement('button');
+  clearHeaderBtn.type = 'button';
+  clearHeaderBtn.className = 'btn';
+  clearHeaderBtn.textContent = 'حذف الصورة';
+  clearHeaderBtn.style.fontSize = '0.85rem';
+  clearHeaderBtn.addEventListener('click', async () => {
+    try {
+      const { error } = await supabase.from('newsletter_sections').update({ header_image_url: null, header_image_alt_ar: null }).eq('id', section.id);
+      if (error) throw error;
+      headerPreview.innerHTML = '';
+      headerFileInput.value = '';
+      section.header_image_url = null;
+      showToast('تم حذف صورة رأس القسم');
+    } catch(e) { showToast(e.message || e, 'error'); }
+  });
+  
+  headerSection.append(headerLabel, headerFileInput, headerPreview, clearHeaderBtn);
+  container.append(headerSection);
+
+  // Save section header image when file is selected
+  headerFileInput.addEventListener('change', async () => {
+    const file = headerFileInput.files?.[0];
+    if (!file) return;
+    
+    try {
+      setLoading(headerFileInput, true);
+      const prog = document.createElement('progress');
+      prog.max = 1;
+      prog.value = 0;
+      headerPreview.appendChild(prog);
+      
+      const note = showToast('جاري رفع صورة رأس القسم…', 'pending', 0);
+      const publicUrl = await uploadFileWithProgress(file, `sections/${section.id}`, (r) => {
+        if (r >= 0) prog.value = r;
+      });
+      prog.value = 1;
+      note.dismiss();
+      
+      // Save to newsletter_sections
+      const { error } = await supabase.from('newsletter_sections').update({ header_image_url: publicUrl, header_image_alt_ar: '' }).eq('id', section.id);
+      if (error) throw error;
+      
+      // Update section object and preview
+      section.header_image_url = publicUrl;
+      headerPreview.innerHTML = `<img src="${publicUrl}" style="max-width: 100%; height: auto; border-radius: 4px; max-height: 200px;">`;
+      headerFileInput.value = '';
+      showToast('تم رفع صورة رأس القسم بنجاح');
+    } catch(e) {
+      showToast(e.message || e, 'error');
+    } finally {
+      setLoading(headerFileInput, false);
+    }
+  });
 
   // switch by section type
   const slug = section.section_types?.slug;
@@ -329,12 +418,17 @@ coverFile.addEventListener('change', async ()=>{
   }catch(e){ coverStatus.textContent = ''; if (pbar && pbar.parentElement) pbar.remove(); note.dismiss(); showToast(e.message||e,'error'); }
 });
 
+// Toggle translation input row
+hasTranslation.addEventListener('change', ()=>{
+  translationInputRow.style.display = hasTranslation.checked ? 'block' : 'none';
+});
+
 // Save meta
 saveMetaBtn.addEventListener('click', async ()=>{
   if (!titleAr.value || !titleAr.value.trim()) return showToast('عنوان النشرة مطلوب','error');
   setLoading(saveMetaBtn, true);
   try{
-    const payload = { title_ar: titleAr.value.trim(), title_en: titleEn.value, edition_number: edition.value ? Number(edition.value) : null, issue_date: issueDate.value || null, status: isPublished.checked ? 'published' : 'draft', category_id: categorySel.value || null, cover_image_url: newsletter?.cover_image_url || null };
+    const payload = { title_ar: titleAr.value.trim(), title_en: titleEn.value, edition_number: edition.value ? Number(edition.value) : null, issue_date: issueDate.value || null, reading_time: readingTime.value || null, welcome_message: welcomeMessage.value || null, has_translation: hasTranslation.checked, translated_content: hasTranslation.checked ? translatedContent.value : null, status: isPublished.checked ? 'published' : 'draft', category_id: categorySel.value || null, cover_image_url: newsletter?.cover_image_url || null };
     if (newsletter && newsletter.id){ const { error } = await supabase.from('newsletters').update(payload).eq('id', newsletter.id); if (error) throw error; showToast('تم تحديث بيانات النشرة'); }
     else { const { data, error } = await supabase.from('newsletters').insert(payload).select().maybeSingle(); if (error) throw error; newsletter = data; history.replaceState(null, '', `?id=${newsletter.id}`); showToast('تم إنشاء النشرة'); }
     await loadNewsletterSections(newsletter.id);
