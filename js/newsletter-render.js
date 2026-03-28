@@ -22,7 +22,10 @@ async function initNewsletterPage(idParam = 'id') {
       return;
     }
 
-    const { newsletter, sections } = result;
+    const { newsletter } = result;
+    const sections = lang === 'ar'
+      ? (result.sections || []).filter((sec) => sec?.section_type?.slug !== 'translation')
+      : (result.sections || []);
 
     const displayTitle = lang === 'en' && newsletter.title_en ? newsletter.title_en : newsletter.title_ar;
     document.title = displayTitle || document.title;
@@ -30,19 +33,42 @@ async function initNewsletterPage(idParam = 'id') {
     const h1 = document.querySelector('.newsletter-title');
     if (h1) h1.textContent = displayTitle;
 
+    // Hide cover image in single-episode view (comment out or remove existing cover display)
     const cover = document.querySelector('.newsletter-cover');
     if (cover) {
-      const fallbackFromSections = findFirstSectionImage(sections);
-      const coverUrl = resolveMediaUrl(newsletter.cover_image_url || fallbackFromSections);
-      if (coverUrl) {
-        cover.src = coverUrl;
-        cover.classList.remove('hidden');
-      }
+      cover.classList.add('hidden');
     }
 
-    buildNav(newsletter.nav_type || 'filter', sections);
+    // Render welcome message if available
+    if (container && newsletter.welcome_message) {
+      const welcomeDiv = document.createElement('div');
+      welcomeDiv.className = 'newsletter-welcome';
+      welcomeDiv.style.marginBottom = '20px';
+      welcomeDiv.innerHTML = `<p style="font-style: italic; color: var(--muted-color);">${htmlEsc(newsletter.welcome_message)}</p>`;
+      container.appendChild(welcomeDiv);
+    }
 
-    if (container) sections.forEach(sec => container.appendChild(renderSection(sec)));
+    // Render reading time if available
+    if (container && newsletter.reading_time) {
+      const readingDiv = document.createElement('div');
+      readingDiv.className = 'newsletter-reading-time';
+      readingDiv.style.marginBottom = '20px';
+      readingDiv.innerHTML = `<p style="color: var(--muted-color); font-size: 0.9rem;">⏱️ ${htmlEsc(newsletter.reading_time)}</p>`;
+      container.appendChild(readingDiv);
+    }
+
+    // If translated version requested and translation exists, show translated content instead of sections
+    if (lang === 'en' && newsletter.has_translation && newsletter.translated_content) {
+      if (container) {
+        const translationDiv = document.createElement('div');
+        translationDiv.className = 'newsletter-translated-content';
+        translationDiv.innerHTML = newsletter.translated_content;
+        container.appendChild(translationDiv);
+      }
+    } else {
+      buildNav(newsletter.nav_type || 'filter', sections);
+      if (container) sections.forEach(sec => container.appendChild(renderSection(sec)));
+    }
 
   } catch (err) {
     console.error(err);
@@ -129,6 +155,11 @@ function renderSection(sec) {
 
   const slug = sec.section_type.slug;
   const c    = sec.content || {};
+
+  // Render section header image (applies to all section types)
+  if (sec.header_image_url) {
+    body.innerHTML += `<img src="${resolveMediaUrl(sec.header_image_url)}" alt="${htmlEsc(sec.section_type.name_ar || 'صورة هيدر القسم')}" class="section-header-banner" loading="lazy">`;
+  }
 
   switch (slug) {
     case 'illumination':

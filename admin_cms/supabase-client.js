@@ -24,6 +24,25 @@ export async function initSupabase() {
   }
 }
 
+export async function reinitSupabase() {
+  // Force schema cache refresh by reinitializing the client
+  try {
+    const res = await fetch('/admin_cms/env.json');
+    const env = await res.json();
+    const url = env.VITE_SUPABASE_URL;
+    const key = env.VITE_SUPABASE_ANON_KEY;
+    SUPABASE_URL = url;
+    SUPABASE_KEY = key;
+    supabase = createClient(url, key);
+    window.supabase = supabase;
+    console.log('Supabase client reinitialized — schema cache should be refreshed');
+    return supabase;
+  } catch (e) {
+    console.error('Failed to reinitialize Supabase:', e);
+    throw e;
+  }
+}
+
 // Upload helper for storage bucket 'newsletter-media'
 export async function uploadFileToBucket(file, prefix = '', onProgress = null) {
   if (!file) return null;

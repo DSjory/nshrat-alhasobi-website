@@ -18,7 +18,7 @@ function normalizeNewsletter(nl, locale) {
     id: nl.id,
     number: nl.edition_number ?? nl.issue_number ?? '-',
     title: isEn
-      ? (nl.title_en || nl.title_ar || 'Untitled')
+      ? (nl.title_en || 'Untitled')
       : (nl.title_ar || nl.title_en || 'بدون عنوان'),
     category: isEn
       ? ((nl.categories && (nl.categories.name_en || nl.categories.name_ar)) || 'Uncategorized')
@@ -29,11 +29,33 @@ function normalizeNewsletter(nl, locale) {
 
 async function fetchNewsletters(locale) {
   // Primary query: current schema
-  let res = await sb
+  let query = sb
     .from('newsletters')
-    .select('id,edition_number,title_ar,title_en,cover_image_url,status,categories(name_ar,name_en),created_at')
-    .eq('status', 'published')
-    .order('created_at', { ascending: false });
+    .select('id,edition_number,title_ar,title_en,cover_image_url,status,has_translation,translated_content,categories(name_ar,name_en),created_at')
+    .eq('status', 'published');
+
+  // Filter by has_translation=true for English locale
+  if (locale === 'en') {
+    query = query.eq('has_translation', true).not('translated_content', 'is', null);
+  }
+
+  let res = await query.order('created_at', { ascending: false });
+
+  // Fallback A: current schema without translation columns
+  if (res.error && res.error.code === '42703') {
+    if (locale === 'en') {
+      // Do not show Arabic-only issues on English page when translation schema is missing.
+      return { data: [], error: null };
+    }
+
+    let fallbackCurrent = sb
+      .from('newsletters')
+      .select('id,edition_number,title_ar,title_en,cover_image_url,status,categories(name_ar,name_en),created_at')
+      .eq('status', 'published');
+
+    // If has_translation does not exist, do not filter by it.
+    res = await fallbackCurrent.order('created_at', { ascending: false });
+  }
 
   // Fallback query: legacy schema compatibility
   if (res.error) {
@@ -44,7 +66,12 @@ async function fetchNewsletters(locale) {
       .order('created_at', { ascending: false });
 
     if (!res.error) {
-      const mapped = (res.data || []).map((nl) => {
+      let rows = res.data || [];
+      if (locale === 'en') {
+        rows = rows.filter((nl) => (nl.newsletter_locales || []).some((r) => r.locale === 'en'));
+      }
+
+      const mapped = rows.map((nl) => {
         const localeRow = (nl.newsletter_locales || []).find((r) => r.locale === locale) || (nl.newsletter_locales || [])[0] || {};
         return {
           id: nl.id,

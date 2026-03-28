@@ -93,10 +93,20 @@ async function loadCategories() {
   const prog = showProgress('جاري جلب التصنيفات…'); prog.set(0.15);
   try {
     const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
+    const { data: newsletters, error: newslettersError } = await supabase
+      .from('newsletters')
+      .select('category_id');
     prog.set(0.8);
     if (error) throw error;
+    if (newslettersError) throw newslettersError;
+    const usageByCategoryId = (newsletters || []).reduce((acc, row) => {
+      if (!row?.category_id) return acc;
+      acc[row.category_id] = (acc[row.category_id] || 0) + 1;
+      return acc;
+    }, {});
     const rows = (data || []).map(cat => [
       cat.name_ar || cat.name_en || '',
+      usageByCategoryId[cat.id] || 0,
       new Date(cat.created_at).toLocaleString(),
       (() => {
         const edit = document.createElement('button'); edit.className = 'btn'; edit.textContent = 'تحرير'; edit.addEventListener('click', () => editCategory(cat));
@@ -124,7 +134,7 @@ async function loadCategories() {
       const add = document.createElement('button'); add.className = 'btn btn-primary'; add.textContent = 'إضافة تصنيف'; add.addEventListener('click', () => addCategory());
       headerActions.appendChild(add);
     }
-    content.append(renderTable(['اسم التصنيف', 'أنشئ في', 'إجراءات'], rows));
+    content.append(renderTable(['اسم التصنيف', 'عدد الاستخدام', 'أنشئ في', 'إجراءات'], rows));
     prog.done();
   } catch (e) {
     content.innerHTML = `<p class="muted">${e.message || e}</p>`;
