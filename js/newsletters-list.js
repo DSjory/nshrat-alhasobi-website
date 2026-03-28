@@ -31,12 +31,12 @@ async function fetchNewsletters(locale) {
   // Primary query: current schema
   let query = sb
     .from('newsletters')
-    .select('id,edition_number,title_ar,title_en,cover_image_url,status,has_translation,translated_content,categories(name_ar,name_en),created_at')
+    .select('id,edition_number,title_ar,title_en,cover_image_url,status,has_translation,categories(name_ar,name_en),created_at')
     .eq('status', 'published');
 
   // Filter by has_translation=true for English locale
   if (locale === 'en') {
-    query = query.eq('has_translation', true).not('translated_content', 'is', null);
+    query = query.eq('has_translation', true).not('title_en', 'is', null);
   }
 
   let res = await query.order('created_at', { ascending: false });

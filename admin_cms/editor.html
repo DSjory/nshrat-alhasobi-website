@@ -46,13 +46,18 @@
 
         <div id="meta" class="meta" style="margin: 0; max-width: 100%;">
           <div class="form-row"><label class="label">العنوان (عربي)</label><input id="title-ar" class="input"></div>
-          <div class="form-row"><label class="label">العنوان (EN)</label><input id="title-en" class="input"></div>
+          <div class="form-row english-only"><label class="label">العنوان (EN)</label><input id="title-en" class="input"></div>
           <div class="form-row meta-row">
             <div style="flex:1"><label class="label">رقم الإصدار</label><input id="edition" class="input" type="number"></div>
             <div style="width:220px"><label class="label">تاريخ الإصدار</label><input id="issue-date" class="input" type="date"></div>
           </div>
-          <div class="form-row"><label class="label">وقت القراءة (مثال: 5 دقائق)</label><input id="reading-time" class="input" placeholder="5 دقائق / 5 mins"></div>
-          <div class="form-row"><label class="label">رسالة الترحيب</label><textarea id="welcome-message" class="input" rows="3" placeholder="Welcome to the Hasoobi newsletter... / اهلا بك في نشرة الحاسوبي"></textarea></div>
+          <div class="form-row">
+            <label><input id="has-translation" type="checkbox"> هل لديه ترجمة إنجليزية؟</label>
+          </div>
+          <div class="form-row"><label class="label">وقت القراءة (عربي)</label><input id="reading-time" class="input" placeholder="5 دقائق"></div>
+          <div class="form-row english-only"><label class="label">وقت القراءة (EN)</label><input id="reading-time-en" class="input" placeholder="5 mins"></div>
+          <div class="form-row"><label class="label">رسالة الترحيب (عربي)</label><textarea id="welcome-message" class="input" rows="3" placeholder="اهلا بك في نشرة الحاسوبي"></textarea></div>
+          <div class="form-row english-only"><label class="label">رسالة الترحيب (EN)</label><textarea id="welcome-message-en" class="input" rows="3" placeholder="Welcome to the Hasoobi newsletter..."></textarea></div>
           <div class="form-row"><label class="label">التصنيف</label><select id="category" class="input"><option value="">-- اختر --</option></select></div>
           <div class="form-row"><label class="label">صورة الغلاف</label>
             <div class="uploader" id="cover-uploader">
@@ -60,13 +65,6 @@
               <div id="cover-preview"></div>
               <div id="cover-status" class="muted"></div>
             </div>
-          </div>
-          <div class="form-row">
-            <label><input id="has-translation" type="checkbox"> هل لديه ترجمة إنجليزية؟</label>
-          </div>
-          <div class="form-row" id="translation-input-row" style="display: none;">
-            <label class="label">محتوى الترجمة الإنجليزية</label>
-            <textarea id="translated-content" class="input" rows="5" placeholder="نسخة إنجليزية كاملة من النشرة بصيغة نصية..."></textarea>
           </div>
           <div class="form-row"><label><input id="is-published" type="checkbox"> منشور</label></div>
         </div>

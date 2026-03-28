@@ -23,9 +23,7 @@ async function initNewsletterPage(idParam = 'id') {
     }
 
     const { newsletter } = result;
-    const sections = lang === 'ar'
-      ? (result.sections || []).filter((sec) => sec?.section_type?.slug !== 'translation')
-      : (result.sections || []);
+    const sections = (result.sections || []).filter((sec) => sec?.section_type?.slug !== 'translation');
 
     const displayTitle = lang === 'en' && newsletter.title_en ? newsletter.title_en : newsletter.title_ar;
     document.title = displayTitle || document.title;
@@ -39,36 +37,34 @@ async function initNewsletterPage(idParam = 'id') {
       cover.classList.add('hidden');
     }
 
+    const welcomeText = (lang === 'en' && newsletter.has_translation)
+      ? (newsletter.welcome_message_en || newsletter.welcome_message)
+      : newsletter.welcome_message;
+
     // Render welcome message if available
-    if (container && newsletter.welcome_message) {
+    if (container && welcomeText) {
       const welcomeDiv = document.createElement('div');
       welcomeDiv.className = 'newsletter-welcome';
       welcomeDiv.style.marginBottom = '20px';
-      welcomeDiv.innerHTML = `<p style="font-style: italic; color: var(--muted-color);">${htmlEsc(newsletter.welcome_message)}</p>`;
+      welcomeDiv.innerHTML = `<p style="font-style: italic; color: var(--muted-color);">${htmlEsc(welcomeText)}</p>`;
       container.appendChild(welcomeDiv);
     }
 
+    const readingText = (lang === 'en' && newsletter.has_translation)
+      ? (newsletter.reading_time_en || newsletter.reading_time)
+      : newsletter.reading_time;
+
     // Render reading time if available
-    if (container && newsletter.reading_time) {
+    if (container && readingText) {
       const readingDiv = document.createElement('div');
       readingDiv.className = 'newsletter-reading-time';
       readingDiv.style.marginBottom = '20px';
-      readingDiv.innerHTML = `<p style="color: var(--muted-color); font-size: 0.9rem;">⏱️ ${htmlEsc(newsletter.reading_time)}</p>`;
+      readingDiv.innerHTML = `<p style="color: var(--muted-color); font-size: 0.9rem;">⏱️ ${htmlEsc(readingText)}</p>`;
       container.appendChild(readingDiv);
     }
 
-    // If translated version requested and translation exists, show translated content instead of sections
-    if (lang === 'en' && newsletter.has_translation && newsletter.translated_content) {
-      if (container) {
-        const translationDiv = document.createElement('div');
-        translationDiv.className = 'newsletter-translated-content';
-        translationDiv.innerHTML = newsletter.translated_content;
-        container.appendChild(translationDiv);
-      }
-    } else {
-      buildNav(newsletter.nav_type || 'filter', sections);
-      if (container) sections.forEach(sec => container.appendChild(renderSection(sec)));
-    }
+    buildNav(newsletter.nav_type || 'filter', sections);
+    if (container) sections.forEach(sec => container.appendChild(renderSection(sec)));
 
   } catch (err) {
     console.error(err);
@@ -138,15 +134,20 @@ function buildFilterNav(sections) {
 }
 
 function renderSection(sec) {
+  const lang = window._nlLang || 'ar';
   const el = document.createElement('section');
   el.id        = `sec-${sec.id}`;
   el.className = `newsletter-section section-${sec.section_type.slug}`;
   el.dir       = 'rtl';
 
+  const sectionTitle = lang === 'en'
+    ? (sec.section_type.name_en || sec.section_type.name_ar)
+    : (sec.section_type.name_ar || sec.section_type.name_en);
+
   el.innerHTML = `
     <div class="section-header">
       <span class="section-icon">${sec.section_type.icon}</span>
-      <h2 class="section-title">${htmlEsc(sec.section_type.name_ar)}</h2>
+      <h2 class="section-title">${htmlEsc(sectionTitle)}</h2>
       <button class="section-toggle-btn" type="button" aria-expanded="true">إخفاء</button>
     </div>`;
 
@@ -166,21 +167,26 @@ function renderSection(sec) {
     case 'inspiring':
       if (c.header_image_url)
         body.innerHTML += `<img src="${resolveMediaUrl(c.header_image_url)}" alt="${htmlEsc(c.header_image_alt_ar)}" class="section-hero-img" loading="lazy">`;
-      if (c.body_ar)
-        body.innerHTML += `<div class="section-text">${c.body_ar}</div>`;
+      {
+        const bodyText = lang === 'en' ? (c.body_en || c.body_ar) : (c.body_ar || c.body_en);
+        if (bodyText) body.innerHTML += `<div class="section-text">${bodyText}</div>`;
+      }
       break;
 
     case 'news':
       (c.items || []).forEach(item => {
+        const titleText = lang === 'en' ? (item.title_en || item.title_ar) : (item.title_ar || item.title_en);
+        const sourceName = lang === 'en' ? (item.source_name_en || item.source_name_ar) : (item.source_name_ar || item.source_name_en);
+        const summaryText = lang === 'en' ? (item.summary_en || item.summary_ar) : (item.summary_ar || item.summary_en);
         body.innerHTML += `
           <div class="news-item">
             ${item.image_url ? `<img src="${resolveMediaUrl(item.image_url)}" class="news-thumb" loading="lazy" alt="">` : ''}
             <div class="news-item-body">
               <h3 class="news-title">${item.source_url
-                ? `<a href="${htmlEsc(item.source_url)}" target="_blank" rel="noopener">${htmlEsc(item.title_ar)}</a>`
-                : htmlEsc(item.title_ar)}</h3>
-              ${item.source_name_ar ? `<span class="news-source">${htmlEsc(item.source_name_ar)}</span>` : ''}
-              ${item.summary_ar    ? `<p class="news-summary">${htmlEsc(item.summary_ar)}</p>`          : ''}
+                ? `<a href="${htmlEsc(item.source_url)}" target="_blank" rel="noopener">${htmlEsc(titleText)}</a>`
+                : htmlEsc(titleText)}</h3>
+              ${sourceName ? `<span class="news-source">${htmlEsc(sourceName)}</span>` : ''}
+              ${summaryText ? `<p class="news-summary">${htmlEsc(summaryText)}</p>` : ''}
             </div>
           </div>`;
       });
@@ -188,15 +194,18 @@ function renderSection(sec) {
 
     case 'articles':
       (c.items || []).forEach(item => {
+        const titleText = lang === 'en' ? (item.title_en || item.title_ar) : (item.title_ar || item.title_en);
+        const authorText = lang === 'en' ? (item.author_name_en || item.author_name_ar) : (item.author_name_ar || item.author_name_en);
+        const excerptText = lang === 'en' ? (item.excerpt_en || item.excerpt_ar) : (item.excerpt_ar || item.excerpt_en);
         body.innerHTML += `
           <div class="article-item">
             ${item.image_url ? `<img src="${resolveMediaUrl(item.image_url)}" class="article-thumb" loading="lazy" alt="">` : ''}
             <div class="article-item-body">
               <h3 class="article-title">${item.article_url
-                ? `<a href="${htmlEsc(item.article_url)}" target="_blank" rel="noopener">${htmlEsc(item.title_ar)}</a>`
-                : htmlEsc(item.title_ar)}</h3>
-              ${item.author_name_ar ? `<span class="article-author">${htmlEsc(item.author_name_ar)}</span>` : ''}
-              ${item.excerpt_ar     ? `<p class="article-excerpt">${htmlEsc(item.excerpt_ar)}</p>`          : ''}
+                ? `<a href="${htmlEsc(item.article_url)}" target="_blank" rel="noopener">${htmlEsc(titleText)}</a>`
+                : htmlEsc(titleText)}</h3>
+              ${authorText ? `<span class="article-author">${htmlEsc(authorText)}</span>` : ''}
+              ${excerptText ? `<p class="article-excerpt">${htmlEsc(excerptText)}</p>` : ''}
             </div>
           </div>`;
       });
@@ -204,16 +213,19 @@ function renderSection(sec) {
 
     case 'podcast':
       if (c.audio_url) {
+        const podcastTitle = lang === 'en' ? (c.title_en || c.title_ar) : (c.title_ar || c.title_en);
+        const podcastDesc = lang === 'en' ? (c.description_en || c.description_ar) : (c.description_ar || c.description_en);
+        const durationLabel = lang === 'en' ? 'min' : 'دقيقة';
         body.innerHTML += `
           <div class="podcast-player">
             ${c.cover_image_url ? `<img src="${resolveMediaUrl(c.cover_image_url)}" class="podcast-cover" loading="lazy" alt="">` : ''}
             <div class="podcast-info">
-              <h3 class="podcast-title">${htmlEsc(c.title_ar)}</h3>
-              ${c.description_ar   ? `<p class="podcast-desc">${htmlEsc(c.description_ar)}</p>`                          : ''}
-              ${c.duration_seconds ? `<span class="podcast-dur">${Math.floor(c.duration_seconds/60)} دقيقة</span>`       : ''}
+              <h3 class="podcast-title">${htmlEsc(podcastTitle)}</h3>
+              ${podcastDesc ? `<p class="podcast-desc">${htmlEsc(podcastDesc)}</p>` : ''}
+              ${c.duration_seconds ? `<span class="podcast-dur">${Math.floor(c.duration_seconds/60)} ${durationLabel}</span>` : ''}
             </div>
             <audio controls src="${htmlEsc(resolveMediaUrl(c.audio_url) || c.audio_url)}" class="podcast-audio"></audio>
-            ${c.external_link ? `<a href="${htmlEsc(c.external_link)}" class="podcast-ext-link" target="_blank" rel="noopener">استمع على المنصة</a>` : ''}
+            ${c.external_link ? `<a href="${htmlEsc(c.external_link)}" class="podcast-ext-link" target="_blank" rel="noopener">${lang === 'en' ? 'Listen on platform' : 'استمع على المنصة'}</a>` : ''}
           </div>`;
       }
       break;

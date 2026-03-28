@@ -86,7 +86,9 @@ CREATE TABLE IF NOT EXISTS public.newsletters (
   issue_date      date,
   cover_image_url text,
   reading_time    varchar(255),
+  reading_time_en varchar(255),
   welcome_message text        DEFAULT 'Welcome to the Hasoobi newsletter... / اهلا بك في نشرة الحاسوبي',
+  welcome_message_en text,
   has_translation boolean     NOT NULL DEFAULT false,
   translated_content text,
   nav_type        text        NOT NULL DEFAULT 'filter'
@@ -100,7 +102,9 @@ CREATE TABLE IF NOT EXISTS public.newsletters (
 -- Backfill columns for pre-existing databases (CREATE TABLE IF NOT EXISTS will not add new columns)
 ALTER TABLE public.newsletters
   ADD COLUMN IF NOT EXISTS reading_time varchar(255),
+  ADD COLUMN IF NOT EXISTS reading_time_en varchar(255),
   ADD COLUMN IF NOT EXISTS welcome_message text DEFAULT 'Welcome to the Hasoobi newsletter... / اهلا بك في نشرة الحاسوبي',
+  ADD COLUMN IF NOT EXISTS welcome_message_en text,
   ADD COLUMN IF NOT EXISTS has_translation boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS translated_content text;
 
@@ -161,12 +165,18 @@ CREATE TABLE IF NOT EXISTS public.section_news_items (
   title_ar              text        NOT NULL DEFAULT '',
   title_en              text,
   summary_ar            text,
+  summary_en            text,
   source_name_ar        text,
+  source_name_en        text,
   source_url            text,
   image_url             text,
   sort_order            int         NOT NULL DEFAULT 0,
   created_at            timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.section_news_items
+  ADD COLUMN IF NOT EXISTS summary_en text,
+  ADD COLUMN IF NOT EXISTS source_name_en text;
 
 
 -- ── 8. section_article_items ──────────────────────────────────────────────────
@@ -177,12 +187,18 @@ CREATE TABLE IF NOT EXISTS public.section_article_items (
   title_ar              text        NOT NULL DEFAULT '',
   title_en              text,
   author_name_ar        text,
+  author_name_en        text,
   excerpt_ar            text,
+  excerpt_en            text,
   article_url           text,
   image_url             text,
   sort_order            int         NOT NULL DEFAULT 0,
   created_at            timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.section_article_items
+  ADD COLUMN IF NOT EXISTS author_name_en text,
+  ADD COLUMN IF NOT EXISTS excerpt_en text;
 
 
 -- ── 9. section_podcast ────────────────────────────────────────────────────────
@@ -193,6 +209,7 @@ CREATE TABLE IF NOT EXISTS public.section_podcast (
   title_ar              text        NOT NULL DEFAULT '',
   title_en              text,
   description_ar        text,
+  description_en        text,
   audio_url             text        NOT NULL DEFAULT '',
   cover_image_url       text,
   duration_seconds      int,
@@ -200,6 +217,9 @@ CREATE TABLE IF NOT EXISTS public.section_podcast (
   created_at            timestamptz NOT NULL DEFAULT now(),
   updated_at            timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE public.section_podcast
+  ADD COLUMN IF NOT EXISTS description_en text;
 
 
 -- ── 10. section_translation ───────────────────────────────────────────────────
