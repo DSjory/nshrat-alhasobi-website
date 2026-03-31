@@ -122,6 +122,16 @@ async function fetchSectionContent(sectionId, slug) {
   return {};
 }
 
+async function fetchNewsletterEditors(newsletterId) {
+  const { data, error } = await window.supabase
+    .from('newsletter_editors')
+    .select('*')
+    .eq('newsletter_id', newsletterId)
+    .order('sort_order');
+  if (error) throw error;
+  return data || [];
+}
+
 async function fetchPublishedNewsletter(newsletterId) {
   // Step A: fetch the newsletter row
   const { data: newsletter, error: nlErr } = await window.supabase
@@ -145,7 +155,11 @@ async function fetchPublishedNewsletter(newsletterId) {
       content: await fetchSectionContent(sec.id, sec.section_type.slug),
     }))
   );
-  return { newsletter, sections: sectionsWithContent };
+  
+  // Step D: Fetch editors
+  const editors = await fetchNewsletterEditors(newsletterId);
+  
+  return { newsletter, sections: sectionsWithContent, editors };
 }
 
 async function fetchNewsletterForEditing(newsletterId) {

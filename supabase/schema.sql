@@ -129,6 +129,20 @@ ALTER TABLE public.newsletter_sections
   ADD COLUMN IF NOT EXISTS header_image_alt_ar text;
 
 
+-- ── 4b. newsletter_editors ────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.newsletter_editors (
+  id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  newsletter_id   uuid        NOT NULL REFERENCES public.newsletters(id) ON DELETE CASCADE,
+  name_ar         text        NOT NULL DEFAULT '',
+  role_ar         text        NOT NULL DEFAULT '',
+  name_en         text,
+  role_en         text,
+  sort_order      int         NOT NULL DEFAULT 0,
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now()
+);
+
+
 -- ── 5. section_illumination ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.section_illumination (
   id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -495,6 +509,7 @@ BEGIN
   FOREACH tbl IN ARRAY ARRAY[
     'newsletters',
     'newsletter_sections',
+    'newsletter_editors',
     'section_illumination',
     'section_inspiring',
     'section_podcast',
@@ -525,6 +540,7 @@ BEGIN
     -- Newsletter structure
     'newsletters',
     'newsletter_sections',
+    'newsletter_editors',
     -- Section content (all six types)
     'section_illumination',
     'section_inspiring',
@@ -597,6 +613,9 @@ CREATE INDEX IF NOT EXISTS idx_newsletter_sections_newsletter
 
 CREATE INDEX IF NOT EXISTS idx_newsletter_sections_type
   ON public.newsletter_sections (section_type_id);
+
+CREATE INDEX IF NOT EXISTS idx_newsletter_editors_newsletter
+  ON public.newsletter_editors (newsletter_id);
 
 CREATE INDEX IF NOT EXISTS idx_section_news_items_section
   ON public.section_news_items (newsletter_section_id);
@@ -826,6 +845,7 @@ BEGIN
     'section_types',
     'newsletters',
     'newsletter_sections',
+    'newsletter_editors',
     'section_illumination',
     'section_inspiring',
     'section_news_items',
@@ -879,10 +899,11 @@ BEGIN
   EXCEPTION WHEN duplicate_object THEN NULL; END;
 
 
-  -- ── all section-content tables ──────────────────────────────────────────────
+  -- ── all section-content tables + newsletter_editors ────────────────────────────────
   -- Public: SELECT. Authenticated admins: full access.
   FOREACH tbl IN ARRAY ARRAY[
     'newsletter_sections',
+    'newsletter_editors',
     'section_illumination',
     'section_inspiring',
     'section_news_items',
