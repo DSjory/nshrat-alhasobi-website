@@ -269,6 +269,7 @@ async function upsertSectionContent(slug, sectionId, content) {
         description_en:   content.description_en   || null,
         audio_url:        content.audio_url        || '',
         cover_image_url:  content.cover_image_url  || null,
+        podcast_image_url: content.podcast_image_url || null,
         duration_seconds: content.duration_seconds || null,
         external_link:    content.external_link    || null,
       };

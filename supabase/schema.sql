@@ -225,6 +225,7 @@ CREATE TABLE IF NOT EXISTS public.section_podcast (
   description_en        text,
   audio_url             text        NOT NULL DEFAULT '',
   cover_image_url       text,
+  podcast_image_url     text,
   duration_seconds      int,
   external_link         text,
   created_at            timestamptz NOT NULL DEFAULT now(),
@@ -232,7 +233,8 @@ CREATE TABLE IF NOT EXISTS public.section_podcast (
 );
 
 ALTER TABLE public.section_podcast
-  ADD COLUMN IF NOT EXISTS description_en text;
+  ADD COLUMN IF NOT EXISTS description_en text,
+  ADD COLUMN IF NOT EXISTS podcast_image_url text;
 
 
 -- ── 11. join_requests ─────────────────────────────────────────────────────────

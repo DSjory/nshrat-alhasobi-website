@@ -77,6 +77,17 @@ export async function uploadFileWithProgress(file, prefix = '', onProgress = nul
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData?.session?.access_token || null;
 
+  function parseUploadError(status, responseText) {
+    let details = '';
+    try {
+      const parsed = JSON.parse(responseText || '{}');
+      details = parsed?.message || parsed?.error || parsed?.error_description || '';
+    } catch (_) {
+      details = (responseText || '').trim();
+    }
+    return new Error(`Upload failed with status ${status}${details ? `: ${details}` : ''}`);
+  }
+
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('PUT', uploadUrl, true);
@@ -98,7 +109,18 @@ export async function uploadFileWithProgress(file, prefix = '', onProgress = nul
           resolve(publicData?.publicUrl || null);
         }catch(err){ resolve(null); }
       } else {
-        reject(new Error(`Upload failed with status ${xhr.status}`));
+        // Fallback for environments where direct PUT can fail with 400.
+        if (xhr.status === 400) {
+          try {
+            const fallbackUrl = await uploadFileToBucket(file, prefix, onProgress);
+            resolve(fallbackUrl);
+            return;
+          } catch (fallbackErr) {
+            reject(parseUploadError(xhr.status, xhr.responseText || fallbackErr?.message || ''));
+            return;
+          }
+        }
+        reject(parseUploadError(xhr.status, xhr.responseText));
       }
     };
     xhr.onerror = function() { reject(new Error('Network error during upload')); };
