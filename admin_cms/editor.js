@@ -32,11 +32,14 @@ const btnAddSection = document.getElementById('btn-add-section');
 const sectionsDiv = document.getElementById('sections');
 const sectionEditorArea = document.getElementById('section-editor-area');
 const publishAllBtn = document.getElementById('publish-all');
+const btnAddEditor = document.getElementById('btn-add-editor');
+const editorsList = document.getElementById('editors-list');
 
 let categoriesCache = [];
 let sectionTypes = [];
 let newsletter = null;
 let newsletterSections = [];
+let newsletterEditors = [];
 
 function toggleTranslationFields(showEnglish) {
   document.querySelectorAll('.english-only').forEach((el) => {
@@ -96,7 +99,182 @@ async function loadNewsletter(id){
       coverStatus.textContent = '';
     }
     await loadNewsletterSections(id);
+    await loadNewsletterEditors(id);
   }catch(e){ console.error(e); showToast('فشل جلب بيانات النشرة','error'); }
+}
+
+async function loadNewsletterEditors(nlId){
+  try{
+    const { data, error } = await supabase.from('newsletter_editors').select('*').eq('newsletter_id', nlId).order('sort_order', {ascending:true});
+    if (error) throw error;
+    newsletterEditors = data || [];
+    renderEditorsList();
+  }catch(e){ console.error(e); }
+}
+
+function renderEditorsList(){
+  editorsList.innerHTML = '';
+  newsletterEditors.forEach((editor, idx) => {
+    const el = document.createElement('div');
+    el.className = 'editor-item';
+    el.style.marginBottom = '12px';
+    el.style.padding = '12px';
+    el.style.backgroundColor = 'rgba(0,0,0,0.02)';
+    el.style.borderRadius = '4px';
+    el.style.display = 'flex';
+    el.style.justifyContent = 'space-between';
+    el.style.alignItems = 'center';
+    
+    const info = document.createElement('div');
+    info.innerHTML = `<strong>${htmlEsc(editor.name_ar || editor.name_en)}</strong><br><small style="color:#999;">${htmlEsc(editor.role_ar || editor.role_en || '')}</small>`;
+    
+    const controls = document.createElement('div');
+    controls.style.display = 'flex';
+    controls.style.gap = '8px';
+    
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn';
+    editBtn.textContent = 'تحرير';
+    editBtn.addEventListener('click', () => openEditorEditor(editor));
+    
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn';
+    delBtn.textContent = 'حذف';
+    delBtn.style.color = '#dc2626';
+    delBtn.style.borderColor = '#dc2626';
+    delBtn.addEventListener('click', async () => {
+      const ok = await showConfirm('حذف المعدِّ؟');
+      if (!ok) return;
+      const { error } = await supabase.from('newsletter_editors').delete().eq('id', editor.id);
+      if (error) return showToast(error.message, 'error');
+      await loadNewsletterEditors(newsletter.id);
+      showToast('تم حذف المعدِّ');
+    });
+    
+    controls.append(editBtn, delBtn);
+    el.append(info, controls);
+    editorsList.appendChild(el);
+  });
+}
+
+function htmlEsc(str) {
+  return (str || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openEditorEditor(editor = null){
+  const mode = editor ? 'تحرير' : 'إضافة';
+  const dialog = document.createElement('div');
+  dialog.style.position = 'fixed';
+  dialog.style.top = '0';
+  dialog.style.left = '0';
+  dialog.style.right = '0';
+  dialog.style.bottom = '0';
+  dialog.style.backgroundColor = 'rgba(0,0,0,0.5)';
+  dialog.style.display = 'flex';
+  dialog.style.justifyContent = 'center';
+  dialog.style.alignItems = 'center';
+  dialog.style.zIndex = '10000';
+  
+  const modal = document.createElement('div');
+  modal.className = 'newsletter-card';
+  modal.style.width = '90%';
+  modal.style.maxWidth = '500px';
+  modal.style.maxHeight = '90vh';
+  modal.style.overflowY = 'auto';
+  
+  const title = document.createElement('h3');
+  title.textContent = `${mode} المعدِّ`;
+  
+  const form = document.createElement('div');
+  
+  const nameLabel = document.createElement('label');
+  nameLabel.className = 'label';
+  nameLabel.textContent = 'الاسم (عربي) *';
+  const nameInput = document.createElement('input');
+  nameInput.className = 'input';
+  nameInput.value = editor?.name_ar || '';
+  nameInput.placeholder = 'الاسم';
+  
+  const roleLabel = document.createElement('label');
+  roleLabel.className = 'label';
+  roleLabel.textContent = 'الدور (عربي) *';
+  roleLabel.style.marginTop = '16px';
+  const roleInput = document.createElement('input');
+  roleInput.className = 'input';
+  roleInput.value = editor?.role_ar || '';
+  roleInput.placeholder = 'مثال: كاتب النشرة';
+  
+  const nameEnLabel = document.createElement('label');
+  nameEnLabel.className = 'label english-only';
+  nameEnLabel.textContent = 'الاسم (EN)';
+  nameEnLabel.style.marginTop = '16px';
+  const nameEnInput = document.createElement('input');
+  nameEnInput.className = 'input english-only';
+  nameEnInput.value = editor?.name_en || '';
+  nameEnInput.placeholder = 'Name';
+  
+  const roleEnLabel = document.createElement('label');
+  roleEnLabel.className = 'label english-only';
+  roleEnLabel.textContent = 'الدور (EN)';
+  roleEnLabel.style.marginTop = '16px';
+  const roleEnInput = document.createElement('input');
+  roleEnInput.className = 'input english-only';
+  roleEnInput.value = editor?.role_en || '';
+  roleEnInput.placeholder = 'Role';
+  
+  toggleTranslationFields(hasTranslation.checked);
+  
+  const btnContainer = document.createElement('div');
+  btnContainer.style.marginTop = '20px';
+  btnContainer.style.display = 'flex';
+  btnContainer.style.gap = '8px';
+  btnContainer.style.justifyContent = 'flex-end';
+  
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary';
+  saveBtn.textContent = 'حفظ';
+  saveBtn.addEventListener('click', async () => {
+    if (!nameInput.value.trim()) return showToast('الاسم مطلوب', 'error');
+    if (!roleInput.value.trim()) return showToast('الدور مطلوب', 'error');
+    
+    const payload = {
+      newsletter_id: newsletter.id,
+      name_ar: nameInput.value.trim(),
+      role_ar: roleInput.value.trim(),
+      name_en: hasTranslation.checked ? (nameEnInput.value || null) : null,
+      role_en: hasTranslation.checked ? (roleEnInput.value || null) : null,
+      sort_order: editor?.sort_order || 0
+    };
+    
+    try {
+      if (editor && editor.id) {
+        const { error } = await supabase.from('newsletter_editors').update(payload).eq('id', editor.id);
+        if (error) throw error;
+        showToast('تم تحديث المعدِّ');
+      } else {
+        const { error } = await supabase.from('newsletter_editors').insert(payload);
+        if (error) throw error;
+        showToast('تم إضافة المعدِّ');
+      }
+      await loadNewsletterEditors(newsletter.id);
+      document.body.removeChild(dialog);
+    } catch (e) {
+      showToast(e.message || e, 'error');
+    }
+  });
+  
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn';
+  cancelBtn.textContent = 'إلغاء';
+  cancelBtn.addEventListener('click', () => document.body.removeChild(dialog));
+  
+  btnContainer.append(saveBtn, cancelBtn);
+  form.append(nameLabel, nameInput, roleLabel, roleInput, nameEnLabel, nameEnInput, roleEnLabel, roleEnInput, btnContainer);
+  modal.append(title, form);
+  dialog.appendChild(modal);
+  document.body.appendChild(dialog);
 }
 
 async function loadNewsletterSections(nlId){
@@ -170,6 +348,11 @@ btnAddSection.addEventListener('click', async ()=>{
     await loadNewsletterSections(newsletter.id);
     showToast('تم إضافة القسم');
   }catch(e){ showToast(e.message || 'خطأ','error'); }
+});
+
+btnAddEditor.addEventListener('click', () => {
+  if (!newsletter || !newsletter.id) return showToast('احفظ بيانات النشرة أولاً','error');
+  openEditorEditor();
 });
 
 async function openSectionEditor(section){

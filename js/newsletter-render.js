@@ -46,6 +46,11 @@ async function initNewsletterPage(idParam = 'id') {
       : newsletter.reading_time;
 
     mountNewsletterIntro(welcomeText, readingText, lang);
+    
+    // Mount editors section if available
+    if (result.editors && result.editors.length > 0) {
+      mountNewsletterEditors(result.editors, lang);
+    }
 
     buildNav(newsletter.nav_type || 'filter', sections);
     if (container) sections.forEach(sec => container.appendChild(renderSection(sec)));
@@ -320,6 +325,51 @@ function mountNewsletterIntro(welcomeText, readingText, lang = 'ar') {
 
   const intro = renderNewsletterIntro(welcomeText, readingText, lang);
   title.insertAdjacentElement('afterend', intro);
+}
+
+function renderNewsletterEditors(editors, lang = 'ar') {
+  const wrap = document.createElement('section');
+  wrap.className = 'newsletter-editors';
+  wrap.dir = 'rtl';
+  
+  const title = document.createElement('h3');
+  title.className = 'newsletter-editors-title';
+  title.textContent = lang === 'en' ? 'Newsletter Editors' : 'معدّو النشرة';
+  
+  const list = document.createElement('ul');
+  list.className = 'newsletter-editors-list';
+  
+  editors.forEach(editor => {
+    const li = document.createElement('li');
+    li.className = 'newsletter-editor-item';
+    
+    const name = lang === 'en' ? (editor.name_en || editor.name_ar) : (editor.name_ar || editor.name_en);
+    const role = lang === 'en' ? (editor.role_en || editor.role_ar) : (editor.role_ar || editor.role_en);
+    
+    li.innerHTML = `<strong>${htmlEsc(name)}</strong>${role ? `: ${htmlEsc(role)}` : ''}`;
+    list.appendChild(li);
+  });
+  
+  wrap.appendChild(title);
+  wrap.appendChild(list);
+  return wrap;
+}
+
+function mountNewsletterEditors(editors, lang = 'ar') {
+  const page = document.querySelector('.nl-page');
+  const intro = page?.querySelector('.newsletter-welcome');
+  if (!page) return;
+  
+  const oldEditors = page.querySelector('.newsletter-editors');
+  if (oldEditors) oldEditors.remove();
+  
+  const editorsSection = renderNewsletterEditors(editors, lang);
+  if (intro) {
+    intro.insertAdjacentElement('afterend', editorsSection);
+  } else {
+    const title = page.querySelector('.newsletter-title');
+    if (title) title.insertAdjacentElement('afterend', editorsSection);
+  }
 }
 
 window.initNewsletterPage = initNewsletterPage;
