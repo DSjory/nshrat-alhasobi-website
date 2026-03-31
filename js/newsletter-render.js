@@ -214,13 +214,14 @@ function renderSection(sec) {
       if (c.audio_url) {
         const podcastTitle = lang === 'en' ? (c.title_en || c.title_ar) : (c.title_ar || c.title_en);
         const podcastDesc = lang === 'en' ? (c.description_en || c.description_ar) : (c.description_ar || c.description_en);
+        const podcastImageUrl = c.podcast_image_url || c.cover_image_url;
         const durationLabel = lang === 'en' ? 'min' : 'دقيقة';
         body.innerHTML += `
           <div class="podcast-player">
-            ${c.cover_image_url ? `<img src="${resolveMediaUrl(c.cover_image_url)}" class="podcast-cover" loading="lazy" alt="">` : ''}
             <div class="podcast-info">
               <h3 class="podcast-title">${htmlEsc(podcastTitle)}</h3>
               ${podcastDesc ? `<p class="podcast-desc">${htmlEsc(podcastDesc)}</p>` : ''}
+              ${podcastImageUrl ? `<img src="${resolveMediaUrl(podcastImageUrl)}" class="podcast-image" loading="lazy" alt="">` : ''}
               ${c.duration_seconds ? `<span class="podcast-dur">${Math.floor(c.duration_seconds/60)} ${durationLabel}</span>` : ''}
             </div>
             <audio controls src="${htmlEsc(resolveMediaUrl(c.audio_url) || c.audio_url)}" class="podcast-audio"></audio>
@@ -256,6 +257,7 @@ function findFirstSectionImage(sections) {
   for (const sec of (sections || [])) {
     const c = sec.content || {};
     if (c.header_image_url) return c.header_image_url;
+    if (c.podcast_image_url) return c.podcast_image_url;
     if (c.cover_image_url) return c.cover_image_url;
     if (Array.isArray(c.items)) {
       const withImage = c.items.find((x) => x?.image_url);

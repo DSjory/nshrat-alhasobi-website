@@ -542,6 +542,7 @@ async function openSectionEditor(section){
     container.append(list, addBtn);
   } else if (slug === 'podcast'){
     const { data } = await supabase.from('section_podcast').select('*').eq('newsletter_section_id', section.id).maybeSingle();
+    let podcastImageUrl = data?.podcast_image_url || data?.cover_image_url || null;
     const titleArLabel = document.createElement('label'); titleArLabel.className='label'; titleArLabel.textContent='عنوان البودكاست (عربي)';
     const title = document.createElement('input'); title.className='input'; title.value = data?.title_ar || '';
     const titleEnWrap = document.createElement('div'); titleEnWrap.className='english-only';
@@ -554,6 +555,55 @@ async function openSectionEditor(section){
     const descEnLabel = document.createElement('label'); descEnLabel.className='label'; descEnLabel.textContent='وصف البودكاست (EN)';
     const descEn = document.createElement('textarea'); descEn.className='input'; descEn.rows=4; descEn.value = data?.description_en || '';
     descEnWrap.append(descEnLabel, descEn);
+
+    const imageLabel = document.createElement('label');
+    imageLabel.className = 'label';
+    imageLabel.textContent = 'صورة البودكاست (تظهر تحت الوصف)';
+    const imageFile = document.createElement('input');
+    imageFile.type = 'file';
+    imageFile.accept = 'image/*';
+    imageFile.className = 'input';
+    const imagePreview = document.createElement('div');
+    imagePreview.style.margin = '8px 0';
+    if (podcastImageUrl) {
+      imagePreview.innerHTML = `<img src="${podcastImageUrl}" style="max-width: 100%; height: auto; border-radius: 8px; max-height: 220px;">`;
+    }
+    const clearImageBtn = document.createElement('button');
+    clearImageBtn.type = 'button';
+    clearImageBtn.className = 'btn';
+    clearImageBtn.textContent = 'حذف صورة البودكاست';
+    clearImageBtn.addEventListener('click', () => {
+      podcastImageUrl = null;
+      imageFile.value = '';
+      imagePreview.innerHTML = '';
+    });
+
+    imageFile.addEventListener('change', async () => {
+      const file = imageFile.files?.[0];
+      if (!file) return;
+      try {
+        setLoading(imageFile, true);
+        const prog = document.createElement('progress');
+        prog.max = 1;
+        prog.value = 0;
+        imagePreview.appendChild(prog);
+        const note = showToast('جاري رفع صورة البودكاست…', 'pending', 0);
+        const publicUrl = await uploadFileWithProgress(file, `sections/${section.id}`, (ratio) => {
+          if (ratio >= 0) prog.value = ratio;
+        });
+        prog.value = 1;
+        note.dismiss();
+        podcastImageUrl = publicUrl;
+        imagePreview.innerHTML = `<img src="${publicUrl}" style="max-width: 100%; height: auto; border-radius: 8px; max-height: 220px;">`;
+        imageFile.value = '';
+        showToast('تم رفع صورة البودكاست');
+      } catch (e) {
+        showToast(e.message || e, 'error');
+      } finally {
+        setLoading(imageFile, false);
+      }
+    });
+
     const audioFile = document.createElement('input'); audioFile.type='file'; audioFile.accept='audio/*';
     const saveBtn = document.createElement('button'); saveBtn.textContent='حفظ'; saveBtn.className='btn btn-primary';
     saveBtn.addEventListener('click', async ()=>{
@@ -573,7 +623,8 @@ async function openSectionEditor(section){
           title_en: hasTranslation.checked ? (titleEn.value || null) : null,
           description_ar: desc.value,
           description_en: hasTranslation.checked ? (descEn.value || null) : null,
-          audio_url: audioUrl
+          audio_url: audioUrl,
+          podcast_image_url: podcastImageUrl
         };
         if (data) await supabase.from('section_podcast').update(payload).eq('id', data.id);
         else await supabase.from('section_podcast').insert(payload);
@@ -581,7 +632,7 @@ async function openSectionEditor(section){
       }catch(e){ showToast(e.message||e,'error'); }
       setLoading(saveBtn, false);
     });
-    container.append(titleArLabel, title, titleEnWrap, descArLabel, desc, descEnWrap, audioFile, saveBtn);
+    container.append(titleArLabel, title, titleEnWrap, descArLabel, desc, descEnWrap, imageLabel, imageFile, imagePreview, clearImageBtn, audioFile, saveBtn);
   } else {
     container.append(document.createElement('div')).textContent = 'نوع القسم غير مدعوم بعد.';
   }
