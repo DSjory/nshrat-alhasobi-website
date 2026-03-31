@@ -27,7 +27,6 @@ export async function loadAuditLog(contentArea, pageTitle) {
           <option value="section_news_items">section_news_items</option>
           <option value="section_article_items">section_article_items</option>
           <option value="section_podcast">section_podcast</option>
-          <option value="section_translation">section_translation</option>
           <option value="join_requests">join_requests</option>
         </select>
         <select id="filter-action" class="input" style="flex:1; min-width:140px;">

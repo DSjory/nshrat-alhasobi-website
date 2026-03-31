@@ -71,8 +71,7 @@ VALUES
   ('inspiring',    'ملهم',      'Inspiring',    '✨', true,  false, 2),
   ('news',         'الأخبار',   'News',         '📰', false, false, 3),
   ('articles',     'المقالات',  'Articles',     '📝', false, false, 4),
-  ('podcast',      'البودكاست', 'Podcast',      '🎙', false, true,  5),
-  ('translation',  'الترجمة',   'Translation',  '🔤', false, false, 6)
+  ('podcast',      'البودكاست', 'Podcast',      '🎙', false, true,  5)
 ON CONFLICT (slug) DO NOTHING;
 
 
@@ -234,24 +233,6 @@ CREATE TABLE IF NOT EXISTS public.section_podcast (
 
 ALTER TABLE public.section_podcast
   ADD COLUMN IF NOT EXISTS description_en text;
-
-
--- ── 10. section_translation ───────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.section_translation (
-  id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  newsletter_section_id uuid        NOT NULL UNIQUE
-                                    REFERENCES public.newsletter_sections(id) ON DELETE CASCADE,
-  header_image_url      text,
-  header_image_alt_ar   text,
-  original_title        text,
-  original_author       text,
-  original_url          text,
-  original_language     text        NOT NULL DEFAULT 'en',
-  translated_body_ar    text        NOT NULL DEFAULT '',
-  translator_note_ar    text,
-  created_at            timestamptz NOT NULL DEFAULT now(),
-  updated_at            timestamptz NOT NULL DEFAULT now()
-);
 
 
 -- ── 11. join_requests ─────────────────────────────────────────────────────────
@@ -512,8 +493,7 @@ BEGIN
     'newsletter_editors',
     'section_illumination',
     'section_inspiring',
-    'section_podcast',
-    'section_translation'
+    'section_podcast'
   ] LOOP
     EXECUTE format(
       'DROP TRIGGER IF EXISTS trg_updated_at ON public.%I', tbl
@@ -541,13 +521,12 @@ BEGIN
     'newsletters',
     'newsletter_sections',
     'newsletter_editors',
-    -- Section content (all six types)
+    -- Section content (all five types)
     'section_illumination',
     'section_inspiring',
     'section_news_items',
     'section_article_items',
     'section_podcast',
-    'section_translation',
     -- Submissions
     'join_requests'
   ] LOOP
@@ -851,7 +830,6 @@ BEGIN
     'section_news_items',
     'section_article_items',
     'section_podcast',
-    'section_translation',
     'join_requests',
     'audit_logs'
   ] LOOP
@@ -908,8 +886,7 @@ BEGIN
     'section_inspiring',
     'section_news_items',
     'section_article_items',
-    'section_podcast',
-    'section_translation'
+    'section_podcast'
   ] LOOP
     BEGIN
       EXECUTE format(
