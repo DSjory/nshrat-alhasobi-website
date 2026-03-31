@@ -377,7 +377,6 @@ async function openSectionEditor(section){
     let legacyTable = null;
     if (slug === 'illumination') legacyTable = 'section_illumination';
     else if (slug === 'inspiring') legacyTable = 'section_inspiring';
-    else if (slug === 'translation') legacyTable = 'section_translation';
 
     if (!legacyTable) {
       throw new Error('هذا القسم يتطلب تحديث قاعدة البيانات لحفظ صورة الهيدر.');
@@ -506,7 +505,6 @@ async function openSectionEditor(section){
     const labelEn = document.createElement('label'); labelEn.className = 'label'; labelEn.textContent = 'المحتوى (EN)';
     const textareaEn = document.createElement('textarea'); textareaEn.className='input'; textareaEn.rows=8; textareaEn.value = data?.body_en || '';
     enWrap.append(labelEn, textareaEn);
-    toggleTranslationFields(hasTranslation.checked);
     const saveBtn = document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='حفظ القسم';
     saveBtn.addEventListener('click', async ()=>{
       setLoading(saveBtn, true);
@@ -526,13 +524,21 @@ async function openSectionEditor(section){
     const { data } = await supabase.from('section_news_items').select('*').eq('newsletter_section_id', section.id).order('sort_order',{ascending:true});
     const list = document.createElement('div'); list.className='repeat-list';
     (data||[]).forEach(it=> list.append(createNewsItemRow(it, section)));
-    const addBtn = document.createElement('button'); addBtn.textContent = '+ إضافة خبر'; addBtn.className='btn'; addBtn.addEventListener('click', ()=> list.append(createNewsItemRow(null, section)));
+    const addBtn = document.createElement('button'); addBtn.textContent = '+ إضافة خبر'; addBtn.className='btn'; addBtn.addEventListener('click', ()=> {
+      const newRow = createNewsItemRow(null, section);
+      list.append(newRow);
+      toggleTranslationFields(hasTranslation.checked);
+    });
     container.append(list, addBtn);
   } else if (slug === 'articles'){
     const { data } = await supabase.from('section_article_items').select('*').eq('newsletter_section_id', section.id).order('sort_order',{ascending:true});
     const list = document.createElement('div'); list.className='repeat-list';
     (data||[]).forEach(it=> list.append(createArticleItemRow(it, section)));
-    const addBtn = document.createElement('button'); addBtn.textContent = '+ إضافة مقال'; addBtn.className='btn'; addBtn.addEventListener('click', ()=> list.append(createArticleItemRow(null, section)));
+    const addBtn = document.createElement('button'); addBtn.textContent = '+ إضافة مقال'; addBtn.className='btn'; addBtn.addEventListener('click', ()=> {
+      const newRow = createArticleItemRow(null, section);
+      list.append(newRow);
+      toggleTranslationFields(hasTranslation.checked);
+    });
     container.append(list, addBtn);
   } else if (slug === 'podcast'){
     const { data } = await supabase.from('section_podcast').select('*').eq('newsletter_section_id', section.id).maybeSingle();
@@ -548,7 +554,6 @@ async function openSectionEditor(section){
     const descEnLabel = document.createElement('label'); descEnLabel.className='label'; descEnLabel.textContent='وصف البودكاست (EN)';
     const descEn = document.createElement('textarea'); descEn.className='input'; descEn.rows=4; descEn.value = data?.description_en || '';
     descEnWrap.append(descEnLabel, descEn);
-    toggleTranslationFields(hasTranslation.checked);
     const audioFile = document.createElement('input'); audioFile.type='file'; audioFile.accept='audio/*';
     const saveBtn = document.createElement('button'); saveBtn.textContent='حفظ'; saveBtn.className='btn btn-primary';
     saveBtn.addEventListener('click', async ()=>{
@@ -577,28 +582,13 @@ async function openSectionEditor(section){
       setLoading(saveBtn, false);
     });
     container.append(titleArLabel, title, titleEnWrap, descArLabel, desc, descEnWrap, audioFile, saveBtn);
-  } else if (slug === 'translation'){
-    const { data } = await supabase.from('section_translation').select('*').eq('newsletter_section_id', section.id).maybeSingle();
-    const origTitle = document.createElement('input'); origTitle.className='input'; origTitle.value = data?.original_title || '';
-    const origAuthor = document.createElement('input'); origAuthor.className='input'; origAuthor.value = data?.original_author || '';
-    const trBody = document.createElement('textarea'); trBody.className='input'; trBody.rows=8; trBody.value = data?.translated_body_ar || '';
-    const saveBtn = document.createElement('button'); saveBtn.textContent='حفظ'; saveBtn.className='btn btn-primary';
-    saveBtn.addEventListener('click', async ()=>{
-      setLoading(saveBtn, true);
-      try{
-        const payload = { newsletter_section_id: section.id, original_title: origTitle.value, original_author: origAuthor.value, translated_body_ar: trBody.value };
-        if (data) await supabase.from('section_translation').update(payload).eq('id', data.id);
-        else await supabase.from('section_translation').insert(payload);
-        showToast('تم حفظ الترجمة');
-      }catch(e){ showToast(e.message||e,'error'); }
-      setLoading(saveBtn, false);
-    });
-    container.append(origTitle, origAuthor, trBody, saveBtn);
   } else {
     container.append(document.createElement('div')).textContent = 'نوع القسم غير مدعوم بعد.';
   }
 
   sectionEditorArea.appendChild(container);
+  // Apply translation field visibility after container is in DOM
+  toggleTranslationFields(hasTranslation.checked);
 }
 
 function createNewsItemRow(item, section){
@@ -623,7 +613,6 @@ function createNewsItemRow(item, section){
   sourceNameEnWrap.append(sourceNameEnLabel, sourceNameEn);
   const sourceUrlLabel = document.createElement('label'); sourceUrlLabel.className='label'; sourceUrlLabel.textContent='رابط المصدر';
   const source = document.createElement('input'); source.className='input'; source.placeholder='مصدر/رابط'; source.value = item?.source_url || '';
-  toggleTranslationFields(hasTranslation.checked);
   const save = document.createElement('button'); save.className='btn btn-primary'; save.textContent='حفظ خبر';
   save.addEventListener('click', async ()=>{
     if (!title.value || !title.value.trim()) return showToast('العنوان مطلوب','error');
@@ -675,7 +664,6 @@ function createArticleItemRow(item, section){
   const excerptEnLabel = document.createElement('label'); excerptEnLabel.className='label'; excerptEnLabel.textContent='المقتطف (EN)';
   const excerptEn = document.createElement('textarea'); excerptEn.className='input'; excerptEn.rows=3; excerptEn.placeholder='Excerpt'; excerptEn.value = item?.excerpt_en || '';
   excerptEnWrap.append(excerptEnLabel, excerptEn);
-  toggleTranslationFields(hasTranslation.checked);
   const save = document.createElement('button'); save.className='btn btn-primary'; save.textContent='حفظ';
   save.addEventListener('click', async ()=>{
     if (!title.value || !title.value.trim()) return showToast('العنوان مطلوب','error');

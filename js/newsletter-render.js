@@ -228,20 +228,6 @@ function renderSection(sec) {
           </div>`;
       }
       break;
-
-    case 'translation':
-      if (c.header_image_url)
-        body.innerHTML += `<img src="${resolveMediaUrl(c.header_image_url)}" alt="${htmlEsc(c.header_image_alt_ar)}" class="section-hero-img" loading="lazy">`;
-      if (c.original_title) {
-        body.innerHTML += `<p class="translation-source">${c.original_url
-          ? `<a href="${htmlEsc(c.original_url)}" target="_blank" rel="noopener">${htmlEsc(c.original_title)}</a>`
-          : htmlEsc(c.original_title)}${c.original_author ? ` — ${htmlEsc(c.original_author)}` : ''}</p>`;
-      }
-      if (c.translated_body_ar)
-        body.innerHTML += `<div class="section-text">${c.translated_body_ar}</div>`;
-      if (c.translator_note_ar)
-        body.innerHTML += `<aside class="translator-note">${htmlEsc(c.translator_note_ar)}</aside>`;
-      break;
   }
 
   el.appendChild(body);

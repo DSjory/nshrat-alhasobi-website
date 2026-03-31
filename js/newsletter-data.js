@@ -91,7 +91,6 @@ const SINGLE_ROW_TABLE = {
   illumination : 'section_illumination',
   inspiring    : 'section_inspiring',
   podcast      : 'section_podcast',
-  translation  : 'section_translation',
 };
 const MULTI_ROW_TABLE = {
   news     : 'section_news_items',
@@ -273,18 +272,6 @@ async function upsertSectionContent(slug, sectionId, content) {
         duration_seconds: content.duration_seconds || null,
         external_link:    content.external_link    || null,
       };
-    } else if (slug === 'translation') {
-      payload = {
-        ...payload,
-        header_image_url:    content.header_image_url    || null,
-        header_image_alt_ar: content.header_image_alt_ar || null,
-        original_title:      content.original_title      || null,
-        original_author:     content.original_author     || null,
-        original_url:        content.original_url        || null,
-        original_language:   content.original_language   || 'en',
-        translated_body_ar:  content.translated_body_ar  || '',
-        translator_note_ar:  content.translator_note_ar  || null,
-      };
     }
 
     const { error } = await window.supabase
@@ -446,11 +433,6 @@ async function migrateOldData() {
         await window.supabase.from('section_podcast').insert({
           newsletter_section_id: sec.id,
           title_ar: nl.podcast_title || 'بودكاست', audio_url: nl.podcast_url,
-        });
-      }
-      if (st.slug === 'translation' && nl.translation_body) {
-        await window.supabase.from('section_translation').insert({
-          newsletter_section_id: sec.id, translated_body_ar: nl.translation_body,
         });
       }
     }

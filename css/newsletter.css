@@ -194,14 +194,6 @@
 .podcast-audio   { width:100%; margin-top:12px; }
 .podcast-ext-link { display:inline-block; margin-top:8px; font-size:16px; text-decoration:underline; }
 
-.translation-source     { font-size:16px; color:#6b7280; margin-bottom:16px; }
-.translation-source a   { color:inherit; }
-.translator-note {
-  margin-top:24px; padding:12px 16px;
-  border-right:3px solid #e5e7eb;
-  font-size:14px; font-style:italic; color:#6b7280;
-}
-
 .nl-error { text-align:center; color:#dc2626; padding:40px; font-size:15px; }
 
 .newsletter-section.collapsed .section-header { margin-bottom: 0; }
