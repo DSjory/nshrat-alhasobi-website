@@ -166,19 +166,10 @@ function htmlEsc(str) {
 function openEditorEditor(editor = null){
   const mode = editor ? 'تحرير' : 'إضافة';
   const dialog = document.createElement('div');
-  dialog.style.position = 'fixed';
-  dialog.style.top = '0';
-  dialog.style.left = '0';
-  dialog.style.right = '0';
-  dialog.style.bottom = '0';
-  dialog.style.backgroundColor = 'rgba(0,0,0,0.5)';
-  dialog.style.display = 'flex';
-  dialog.style.justifyContent = 'center';
-  dialog.style.alignItems = 'center';
-  dialog.style.zIndex = '10000';
+  dialog.className = 'ui-modal-overlay';
   
   const modal = document.createElement('div');
-  modal.className = 'newsletter-card';
+  modal.className = 'ui-modal';
   modal.style.width = '90%';
   modal.style.maxWidth = '500px';
   modal.style.maxHeight = '90vh';
@@ -223,8 +214,13 @@ function openEditorEditor(editor = null){
   roleEnInput.className = 'input english-only';
   roleEnInput.value = editor?.role_en || '';
   roleEnInput.placeholder = 'Role';
-  
-  toggleTranslationFields(hasTranslation.checked);
+
+  const updateEditorEnglishVisibility = () => {
+    const showEnglish = hasTranslation.checked;
+    [nameEnLabel, nameEnInput, roleEnLabel, roleEnInput].forEach((el) => {
+      el.style.display = showEnglish ? '' : 'none';
+    });
+  };
   
   const btnContainer = document.createElement('div');
   btnContainer.style.marginTop = '20px';
@@ -274,7 +270,11 @@ function openEditorEditor(editor = null){
   form.append(nameLabel, nameInput, roleLabel, roleInput, nameEnLabel, nameEnInput, roleEnLabel, roleEnInput, btnContainer);
   modal.append(title, form);
   dialog.appendChild(modal);
+  dialog.addEventListener('click', (e) => {
+    if (e.target === dialog) document.body.removeChild(dialog);
+  });
   document.body.appendChild(dialog);
+  updateEditorEnglishVisibility();
 }
 
 async function loadNewsletterSections(nlId){
@@ -543,6 +543,11 @@ async function openSectionEditor(section){
   } else if (slug === 'podcast'){
     const { data } = await supabase.from('section_podcast').select('*').eq('newsletter_section_id', section.id).maybeSingle();
     let podcastImageUrl = data?.podcast_image_url || data?.cover_image_url || null;
+
+    function isMissingPodcastImageColumn(error) {
+      const text = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
+      return error?.code === '42703' || error?.code === 'PGRST204' || /podcast_image_url/i.test(text);
+    }
     const titleArLabel = document.createElement('label'); titleArLabel.className='label'; titleArLabel.textContent='عنوان البودكاست (عربي)';
     const title = document.createElement('input'); title.className='input'; title.value = data?.title_ar || '';
     const titleEnWrap = document.createElement('div'); titleEnWrap.className='english-only';
@@ -604,35 +609,46 @@ async function openSectionEditor(section){
       }
     });
 
-    const audioFile = document.createElement('input'); audioFile.type='file'; audioFile.accept='audio/*';
     const saveBtn = document.createElement('button'); saveBtn.textContent='حفظ'; saveBtn.className='btn btn-primary';
     saveBtn.addEventListener('click', async ()=>{
       setLoading(saveBtn, true);
       try{
-        let audioUrl = data?.audio_url || null;
-        const f = audioFile.files && audioFile.files[0];
-        if (f){
-          const prog = document.createElement('progress'); prog.max = 1; prog.value = 0; container.appendChild(prog);
-          const note = showToast('جاري رفع ملف الصوت…', 'pending', 0);
-          const pub = await uploadFileWithProgress(f, `sections/${section.id}`, (r)=>{ if (r>=0) prog.value = r; });
-          prog.value = 1; note.dismiss(); audioUrl = pub;
-        }
+        const audioUrl = data?.audio_url || '';
         const payload = {
           newsletter_section_id: section.id,
           title_ar: title.value,
           title_en: hasTranslation.checked ? (titleEn.value || null) : null,
           description_ar: desc.value,
           description_en: hasTranslation.checked ? (descEn.value || null) : null,
-          audio_url: audioUrl,
+          audio_url: audioUrl || '',
           podcast_image_url: podcastImageUrl
         };
-        if (data) await supabase.from('section_podcast').update(payload).eq('id', data.id);
-        else await supabase.from('section_podcast').insert(payload);
+        if (data) {
+          const { error } = await supabase.from('section_podcast').update(payload).eq('id', data.id);
+          if (error) {
+            if (!isMissingPodcastImageColumn(error)) throw error;
+            const legacyPayload = { ...payload, cover_image_url: podcastImageUrl };
+            delete legacyPayload.podcast_image_url;
+            const { error: legacyError } = await supabase.from('section_podcast').update(legacyPayload).eq('id', data.id);
+            if (legacyError) throw legacyError;
+            showToast('تم الحفظ مع وضع التوافق. يفضّل تشغيل migration لإضافة podcast_image_url.', 'warning');
+          }
+        } else {
+          const { error } = await supabase.from('section_podcast').insert(payload);
+          if (error) {
+            if (!isMissingPodcastImageColumn(error)) throw error;
+            const legacyPayload = { ...payload, cover_image_url: podcastImageUrl };
+            delete legacyPayload.podcast_image_url;
+            const { error: legacyError } = await supabase.from('section_podcast').insert(legacyPayload);
+            if (legacyError) throw legacyError;
+            showToast('تم الحفظ مع وضع التوافق. يفضّل تشغيل migration لإضافة podcast_image_url.', 'warning');
+          }
+        }
         showToast('تم حفظ البودكاست');
       }catch(e){ showToast(e.message||e,'error'); }
       setLoading(saveBtn, false);
     });
-    container.append(titleArLabel, title, titleEnWrap, descArLabel, desc, descEnWrap, imageLabel, imageFile, imagePreview, clearImageBtn, audioFile, saveBtn);
+    container.append(titleArLabel, title, titleEnWrap, descArLabel, desc, descEnWrap, imageLabel, imageFile, imagePreview, clearImageBtn, saveBtn);
   } else {
     container.append(document.createElement('div')).textContent = 'نوع القسم غير مدعوم بعد.';
   }

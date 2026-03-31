@@ -210,23 +210,26 @@ function renderSection(sec) {
       });
       break;
 
-    case 'podcast':
-      if (c.audio_url) {
-        const podcastTitle = lang === 'en' ? (c.title_en || c.title_ar) : (c.title_ar || c.title_en);
-        const podcastDesc = lang === 'en' ? (c.description_en || c.description_ar) : (c.description_ar || c.description_en);
-        const podcastImageUrl = c.podcast_image_url || c.cover_image_url;
-        const durationLabel = lang === 'en' ? 'min' : 'دقيقة';
-        body.innerHTML += `
-          <div class="podcast-player">
-            <div class="podcast-info">
-              <h3 class="podcast-title">${htmlEsc(podcastTitle)}</h3>
-              ${podcastDesc ? `<p class="podcast-desc">${htmlEsc(podcastDesc)}</p>` : ''}
-              ${podcastImageUrl ? `<img src="${resolveMediaUrl(podcastImageUrl)}" class="podcast-image" loading="lazy" alt="">` : ''}
-              ${c.duration_seconds ? `<span class="podcast-dur">${Math.floor(c.duration_seconds/60)} ${durationLabel}</span>` : ''}
-            </div>
-            <audio controls src="${htmlEsc(resolveMediaUrl(c.audio_url) || c.audio_url)}" class="podcast-audio"></audio>
-            ${c.external_link ? `<a href="${htmlEsc(c.external_link)}" class="podcast-ext-link" target="_blank" rel="noopener">${lang === 'en' ? 'Listen on platform' : 'استمع على المنصة'}</a>` : ''}
-          </div>`;
+    case 'podcast': {
+      const podcastTitle = lang === 'en' ? (c.title_en || c.title_ar) : (c.title_ar || c.title_en);
+      const podcastDesc = lang === 'en' ? (c.description_en || c.description_ar) : (c.description_ar || c.description_en);
+      const podcastImageUrl = c.podcast_image_url || c.cover_image_url;
+      const durationLabel = lang === 'en' ? 'min' : 'دقيقة';
+      const hasPodcastContent = podcastTitle || podcastDesc || podcastImageUrl || c.audio_url || c.external_link;
+
+      if (!hasPodcastContent) break;
+
+      body.innerHTML += `
+        <div class="podcast-player">
+          <div class="podcast-info">
+            <h3 class="podcast-title">${htmlEsc(podcastTitle)}</h3>
+            ${podcastDesc ? `<p class="podcast-desc">${htmlEsc(podcastDesc)}</p>` : ''}
+            ${podcastImageUrl ? `<img src="${resolveMediaUrl(podcastImageUrl)}" class="podcast-image" loading="lazy" alt="">` : ''}
+            ${c.duration_seconds ? `<span class="podcast-dur">${Math.floor(c.duration_seconds/60)} ${durationLabel}</span>` : ''}
+          </div>
+          ${c.audio_url ? `<audio controls src="${htmlEsc(resolveMediaUrl(c.audio_url) || c.audio_url)}" class="podcast-audio"></audio>` : ''}
+          ${c.external_link ? `<a href="${htmlEsc(c.external_link)}" class="podcast-ext-link" target="_blank" rel="noopener">${lang === 'en' ? 'Listen on platform' : 'استمع على المنصة'}</a>` : ''}
+        </div>`;
       }
       break;
   }
