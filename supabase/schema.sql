@@ -46,7 +46,8 @@ BEGIN
       ('هندسة الحاسب',    'Computer Engineering'),
       ('هندسة البرمجيات',  'Software Engineering'),
       ('المجتمع التقني',   'Tech Community'),
-      ('الحوسبة',          'Computing');
+      ('الحوسبة',          'Computing'),
+      ('مجالات متنوعة' ,'Diverse Fields');  
   END IF;
 END $$;
 
