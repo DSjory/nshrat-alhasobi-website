@@ -134,30 +134,45 @@ CREATE TABLE IF NOT EXISTS public.newsletter_editors (
   id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   newsletter_id   uuid        NOT NULL REFERENCES public.newsletters(id) ON DELETE CASCADE,
 
-  -- Content roles
-  writer_ar       text,
-  writer_en       text,
-  news_ar         text,
-  news_en         text,
-  design_ar       text,
-  design_en       text,
+  -- Contributors (Arabic)
+  article_writer_ar      text,
+  news_hunters_ar        text,
+  content_writers_ar     text,
+  designers_ar           text,
+  member_affairs_ar      text,
+  newsletter_leader_ar   text,
+  newsletter_deputy_ar   text,
 
-  -- Leadership roles
-  leader_ar       text,
-  leader_en       text,
-  deputy_ar       text,
-  deputy_en       text,
-  member_affairs_ar text,
-  member_affairs_en text,
-
-  -- Translation
-  chief_trans_en  text,
-  trans_team_en   text,
+  -- Contributors (English translation)
+  article_writer_en      text,
+  news_hunters_en        text,
+  content_writers_en     text,
+  designers_en           text,
+  member_affairs_en      text,
+  newsletter_leader_en   text,
+  newsletter_deputy_en   text,
 
   sort_order      int         NOT NULL DEFAULT 0,
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
+
+-- Backfill columns for pre-existing databases
+ALTER TABLE public.newsletter_editors
+  ADD COLUMN IF NOT EXISTS article_writer_ar text,
+  ADD COLUMN IF NOT EXISTS news_hunters_ar text,
+  ADD COLUMN IF NOT EXISTS content_writers_ar text,
+  ADD COLUMN IF NOT EXISTS designers_ar text,
+  ADD COLUMN IF NOT EXISTS member_affairs_ar text,
+  ADD COLUMN IF NOT EXISTS newsletter_leader_ar text,
+  ADD COLUMN IF NOT EXISTS newsletter_deputy_ar text,
+  ADD COLUMN IF NOT EXISTS article_writer_en text,
+  ADD COLUMN IF NOT EXISTS news_hunters_en text,
+  ADD COLUMN IF NOT EXISTS content_writers_en text,
+  ADD COLUMN IF NOT EXISTS designers_en text,
+  ADD COLUMN IF NOT EXISTS member_affairs_en text,
+  ADD COLUMN IF NOT EXISTS newsletter_leader_en text,
+  ADD COLUMN IF NOT EXISTS newsletter_deputy_en text;
 
 
 -- ── 5. section_illumination ───────────────────────────────────────────────────
