@@ -46,14 +46,13 @@ async function initNewsletterPage(idParam = 'id') {
       : newsletter.reading_time;
 
     mountNewsletterIntro(welcomeText, readingText, lang);
-    
-    // Mount editors section if available
-    if (result.editors && result.editors.length > 0) {
-      mountNewsletterEditors(result.editors, lang);
-    }
 
     buildNav(newsletter.nav_type || 'filter', sections);
-    if (container) sections.forEach(sec => container.appendChild(renderSection(sec)));
+    if (container) {
+      sections.forEach((sec) => container.appendChild(renderSection(sec)));
+      const contributorsNode = renderNewsletterContributors(result.editors || [], lang, newsletter.has_translation);
+      if (contributorsNode) container.appendChild(contributorsNode);
+    }
 
   } catch (err) {
     console.error(err);
@@ -318,49 +317,54 @@ function mountNewsletterIntro(welcomeText, readingText, lang = 'ar') {
   title.insertAdjacentElement('afterend', intro);
 }
 
-function renderNewsletterEditors(editors, lang = 'ar') {
+function renderNewsletterContributors(editors, lang = 'ar', hasTranslation = false) {
+  const row = editors?.[0];
+  if (!row) return null;
+
+  const useEnglish = lang === 'en' && hasTranslation;
+  const roles = useEnglish
+    ? [
+        { label: 'Article Writer', value: row.article_writer_en || row.article_writer_ar },
+        { label: 'News Hunters', value: row.news_hunters_en || row.news_hunters_ar },
+        { label: 'Content Writers', value: row.content_writers_en || row.content_writers_ar },
+        { label: 'Designers', value: row.designers_en || row.designers_ar },
+        { label: 'Member Affairs', value: row.member_affairs_en || row.member_affairs_ar },
+        { label: 'Newsletter Leader', value: row.newsletter_leader_en || row.newsletter_leader_ar },
+        { label: 'Newsletter Deputy', value: row.newsletter_deputy_en || row.newsletter_deputy_ar },
+      ]
+    : [
+        { label: 'كاتب المقالة', value: row.article_writer_ar || row.article_writer_en },
+        { label: 'صائدي الأخبار', value: row.news_hunters_ar || row.news_hunters_en },
+        { label: 'كتاب المحتوى', value: row.content_writers_ar || row.content_writers_en },
+        { label: 'المصممين', value: row.designers_ar || row.designers_en },
+        { label: 'شؤون الأعضاء', value: row.member_affairs_ar || row.member_affairs_en },
+        { label: 'قائدة النشرة', value: row.newsletter_leader_ar || row.newsletter_leader_en },
+        { label: 'نائبة النشرة', value: row.newsletter_deputy_ar || row.newsletter_deputy_en },
+      ];
+
+  const filled = roles.filter((item) => item.value && String(item.value).trim());
+  if (!filled.length) return null;
+
   const wrap = document.createElement('section');
-  wrap.className = 'newsletter-editors';
-  wrap.dir = 'rtl';
-  
+  wrap.className = 'newsletter-editors newsletter-contributors';
+  wrap.dir = useEnglish ? 'ltr' : 'rtl';
+
   const title = document.createElement('h3');
   title.className = 'newsletter-editors-title';
-  title.textContent = lang === 'en' ? 'Newsletter Editors' : 'معدّو النشرة';
-  
+  title.textContent = useEnglish ? 'Newsletter Contributors' : 'معدّو النشرة (المساهمون)';
+  wrap.appendChild(title);
+
   const list = document.createElement('ul');
   list.className = 'newsletter-editors-list';
-  
-  editors.forEach(editor => {
+  filled.forEach((item) => {
     const li = document.createElement('li');
     li.className = 'newsletter-editor-item';
-    
-    const name = lang === 'en' ? (editor.name_en || editor.name_ar) : (editor.name_ar || editor.name_en);
-    const role = lang === 'en' ? (editor.role_en || editor.role_ar) : (editor.role_ar || editor.role_en);
-    
-    li.innerHTML = `<strong>${htmlEsc(name)}</strong>${role ? `: ${htmlEsc(role)}` : ''}`;
+    li.innerHTML = `<strong>${htmlEsc(item.label)}</strong>: ${htmlEsc(item.value)}`;
     list.appendChild(li);
   });
-  
-  wrap.appendChild(title);
+
   wrap.appendChild(list);
   return wrap;
-}
-
-function mountNewsletterEditors(editors, lang = 'ar') {
-  const page = document.querySelector('.nl-page');
-  const intro = page?.querySelector('.newsletter-welcome');
-  if (!page) return;
-  
-  const oldEditors = page.querySelector('.newsletter-editors');
-  if (oldEditors) oldEditors.remove();
-  
-  const editorsSection = renderNewsletterEditors(editors, lang);
-  if (intro) {
-    intro.insertAdjacentElement('afterend', editorsSection);
-  } else {
-    const title = page.querySelector('.newsletter-title');
-    if (title) title.insertAdjacentElement('afterend', editorsSection);
-  }
 }
 
 window.initNewsletterPage = initNewsletterPage;
