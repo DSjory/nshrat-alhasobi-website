@@ -1,5 +1,6 @@
 import { initSupabase, reinitSupabase, uploadFileWithProgress } from './supabase-client.js';
 import { showToast, showConfirm } from './ui.js';
+import DOMPurify from 'dompurify';
 
 await initSupabase();
 let supabase = window.supabase;
@@ -7,6 +8,136 @@ let supabase = window.supabase;
 // use UI utilities (showToast returns a handle)
 
 function setLoading(el, isLoading){ if (!el) return; el.disabled = isLoading; if (isLoading) el.classList.add('loading'); else el.classList.remove('loading'); }
+
+const RICH_TEXT_TAGS = ['a', 'b', 'strong', 'i', 'em', 'u', 'mark', 'br', 'p', 'div', 'span', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre'];
+const RICH_TEXT_ATTR = ['href', 'target', 'rel'];
+const RICH_TEXT_CONFIG = {
+  ALLOWED_TAGS: RICH_TEXT_TAGS,
+  ALLOWED_ATTR: RICH_TEXT_ATTR,
+  FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'svg', 'math'],
+  FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover'],
+};
+
+function htmlEsc(str) {
+  return (str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function textToHtmlPreservingWhitespace(text) {
+  if (!text) return '';
+  return htmlEsc(text)
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')
+    .replace(/  /g, ' &nbsp;')
+    .replace(/\n/g, '<br>');
+}
+
+function sanitizeRichText(inputHtml) {
+  const clean = DOMPurify.sanitize(inputHtml || '', RICH_TEXT_CONFIG);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = clean;
+  wrap.querySelectorAll('a').forEach((a) => {
+    const href = (a.getAttribute('href') || '').trim();
+    if (!href || /^javascript:/i.test(href)) {
+      a.removeAttribute('href');
+      return;
+    }
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener noreferrer');
+  });
+  return wrap.innerHTML;
+}
+
+function insertHtmlAtCursor(html) {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+  const range = selection.getRangeAt(0);
+  range.deleteContents();
+
+  const fragment = range.createContextualFragment(html);
+  const lastNode = fragment.lastChild;
+  range.insertNode(fragment);
+
+  if (lastNode) {
+    range.setStartAfter(lastNode);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
+}
+
+function createRichTextField({ labelText, initialHtml = '', isEnglish = false }) {
+  const wrap = document.createElement('div');
+  if (isEnglish) wrap.className = 'english-only';
+
+  const label = document.createElement('label');
+  label.className = 'label';
+  label.textContent = labelText;
+
+  const toolbar = document.createElement('div');
+  toolbar.className = 'rich-editor-toolbar';
+  toolbar.innerHTML = `
+    <button type="button" class="btn rich-btn" data-cmd="bold"><b>B</b></button>
+    <button type="button" class="btn rich-btn" data-cmd="italic"><i>I</i></button>
+    <button type="button" class="btn rich-btn" data-cmd="underline"><u>U</u></button>
+    <button type="button" class="btn rich-btn" data-cmd="highlight">Highlight</button>
+    <button type="button" class="btn rich-btn" data-cmd="link">Link</button>
+    <button type="button" class="btn rich-btn" data-cmd="unlink">Unlink</button>
+  `;
+
+  const editor = document.createElement('div');
+  editor.className = 'rich-editor input';
+  editor.contentEditable = 'true';
+  editor.innerHTML = sanitizeRichText(initialHtml);
+
+  toolbar.addEventListener('click', (ev) => {
+    const button = ev.target.closest('.rich-btn');
+    if (!button) return;
+    const cmd = button.dataset.cmd;
+    editor.focus();
+
+    if (cmd === 'highlight') {
+      const ok = document.execCommand('hiliteColor', false, '#fff6a3');
+      if (!ok) document.execCommand('backColor', false, '#fff6a3');
+      return;
+    }
+
+    if (cmd === 'link') {
+      const href = window.prompt('رابط URL', 'https://');
+      if (!href || !href.trim()) return;
+      const safeHref = href.trim();
+      document.execCommand('createLink', false, safeHref);
+      return;
+    }
+
+    if (cmd === 'unlink') {
+      document.execCommand('unlink', false, null);
+      return;
+    }
+
+    document.execCommand(cmd, false, null);
+  });
+
+  editor.addEventListener('paste', (ev) => {
+    ev.preventDefault();
+    const html = ev.clipboardData?.getData('text/html');
+    const plain = ev.clipboardData?.getData('text/plain') || '';
+    const incoming = html && html.trim() ? html : textToHtmlPreservingWhitespace(plain);
+    const clean = sanitizeRichText(incoming);
+    insertHtmlAtCursor(clean);
+  });
+
+  wrap.append(label, toolbar, editor);
+  return {
+    wrap,
+    editor,
+    getSanitizedHtml: () => sanitizeRichText(editor.innerHTML),
+  };
+}
 
 // DOM refs
 const params = new URLSearchParams(window.location.search);
@@ -386,18 +517,25 @@ async function openSectionEditor(section){
     // fetch existing content
     const table = slug === 'illumination' ? 'section_illumination' : 'section_inspiring';
     const { data } = await supabase.from(table).select('*').eq('newsletter_section_id', section.id).maybeSingle();
-    const labelAr = document.createElement('label'); labelAr.className = 'label'; labelAr.textContent = 'المحتوى (عربي)';
-    const textarea = document.createElement('textarea'); textarea.className='input'; textarea.rows=8; textarea.value = data?.body_ar || '';
-    const enWrap = document.createElement('div'); enWrap.className = 'english-only';
-    const labelEn = document.createElement('label'); labelEn.className = 'label'; labelEn.textContent = 'المحتوى (EN)';
-    const textareaEn = document.createElement('textarea'); textareaEn.className='input'; textareaEn.rows=8; textareaEn.value = data?.body_en || '';
-    enWrap.append(labelEn, textareaEn);
+    const arField = createRichTextField({
+      labelText: 'المحتوى (عربي)',
+      initialHtml: data?.body_ar || '',
+    });
+    const enField = createRichTextField({
+      labelText: 'المحتوى (EN)',
+      initialHtml: data?.body_en || '',
+      isEnglish: true,
+    });
     const saveBtn = document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='حفظ القسم';
     saveBtn.addEventListener('click', async ()=>{
       setLoading(saveBtn, true);
       try{
           // Section banner image is managed once in newsletter_sections (top uploader).
-          const payload = { newsletter_section_id: section.id, body_ar: textarea.value, body_en: hasTranslation.checked ? (textareaEn.value || null) : null };
+          const payload = {
+            newsletter_section_id: section.id,
+            body_ar: arField.getSanitizedHtml(),
+            body_en: hasTranslation.checked ? (enField.getSanitizedHtml() || null) : null
+          };
         // upsert: delete existing then insert (simpler)
         if (data) await supabase.from(table).update(payload).eq('id', data.id);
         else await supabase.from(table).insert(payload);
@@ -405,7 +543,7 @@ async function openSectionEditor(section){
       }catch(e){ showToast(e.message||e,'error'); }
       setLoading(saveBtn, false);
     });
-      container.append(labelAr, textarea, enWrap, saveBtn);
+      container.append(arField.wrap, enField.wrap, saveBtn);
   } else if (slug === 'news'){
     // news items list
     const { data } = await supabase.from('section_news_items').select('*').eq('newsletter_section_id', section.id).order('sort_order',{ascending:true});

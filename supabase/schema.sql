@@ -188,6 +188,15 @@ CREATE TABLE IF NOT EXISTS public.section_illumination (
   updated_at            timestamptz NOT NULL DEFAULT now()
 );
 
+-- Rich text support for illumination body (safe for old databases)
+ALTER TABLE public.section_illumination
+  ADD COLUMN IF NOT EXISTS body_ar text NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS body_en text;
+
+ALTER TABLE public.section_illumination
+  ALTER COLUMN body_ar TYPE text,
+  ALTER COLUMN body_en TYPE text;
+
 
 -- ── 6. section_inspiring ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.section_inspiring (
@@ -201,6 +210,15 @@ CREATE TABLE IF NOT EXISTS public.section_inspiring (
   created_at            timestamptz NOT NULL DEFAULT now(),
   updated_at            timestamptz NOT NULL DEFAULT now()
 );
+
+-- Rich text support for inspiring body (safe for old databases)
+ALTER TABLE public.section_inspiring
+  ADD COLUMN IF NOT EXISTS body_ar text NOT NULL DEFAULT '',
+  ADD COLUMN IF NOT EXISTS body_en text;
+
+ALTER TABLE public.section_inspiring
+  ALTER COLUMN body_ar TYPE text,
+  ALTER COLUMN body_en TYPE text;
 
 
 -- ── 7. section_news_items ─────────────────────────────────────────────────────

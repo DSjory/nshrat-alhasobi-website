@@ -1,6 +1,30 @@
 // js/newsletter-render.js
 // Public newsletter page renderer.
 // Requires: window.supabase, newsletter-data.js
+import DOMPurify from 'dompurify';
+
+const RICH_TEXT_SANITIZE_CONFIG = {
+  ALLOWED_TAGS: ['a', 'b', 'strong', 'i', 'em', 'u', 'mark', 'br', 'p', 'div', 'span', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre'],
+  ALLOWED_ATTR: ['href', 'target', 'rel'],
+  FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'svg', 'math'],
+  FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover'],
+};
+
+function sanitizeRichText(html) {
+  const clean = DOMPurify.sanitize(html || '', RICH_TEXT_SANITIZE_CONFIG);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = clean;
+  wrap.querySelectorAll('a').forEach((a) => {
+    const href = (a.getAttribute('href') || '').trim();
+    if (!href || /^javascript:/i.test(href)) {
+      a.removeAttribute('href');
+      return;
+    }
+    a.setAttribute('target', '_blank');
+    a.setAttribute('rel', 'noopener noreferrer');
+  });
+  return wrap.innerHTML;
+}
 
 async function initNewsletterPage(idParam = 'id') {
   const params        = new URLSearchParams(location.search);
@@ -167,7 +191,7 @@ function renderSection(sec) {
         body.innerHTML += `<img src="${resolveMediaUrl(c.header_image_url)}" alt="${htmlEsc(c.header_image_alt_ar)}" class="section-hero-img" loading="lazy">`;
       {
         const bodyText = lang === 'en' ? (c.body_en || c.body_ar) : (c.body_ar || c.body_en);
-        if (bodyText) body.innerHTML += `<div class="section-text">${bodyText}</div>`;
+        if (bodyText) body.innerHTML += `<div class="section-text">${sanitizeRichText(bodyText)}</div>`;
       }
       break;
 

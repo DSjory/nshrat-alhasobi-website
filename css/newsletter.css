@@ -193,7 +193,9 @@
 .section-title  { font-size:22px; font-weight:700; margin:0; }
 .section-header-banner { width:100%; max-width:100%; height:auto; border-radius:8px; margin-bottom:16px; object-fit:cover; display:block; }
 .section-hero-img { width:100%; border-radius:12px; margin-bottom:20px; object-fit:cover; }
-.section-text   { font-size:16px; line-height:1.9; }
+.section-text   { font-size:16px; line-height:1.9; white-space:pre-wrap; word-break:break-word; }
+.section-text a { color:inherit; text-decoration:underline; }
+.section-text mark { background:#fff6a3; padding:0 .1em; }
 
 .news-item      { display:flex; gap:12px; padding:14px 0; border-bottom:1px solid #e5e7eb; }
 .news-item:last-child { border-bottom:none; }
