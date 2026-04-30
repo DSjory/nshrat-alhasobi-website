@@ -1,33 +1,78 @@
-// search.js - النسخة النهائية الرسمية (ديسمبر 2025) - مضمونة 100%
+// search.js
 
-// Create Supabase client from the SDK (assumes @supabase/supabase-js CDN load)
 const { createClient } = window.supabase || {};
 const SUPABASE_URL = 'https://txldnqhqsgtqttpzbkeq.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_FfSXeg7MY_fQvuot_uIdWQ_eot3x8jr';
 const sb = createClient ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
+async function loadCategoriesIntoFilter() {
+    const select = document.getElementById('category-filter');
+    if (!select || !sb) return;
+
+    const locale = getLocale();
+
+    const { data, error } = await sb
+        .from('categories')
+        .select('name_ar, name_en')
+        .order('name_ar', { ascending: true });
+
+    if (error) {
+        console.error('خطأ في تحميل التصنيفات:', error);
+        return;
+    }
+
+    select.innerHTML = '<option value="all">جميع التصنيفات</option>';
+
+    (data || []).forEach((cat) => {
+        const name = locale === 'en'
+            ? (cat.name_en || cat.name_ar)
+            : (cat.name_ar || cat.name_en);
+
+        if (!name) return;
+
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        select.appendChild(option);
+    });
+}
+
 function resolveCoverUrl(value) {
-    if (!value) return '/assets/img/شعار نشرة الحاسوبي باللون الازرق.png';
+    if (!value) return 'assets/img/شعار نشرة الحاسوبي باللون الازرق.png';
     if (/^https?:\/\//i.test(value)) return value;
+
     let path = String(value).replace(/^\/+/, '');
     path = path.replace(/^newsletter-media\//, '');
     const encoded = path.split('/').map((s) => encodeURIComponent(s)).join('/');
+
     return `${SUPABASE_URL}/storage/v1/object/public/newsletter-media/${encoded}`;
 }
 
 function getLocale() {
-    if (document.documentElement.lang === 'en') return 'en';
-    return 'ar';
+    return document.documentElement.lang === 'en' ? 'en' : 'ar';
+}
+
+function normalizeText(value) {
+    return String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[إأآا]/g, 'ا')
+        .replace(/ة/g, 'ه')
+        .replace(/ى/g, 'ي')
+        .replace(/[ًٌٍَُِّْ]/g, '');
 }
 
 function normalizeNewsletterRecord(nl) {
     const locale = getLocale();
+
     const title = locale === 'en'
         ? (nl.title_en || nl.title_ar || 'Untitled')
         : (nl.title_ar || nl.title_en || 'بدون عنوان');
+
     const category = locale === 'en'
         ? (nl.categories?.name_en || nl.categories?.name_ar || 'Uncategorized')
         : (nl.categories?.name_ar || nl.categories?.name_en || 'غير مصنف');
+
     return {
         id: nl.id,
         issue_number: nl.edition_number,
@@ -37,21 +82,20 @@ function normalizeNewsletterRecord(nl) {
     };
 }
 
-// دالة لتحديد الجدول الحالي (الأهم في الملف كله!)
 function getTable() {
     return 'newsletters';
 }
 
-// عرض البطاقات
 function displayResults(episodes, container) {
     container.innerHTML = episodes.length === 0
         ? '<p class="center muted padded large">لا توجد نتائج مطابقة.</p>'
         : '';
 
-    episodes.forEach(ep => {
+    episodes.forEach((ep, index) => {
         const card = document.createElement('a');
         card.href = `single-episode.html?id=${ep.id}&lang=${getLocale()}`;
-        card.className = 'episode-card';
+        card.className = 'episode-card fade-up';
+        card.style.setProperty('--animate-delay', `${Math.min(1000, index * 120)}ms`);
 
         card.innerHTML = `
             <div class="card-image-container">
@@ -65,27 +109,15 @@ function displayResults(episodes, container) {
                 </div>
             </div>
         `;
-        container.appendChild(card);
 
-        // enable entrance animation for dynamically created cards
-        try {
-            const count = container.querySelectorAll('.episode-card').length - 1;
-            const delay = Math.min(1000, count * 140);
-            card.classList.add('fade-up');
-            card.style.setProperty('--animate-delay', `${delay}ms`);
-            document.body.classList.add('has-animations');
-        } catch (e) {
-            // ignore
-        }
+        container.appendChild(card);
     });
+
+    document.body.classList.add('has-animations');
 }
 
-// البحث + تحميل النتائج
-async function performSearch() {
-    const term = (document.querySelector('#search-input')?.value || '').trim();
-    const category = document.getElementById('category-filter')?.value || 'all';
-    const container = document.getElementById('episodes-grid') || document.getElementById('latest-episodes-grid');
-    if (!container) return;
+async function fetchNewsletters(term = '') {
+    if (!sb) return [];
 
     let query = sb
         .from(getTable())
@@ -93,35 +125,60 @@ async function performSearch() {
         .eq('status', 'published')
         .order('edition_number', { ascending: false });
 
-    if (term) {
-        if (!isNaN(term) && term !== '') {
-            query = query.eq('edition_number', parseInt(term));
+    const cleanTerm = term.trim();
+
+    if (cleanTerm) {
+        if (!isNaN(cleanTerm)) {
+            query = query.eq('edition_number', parseInt(cleanTerm, 10));
         } else {
-            query = query.or(`title_ar.ilike.%${term}%,title_en.ilike.%${term}%`);
+            query = query.or(`title_ar.ilike.%${cleanTerm}%,title_en.ilike.%${cleanTerm}%`);
         }
     }
 
     const { data, error } = await query;
+
     if (error) {
         console.error('خطأ في البحث:', error);
+        return null;
+    }
+
+    return (data || []).map(normalizeNewsletterRecord);
+}
+
+async function performSearch() {
+    const term = (document.getElementById('search-input')?.value || '').trim();
+    const category = document.getElementById('category-filter')?.value || 'all';
+    const container = document.getElementById('episodes-grid') || document.getElementById('latest-episodes-grid');
+
+    if (!container) return;
+
+    container.innerHTML = '<p class="center muted padded">جاري البحث...</p>';
+
+    let rows = await fetchNewsletters(term);
+
+    if (rows === null) {
         container.innerHTML = '<p class="center error">حدث خطأ، حاول مرة أخرى.</p>';
         return;
     }
-    let rows = (data || []).map(normalizeNewsletterRecord);
+
     if (category !== 'all') {
-        rows = rows.filter((r) => String(r.category || '').trim() === String(category).trim());
+        const selectedCategory = normalizeText(category);
+
+        rows = rows.filter((r) => {
+            const rowCategory = normalizeText(r.category);
+            return rowCategory.includes(selectedCategory) || selectedCategory.includes(rowCategory);
+        });
     }
+
     displayResults(rows, container);
 }
 
-// تحميل أحدث النشرات (للصفحة الرئيسية)
 async function loadLatestEpisodes(limit = 3) {
     const container = document.getElementById('latest-episodes-grid');
-    if (!container) return;
+    if (!container || !sb) return;
 
     container.innerHTML = '<p class="center muted padded">جاري تحميل أحدث النشرات...</p>';
 
-    // المخطط الحالي يعتمد newsletters
     const { data, error } = await sb
         .from('newsletters')
         .select('id,edition_number,title_ar,title_en,cover_image_url,status,categories(name_ar,name_en),created_at')
@@ -135,245 +192,118 @@ async function loadLatestEpisodes(limit = 3) {
         return;
     }
 
-    // نعرض البيانات مهما كان
     displayResults((data || []).map(normalizeNewsletterRecord), container);
 }
 
-// تفعيل كل شيء عند تحميل الصفحة
-document.addEventListener('DOMContentLoaded', () => {
-    setupModeToggle();
-    setupSearchToggle();
+function createSearchBarIfMissing() {
+    let bar = document.getElementById('search-bar-container');
 
-    const table = getTable();
+    if (bar) return bar;
 
-    // صفحة الرئيسية → أحدث 3
-    if (document.getElementById('latest-episodes-grid')) {
-        loadLatestEpisodes(3);
+    bar = document.createElement('div');
+    bar.id = 'search-bar-container';
+    bar.className = 'search-bar-container hidden';
+
+    const options = SEARCH_CATEGORIES.map((cat) => {
+        return `<option value="${cat.value}">${cat.label}</option>`;
+    }).join('');
+
+    bar.innerHTML = `
+        <div class="search-controls container">
+            <input type="text" id="search-input" placeholder="ابحث بالعنوان أو رقم العدد..." class="form-input">
+
+            <select id="category-filter" class="form-select">
+                ${options}
+            </select>
+
+            <button id="search-execute-btn" class="btn btn-primary">بحث</button>
+            <button id="close-search-btn" class="btn btn-danger">إغلاق</button>
+        </div>
+    `;
+
+    const main = document.querySelector('main');
+
+    if (main) {
+        document.body.insertBefore(bar, main);
+    } else {
+        document.body.appendChild(bar);
     }
 
-    // Latest news loader moved into separate file: latest-news.js
-
-    // صفحات الأرشيف → جلب كل النشرات
-    if (document.getElementById('episodes-grid')) {
-        performSearch();
-    }
-
-    // ربط البحث (Enter + زر + فلتر)
-    document.querySelectorAll('#search-input').forEach(input => {
-        input.addEventListener('keypress', e => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                performSearch();
-            }
-        });
-    });
-
-    document.getElementById('search-execute-btn')?.addEventListener('click', performSearch);
-    document.getElementById('category-filter')?.addEventListener('change', performSearch);
-
-    // دعم البحث من الـ URL (?q=كلمة)
-    const params = new URLSearchParams(location.search);
-    const q = params.get('q');
-    if (q) {
-        document.querySelectorAll('#search-input').forEach(i => i.value = decodeURIComponent(q));
-        performSearch();
-    }
-});
-
-// تبديل شريط البحث في الهيدر
-function setupSearchToggle() {
-    const btn = document.getElementById('search-button');
-    const bar = document.querySelector('#search-bar-container');
-    const close = document.getElementById('close-search-btn');
-    if (!btn || !bar) return;
-    btn.onclick = () => bar.classList.toggle('search-active');
-    close.onclick = () => {
-        bar.classList.remove('search-active');
-        document.querySelectorAll('#search-input').forEach(i => i.value = '');
-    };
+    return bar;
 }
 
-/* Fetch external latest news JSON and render cards */
-async function loadLatestNewsFromAPI() {
-    const container = document.getElementById('latest-news-grid');
-    if (!container) return;
-    container.innerHTML = '<p class="center muted padded">جاري جلب أحدث الأخبار...</p>';
+function setupSearchToggle() {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const pagesWithoutSearch = ['join.html', 'about.html'];
 
-    try {
-        const res = await fetch('https://c3ziz.github.io/saudi-news-ai-rss/api/latest.json');
-        if (!res.ok) throw new Error('Network response not ok');
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) {
-            container.innerHTML = '<p class="center muted">لا توجد أخبار حالياً.</p>';
-            return;
+    if (pagesWithoutSearch.includes(currentPage)) {
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#search-button')) {
+                e.preventDefault();
+            }
+        });
+        return;
+    }
+
+    document.addEventListener('click', (e) => {
+        const searchBtn = e.target.closest('#search-button');
+        const closeBtn = e.target.closest('#close-search-btn');
+        const executeBtn = e.target.closest('#search-execute-btn');
+
+        if (searchBtn) {
+            e.preventDefault();
+
+            const bar = createSearchBarIfMissing();
+            loadCategoriesIntoFilter();
+            const input = document.getElementById('search-input');
+
+            bar.classList.remove('hidden');
+            bar.classList.add('search-active');
+            bar.style.display = 'block';
+
+            setTimeout(() => input?.focus(), 100);
         }
 
-        container.innerHTML = '';
-        data.forEach(item => {
-            const card = document.createElement('article');
-            card.className = 'news-card';
+        if (closeBtn) {
+            e.preventDefault();
 
-            const title = item.title || '';
-            const link = item.link || item.url || item.id || '#';
-            const summary = item.summary_ai || item.summary || item.description || '';
-            const publishedRaw = item.published || item.pubDate || '';
-            let published = '';
-            try {
-                const d = new Date(publishedRaw);
-                if (!isNaN(d)) {
-                    published = d.toLocaleString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                }
-            } catch (e) { published = publishedRaw; }
+            const bar = document.getElementById('search-bar-container');
+            const input = document.getElementById('search-input');
+            const category = document.getElementById('category-filter');
 
-            const sourceUrl = item.source || item.link || '';
-            function hostname(u) {
-                try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return '' }
-            }
+            bar?.classList.add('hidden');
+            bar?.classList.remove('search-active');
 
-            const category = item.category || '';
+            if (input) input.value = '';
+            if (category) category.value = 'all';
+        }
 
-            card.innerHTML = `
-                ${item.image ? `<img class="news-image" src="${item.image}" alt="${escapeHtml(title)}" loading="lazy">` : ''}
-                <div class="news-body">
-                    <div class="news-top">
-                        ${category ? `<span class="news-category">${escapeHtml(category)}</span>` : ''}
-                        ${sourceUrl ? `<span class="news-source">${escapeHtml(hostname(sourceUrl))}</span>` : ''}
-                    </div>
-                    <h4 class="news-title">${escapeHtml(title)}</h4>
-                    ${published ? `<div class="news-date">${escapeHtml(published)}</div>` : ''}
-                    <p class="news-snippet">${escapeHtml(summary)}</p>
-                    <div class="news-footer"><a class="read-more" href="${link}" target="_blank" rel="noopener">اقرأ أكثر</a></div>
-                </div>
-            `;
-
-            container.appendChild(card);
-
-            // animation for news cards
-            try {
-                const index = container.querySelectorAll('.news-card').length - 1;
-                const delay = Math.min(1000, index * 140);
-                card.classList.add('fade-up');
-                card.style.setProperty('--animate-delay', `${delay}ms`);
-                document.body.classList.add('has-animations');
-            } catch (e) {}
-
-            // enable entrance animation for dynamically created news cards
-            try {
-                const index = container.querySelectorAll('.news-card').length - 1;
-                const delay = Math.min(1000, index * 140);
-                card.classList.add('fade-up');
-                card.style.setProperty('--animate-delay', `${delay}ms`);
-                document.body.classList.add('has-animations');
-            } catch (e) {}
-        });
-
-    } catch (err) {
-        console.error('خطأ في جلب أحدث الأخبار:', err);
-        container.innerHTML = '<p class="center error">فشل جلب الأخبار.</p>';
-    }
-}
-
-/* Simple HTML escaper for titles/snippets */
-function escapeHtml(unsafe) {
-    if (!unsafe) return '';
-    return String(unsafe)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-/* Setup article action bar interactions (like/save/comment/report) */
-function setupArticleActionBar() {
-    const likeBtn = document.getElementById('like-btn');
-    const saveBtn = document.getElementById('save-btn');
-    const commentBtn = document.getElementById('comment-btn');
-    const reportBtn = document.getElementById('report-btn');
-
-    if (likeBtn) {
-        likeBtn.addEventListener('click', () => {
-            likeBtn.classList.toggle('liked');
-            // simple local count animation
-        });
-    }
-
-    if (saveBtn) {
-        saveBtn.addEventListener('click', () => {
-            saveBtn.classList.toggle('liked');
-            const saved = JSON.parse(localStorage.getItem('savedIssues') || '[]');
-            // try to find issue id from URL
-            const params = new URLSearchParams(location.search);
-            const issue = params.get('issue');
-            if (!issue) return;
-            const idx = saved.indexOf(issue);
-            if (idx === -1) saved.push(issue); else saved.splice(idx,1);
-            localStorage.setItem('savedIssues', JSON.stringify(saved));
-        });
-    }
-
-    if (commentBtn) {
-        commentBtn.addEventListener('click', () => {
-            const el = document.getElementById('comment-content');
-            if (el) el.focus();
-            window.scrollTo({ top: document.getElementById('comments-section')?.offsetTop - 120 || 0, behavior: 'smooth' });
-        });
-    }
-
-    if (reportBtn) {
-        reportBtn.addEventListener('click', () => {
-            const proceed = confirm('هل تريد الإبلاغ عن مشكلة في هذه النشرة؟');
-            if (proceed) {
-                // basic client-side report: open mailto to maintain privacy
-                window.location.href = 'mailto:info@example.com?subject=تقرير%20مشكلة%20في%20النشرة';
-            }
-        });
-    }
-}
-
-// initialize action bar when article is present
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('article-action-bar')) setupArticleActionBar();
-});
-
-/* Setup page entrance animations: add .fade-up and stagger delays, then enable .has-animations */
-function setupPageAnimations() {
-    // Apply fade-up to the whole page: assign to top-level visible body children
-    // This makes the entrance effect apply to the whole page rather than isolated sections.
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        document.body.classList.add('has-animations');
-        return;
-    }
-
-    const children = Array.from(document.body.children).filter(el => {
-        // skip scripts, noscript and elements not visually rendered
-        return el.tagName.toLowerCase() !== 'script' && el.tagName.toLowerCase() !== 'noscript' && el.offsetParent !== null;
+        if (executeBtn) {
+            e.preventDefault();
+            performSearch();
+        }
     });
 
-    // if no top-level children found, still enable has-animations so nested dynamic elements can animate
-    if (!children.length) {
-        document.body.classList.add('has-animations');
-        return;
-    }
-
-    children.forEach((el, idx) => {
-        el.classList.add('fade-up');
-        const delay = Math.min(1200, idx * 160);
-        el.style.setProperty('--animate-delay', `${delay}ms`);
+    document.addEventListener('input', (e) => {
+        if (e.target.id === 'search-input') {
+            performSearch();
+        }
     });
 
-    // Also ensure any existing dynamic cards already got fade-up earlier; enabling the class runs animations
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-        document.body.classList.add('has-animations');
-    }));
+    document.addEventListener('change', (e) => {
+        if (e.target.id === 'category-filter') {
+            performSearch();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.target.id === 'search-input' && e.key === 'Enter') {
+            e.preventDefault();
+            performSearch();
+        }
+    });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // run animations after small idle to avoid blocking load
-    setTimeout(setupPageAnimations, 120);
-});
-
-// الوضع الليلي
 function setupModeToggle() {
     const btn = document.getElementById('mode-toggle-button');
     if (!btn) return;
@@ -381,6 +311,7 @@ function setupModeToggle() {
     btn.onclick = () => {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
+
         localStorage.setItem('theme', isDark ? 'dark' : 'light');
         btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
     };
@@ -390,3 +321,117 @@ function setupModeToggle() {
         btn.innerHTML = '<i class="fas fa-sun"></i>';
     }
 }
+
+function escapeHtml(unsafe) {
+    if (!unsafe) return '';
+
+    return String(unsafe)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function setupPageAnimations() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.body.classList.add('has-animations');
+        return;
+    }
+
+    const children = Array.from(document.body.children).filter((el) => {
+        return el.tagName.toLowerCase() !== 'script'
+            && el.tagName.toLowerCase() !== 'noscript'
+            && el.offsetParent !== null;
+    });
+
+    children.forEach((el, idx) => {
+        el.classList.add('fade-up');
+        el.style.setProperty('--animate-delay', `${Math.min(1200, idx * 160)}ms`);
+    });
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            document.body.classList.add('has-animations');
+        });
+    });
+}
+
+function setupArticleActionBar() {
+    const likeBtn = document.getElementById('like-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const commentBtn = document.getElementById('comment-btn');
+    const reportBtn = document.getElementById('report-btn');
+
+    if (likeBtn) {
+        likeBtn.addEventListener('click', () => {
+            likeBtn.classList.toggle('liked');
+        });
+    }
+
+    if (saveBtn) {
+        saveBtn.addEventListener('click', () => {
+            saveBtn.classList.toggle('liked');
+
+            const saved = JSON.parse(localStorage.getItem('savedIssues') || '[]');
+            const params = new URLSearchParams(location.search);
+            const issue = params.get('issue');
+
+            if (!issue) return;
+
+            const idx = saved.indexOf(issue);
+
+            if (idx === -1) {
+                saved.push(issue);
+            } else {
+                saved.splice(idx, 1);
+            }
+
+            localStorage.setItem('savedIssues', JSON.stringify(saved));
+        });
+    }
+
+    if (commentBtn) {
+        commentBtn.addEventListener('click', () => {
+            const el = document.getElementById('comment-content');
+            if (el) el.focus();
+
+            window.scrollTo({
+                top: document.getElementById('comments-section')?.offsetTop - 120 || 0,
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    if (reportBtn) {
+        reportBtn.addEventListener('click', () => {
+            const proceed = confirm('هل تريد الإبلاغ عن مشكلة في هذه النشرة؟');
+
+            if (proceed) {
+                window.location.href = 'mailto:info@example.com?subject=تقرير%20مشكلة%20في%20النشرة';
+            }
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    setupModeToggle();
+    setupSearchToggle();
+    loadCategoriesIntoFilter();
+
+    if (document.getElementById('latest-episodes-grid')) {
+        loadLatestEpisodes(3);
+    }
+
+    if (document.getElementById('episodes-grid')) {
+        performSearch();
+    }
+
+    if (document.getElementById('article-action-bar')) {
+        setupArticleActionBar();
+    }
+
+    setTimeout(setupPageAnimations, 120);
+});
+
+
