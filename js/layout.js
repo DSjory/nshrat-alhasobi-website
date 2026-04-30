@@ -8,7 +8,6 @@ export function renderUnifiedLayout() {
     { name: 'الرئيسية', link: 'index.html' },
     { name: 'جميع النشرات', link: 'episodes_ar.html' },
     { name: 'النشرات المترجمة', link: 'episodes_en.html' },
-    { name: 'انضم إلينا', link: 'join.html' },
     { name: 'فريق العمل', link: 'about.html' },
   ];
 
