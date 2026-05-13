@@ -2,6 +2,8 @@
 // Public newsletter page renderer.
 // Requires: window.supabase, newsletter-data.js
 
+import { renderRichText } from './rich-text.js';
+
 async function initNewsletterPage(idParam = 'id') {
   const params        = new URLSearchParams(location.search);
   const newsletterId  = params.get(idParam);
@@ -167,7 +169,7 @@ function renderSection(sec) {
         body.innerHTML += `<img src="${resolveMediaUrl(c.header_image_url)}" alt="${htmlEsc(c.header_image_alt_ar)}" class="section-hero-img" loading="lazy">`;
       {
         const bodyText = lang === 'en' ? (c.body_en || c.body_ar) : (c.body_ar || c.body_en);
-        if (bodyText) body.innerHTML += `<div class="section-text">${bodyText}</div>`;
+        if (bodyText) body.innerHTML += `<div class="section-text rich-text">${renderRichText(bodyText)}</div>`;
       }
       break;
 
@@ -184,7 +186,7 @@ function renderSection(sec) {
                 ? `<a href="${htmlEsc(item.source_url)}" target="_blank" rel="noopener">${htmlEsc(titleText)}</a>`
                 : htmlEsc(titleText)}</h3>
               ${sourceName ? `<span class="news-source">${htmlEsc(sourceName)}</span>` : ''}
-              ${summaryText ? `<p class="news-summary">${htmlEsc(summaryText)}</p>` : ''}
+              ${summaryText ? `<div class="news-summary rich-text">${renderRichText(summaryText)}</div>` : ''}
             </div>
           </div>`;
       });
@@ -203,7 +205,7 @@ function renderSection(sec) {
                 ? `<a href="${htmlEsc(item.article_url)}" target="_blank" rel="noopener">${htmlEsc(titleText)}</a>`
                 : htmlEsc(titleText)}</h3>
               ${authorText ? `<span class="article-author">${htmlEsc(authorText)}</span>` : ''}
-              ${excerptText ? `<p class="article-excerpt">${htmlEsc(excerptText)}</p>` : ''}
+              ${excerptText ? `<div class="article-excerpt rich-text">${renderRichText(excerptText)}</div>` : ''}
             </div>
           </div>`;
       });
@@ -222,7 +224,7 @@ function renderSection(sec) {
         <div class="podcast-player">
           <div class="podcast-info">
             <h3 class="podcast-title">${htmlEsc(podcastTitle)}</h3>
-            ${podcastDesc ? `<p class="podcast-desc">${htmlEsc(podcastDesc)}</p>` : ''}
+            ${podcastDesc ? `<div class="podcast-desc rich-text">${renderRichText(podcastDesc)}</div>` : ''}
             ${podcastImageUrl ? `<img src="${resolveMediaUrl(podcastImageUrl)}" class="podcast-image" loading="lazy" alt="">` : ''}
             ${c.duration_seconds ? `<span class="podcast-dur">${Math.floor(c.duration_seconds/60)} ${durationLabel}</span>` : ''}
           </div>
@@ -298,7 +300,7 @@ function renderNewsletterIntro(welcomeText, readingText, lang = 'ar') {
   const readingLabel = lang === 'en' ? 'Reading time' : 'وقت القراءة';
 
   wrap.innerHTML = `
-    ${welcomeText ? `<p class="newsletter-welcome-text">${htmlEsc(welcomeText)}</p>` : ''}
+    ${welcomeText ? `<div class="newsletter-welcome-text rich-text">${renderRichText(welcomeText)}</div>` : ''}
     ${readingText ? `<div class="newsletter-reading-time"><span class="newsletter-reading-time-label">⏱ ${htmlEsc(readingLabel)}:</span> ${htmlEsc(readingText)}</div>` : ''}`;
 
   return wrap;
