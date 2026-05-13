@@ -1,5 +1,6 @@
 import { initSupabase, reinitSupabase, uploadFileWithProgress } from './supabase-client.js';
 import { showToast, showConfirm } from './ui.js';
+import { createRichTextField } from './js/rich-text-field.js';
 
 await initSupabase();
 let supabase = window.supabase;
@@ -17,8 +18,20 @@ const edition = document.getElementById('edition');
 const issueDate = document.getElementById('issue-date');
 const readingTime = document.getElementById('reading-time');
 const readingTimeEn = document.getElementById('reading-time-en');
-const welcomeMessage = document.getElementById('welcome-message');
-const welcomeMessageEn = document.getElementById('welcome-message-en');
+const welcomeMessageHost = document.getElementById('welcome-message-host');
+const welcomeMessageEnHost = document.getElementById('welcome-message-en-host');
+const welcomeMessageField = createRichTextField({
+  dir: 'rtl',
+  placeholder: welcomeMessageHost?.dataset.placeholder || '',
+  minHeight: '6em',
+});
+const welcomeMessageEnField = createRichTextField({
+  dir: 'ltr',
+  placeholder: welcomeMessageEnHost?.dataset.placeholder || '',
+  minHeight: '6em',
+});
+welcomeMessageHost?.appendChild(welcomeMessageField.el);
+welcomeMessageEnHost?.appendChild(welcomeMessageEnField.el);
 const hasTranslation = document.getElementById('has-translation');
 const categorySel = document.getElementById('category');
 const coverFile = document.getElementById('cover-file');
@@ -99,8 +112,8 @@ async function loadNewsletter(id){
     issueDate.value = newsletter.issue_date || '';
     readingTime.value = newsletter.reading_time || '';
     readingTimeEn.value = newsletter.reading_time_en || '';
-    welcomeMessage.value = newsletter.welcome_message || 'اهلا بك في نشرة الحاسوبي';
-    welcomeMessageEn.value = newsletter.welcome_message_en || '';
+    welcomeMessageField.setHtml(newsletter.welcome_message || 'اهلا بك في نشرة الحاسوبي');
+    welcomeMessageEnField.setHtml(newsletter.welcome_message_en || '');
     hasTranslation.checked = newsletter.has_translation || false;
     toggleTranslationFields(hasTranslation.checked);
     isPublished.checked = newsletter.status === 'published';
@@ -387,17 +400,17 @@ async function openSectionEditor(section){
     const table = slug === 'illumination' ? 'section_illumination' : 'section_inspiring';
     const { data } = await supabase.from(table).select('*').eq('newsletter_section_id', section.id).maybeSingle();
     const labelAr = document.createElement('label'); labelAr.className = 'label'; labelAr.textContent = 'المحتوى (عربي)';
-    const textarea = document.createElement('textarea'); textarea.className='input'; textarea.rows=8; textarea.value = data?.body_ar || '';
+    const bodyField = createRichTextField({ dir: 'rtl', initialHtml: data?.body_ar || '', minHeight: '12em' });
     const enWrap = document.createElement('div'); enWrap.className = 'english-only';
     const labelEn = document.createElement('label'); labelEn.className = 'label'; labelEn.textContent = 'المحتوى (EN)';
-    const textareaEn = document.createElement('textarea'); textareaEn.className='input'; textareaEn.rows=8; textareaEn.value = data?.body_en || '';
-    enWrap.append(labelEn, textareaEn);
+    const bodyFieldEn = createRichTextField({ dir: 'ltr', initialHtml: data?.body_en || '', minHeight: '12em' });
+    enWrap.append(labelEn, bodyFieldEn.el);
     const saveBtn = document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='حفظ القسم';
     saveBtn.addEventListener('click', async ()=>{
       setLoading(saveBtn, true);
       try{
           // Section banner image is managed once in newsletter_sections (top uploader).
-          const payload = { newsletter_section_id: section.id, body_ar: textarea.value, body_en: hasTranslation.checked ? (textareaEn.value || null) : null };
+          const payload = { newsletter_section_id: section.id, body_ar: bodyField.getHtml(), body_en: hasTranslation.checked ? (bodyFieldEn.getHtml() || null) : null };
         // upsert: delete existing then insert (simpler)
         if (data) await supabase.from(table).update(payload).eq('id', data.id);
         else await supabase.from(table).insert(payload);
@@ -405,7 +418,7 @@ async function openSectionEditor(section){
       }catch(e){ showToast(e.message||e,'error'); }
       setLoading(saveBtn, false);
     });
-      container.append(labelAr, textarea, enWrap, saveBtn);
+      container.append(labelAr, bodyField.el, enWrap, saveBtn);
   } else if (slug === 'news'){
     // news items list
     const { data } = await supabase.from('section_news_items').select('*').eq('newsletter_section_id', section.id).order('sort_order',{ascending:true});
@@ -442,11 +455,11 @@ async function openSectionEditor(section){
     const titleEn = document.createElement('input'); titleEn.className='input'; titleEn.value = data?.title_en || '';
     titleEnWrap.append(titleEnLabel, titleEn);
     const descArLabel = document.createElement('label'); descArLabel.className='label'; descArLabel.textContent='وصف البودكاست (عربي)';
-    const desc = document.createElement('textarea'); desc.className='input'; desc.rows=4; desc.value = data?.description_ar || '';
+    const descField = createRichTextField({ dir: 'rtl', initialHtml: data?.description_ar || '', minHeight: '8em' });
     const descEnWrap = document.createElement('div'); descEnWrap.className='english-only';
     const descEnLabel = document.createElement('label'); descEnLabel.className='label'; descEnLabel.textContent='وصف البودكاست (EN)';
-    const descEn = document.createElement('textarea'); descEn.className='input'; descEn.rows=4; descEn.value = data?.description_en || '';
-    descEnWrap.append(descEnLabel, descEn);
+    const descFieldEn = createRichTextField({ dir: 'ltr', initialHtml: data?.description_en || '', minHeight: '8em' });
+    descEnWrap.append(descEnLabel, descFieldEn.el);
 
     const imageLabel = document.createElement('label');
     imageLabel.className = 'label';
@@ -505,8 +518,8 @@ async function openSectionEditor(section){
           newsletter_section_id: section.id,
           title_ar: title.value,
           title_en: hasTranslation.checked ? (titleEn.value || null) : null,
-          description_ar: desc.value,
-          description_en: hasTranslation.checked ? (descEn.value || null) : null,
+          description_ar: descField.getHtml(),
+          description_en: hasTranslation.checked ? (descFieldEn.getHtml() || null) : null,
           audio_url: audioUrl || '',
           podcast_image_url: podcastImageUrl
         };
@@ -535,7 +548,7 @@ async function openSectionEditor(section){
       }catch(e){ showToast(e.message||e,'error'); }
       setLoading(saveBtn, false);
     });
-    container.append(titleArLabel, title, titleEnWrap, descArLabel, desc, descEnWrap, imageLabel, imageFile, imagePreview, clearImageBtn, saveBtn);
+    container.append(titleArLabel, title, titleEnWrap, descArLabel, descField.el, descEnWrap, imageLabel, imageFile, imagePreview, clearImageBtn, saveBtn);
   } else {
     container.append(document.createElement('div')).textContent = 'نوع القسم غير مدعوم بعد.';
   }
@@ -554,11 +567,11 @@ function createNewsItemRow(item, section){
   const titleEn = document.createElement('input'); titleEn.className='input'; titleEn.placeholder='News title'; titleEn.value = item?.title_en || '';
   titleEnWrap.append(titleEnLabel, titleEn);
   const summaryArLabel = document.createElement('label'); summaryArLabel.className='label'; summaryArLabel.textContent='ملخص الخبر (عربي)';
-  const summary = document.createElement('textarea'); summary.className='input'; summary.rows=3; summary.placeholder='الملخص'; summary.value = item?.summary_ar || '';
+  const summaryField = createRichTextField({ dir: 'rtl', initialHtml: item?.summary_ar || '', placeholder: 'الملخص', minHeight: '6em' });
   const summaryEnWrap = document.createElement('div'); summaryEnWrap.className='english-only';
   const summaryEnLabel = document.createElement('label'); summaryEnLabel.className='label'; summaryEnLabel.textContent='ملخص الخبر (EN)';
-  const summaryEn = document.createElement('textarea'); summaryEn.className='input'; summaryEn.rows=3; summaryEn.placeholder='Summary'; summaryEn.value = item?.summary_en || '';
-  summaryEnWrap.append(summaryEnLabel, summaryEn);
+  const summaryFieldEn = createRichTextField({ dir: 'ltr', initialHtml: item?.summary_en || '', placeholder: 'Summary', minHeight: '6em' });
+  summaryEnWrap.append(summaryEnLabel, summaryFieldEn.el);
   const sourceNameArLabel = document.createElement('label'); sourceNameArLabel.className='label'; sourceNameArLabel.textContent='اسم المصدر (عربي)';
   const sourceNameAr = document.createElement('input'); sourceNameAr.className='input'; sourceNameAr.placeholder='اسم المصدر'; sourceNameAr.value = item?.source_name_ar || '';
   const sourceNameEnWrap = document.createElement('div'); sourceNameEnWrap.className='english-only';
@@ -576,8 +589,8 @@ function createNewsItemRow(item, section){
         newsletter_section_id: section.id,
         title_ar: title.value.trim(),
         title_en: hasTranslation.checked ? (titleEn.value || null) : null,
-        summary_ar: summary.value,
-        summary_en: hasTranslation.checked ? (summaryEn.value || null) : null,
+        summary_ar: summaryField.getHtml(),
+        summary_en: hasTranslation.checked ? (summaryFieldEn.getHtml() || null) : null,
         source_name_ar: sourceNameAr.value || null,
         source_name_en: hasTranslation.checked ? (sourceNameEn.value || null) : null,
         source_url: source.value,
@@ -595,7 +608,7 @@ function createNewsItemRow(item, section){
     const ok = await showConfirm('حذف الخبر؟'); if (!ok) return;
     const { error } = await supabase.from('section_news_items').delete().eq('id', item.id); if (error) return showToast(error.message,'error'); row.remove(); await loadNewsletterSections(newsletter.id); showToast('تم الحذف');
   });
-  row.append(titleArLabel, title, titleEnWrap, summaryArLabel, summary, summaryEnWrap, sourceNameArLabel, sourceNameAr, sourceNameEnWrap, sourceUrlLabel, source, save, del); return row;
+  row.append(titleArLabel, title, titleEnWrap, summaryArLabel, summaryField.el, summaryEnWrap, sourceNameArLabel, sourceNameAr, sourceNameEnWrap, sourceUrlLabel, source, save, del); return row;
 }
 
 function createArticleItemRow(item, section){
@@ -613,11 +626,11 @@ function createArticleItemRow(item, section){
   const authorEn = document.createElement('input'); authorEn.className='input'; authorEn.placeholder='Author'; authorEn.value = item?.author_name_en || '';
   authorEnWrap.append(authorEnLabel, authorEn);
   const excerptArLabel = document.createElement('label'); excerptArLabel.className='label'; excerptArLabel.textContent='المقتطف (عربي)';
-  const excerpt = document.createElement('textarea'); excerpt.className='input'; excerpt.rows=3; excerpt.placeholder='مقتطف'; excerpt.value = item?.excerpt_ar || '';
+  const excerptField = createRichTextField({ dir: 'rtl', initialHtml: item?.excerpt_ar || '', placeholder: 'مقتطف', minHeight: '6em' });
   const excerptEnWrap = document.createElement('div'); excerptEnWrap.className='english-only';
   const excerptEnLabel = document.createElement('label'); excerptEnLabel.className='label'; excerptEnLabel.textContent='المقتطف (EN)';
-  const excerptEn = document.createElement('textarea'); excerptEn.className='input'; excerptEn.rows=3; excerptEn.placeholder='Excerpt'; excerptEn.value = item?.excerpt_en || '';
-  excerptEnWrap.append(excerptEnLabel, excerptEn);
+  const excerptFieldEn = createRichTextField({ dir: 'ltr', initialHtml: item?.excerpt_en || '', placeholder: 'Excerpt', minHeight: '6em' });
+  excerptEnWrap.append(excerptEnLabel, excerptFieldEn.el);
   const save = document.createElement('button'); save.className='btn btn-primary'; save.textContent='حفظ';
   save.addEventListener('click', async ()=>{
     if (!title.value || !title.value.trim()) return showToast('العنوان مطلوب','error');
@@ -629,8 +642,8 @@ function createArticleItemRow(item, section){
         title_en: hasTranslation.checked ? (titleEn.value || null) : null,
         author_name_ar: author.value,
         author_name_en: hasTranslation.checked ? (authorEn.value || null) : null,
-        excerpt_ar: excerpt.value,
-        excerpt_en: hasTranslation.checked ? (excerptEn.value || null) : null,
+        excerpt_ar: excerptField.getHtml(),
+        excerpt_en: hasTranslation.checked ? (excerptFieldEn.getHtml() || null) : null,
         sort_order: 0
       };
       if (item && item.id) await supabase.from('section_article_items').update(payload).eq('id', item.id);
@@ -644,7 +657,7 @@ function createArticleItemRow(item, section){
     const ok = await showConfirm('حذف المقال؟'); if (!ok) return;
     const { error } = await supabase.from('section_article_items').delete().eq('id', item.id); if (error) return showToast(error.message,'error'); row.remove(); await loadNewsletterSections(newsletter.id); showToast('تم الحذف');
   });
-  row.append(titleArLabel, title, titleEnWrap, authorArLabel, author, authorEnWrap, excerptArLabel, excerpt, excerptEnWrap, save, del); return row;
+  row.append(titleArLabel, title, titleEnWrap, authorArLabel, author, authorEnWrap, excerptArLabel, excerptField.el, excerptEnWrap, save, del); return row;
 }
 
 // cover upload
@@ -674,7 +687,7 @@ hasTranslation.addEventListener('change', ()=>{
   if (!enabled) {
     titleEn.value = '';
     readingTimeEn.value = '';
-    welcomeMessageEn.value = '';
+    welcomeMessageEnField.clear();
     Object.entries(contributorsInputs).forEach(([key, input]) => {
       if (key.endsWith('_en') && input) input.value = '';
     });
@@ -693,8 +706,8 @@ saveMetaBtn.addEventListener('click', async ()=>{
       issue_date: issueDate.value || null,
       reading_time: readingTime.value || null,
       reading_time_en: hasTranslation.checked ? (readingTimeEn.value || null) : null,
-      welcome_message: welcomeMessage.value || null,
-      welcome_message_en: hasTranslation.checked ? (welcomeMessageEn.value || null) : null,
+      welcome_message: welcomeMessageField.getHtml() || null,
+      welcome_message_en: hasTranslation.checked ? (welcomeMessageEnField.getHtml() || null) : null,
       has_translation: hasTranslation.checked,
       translated_content: null,
       status: isPublished.checked ? 'published' : 'draft',
