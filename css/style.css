@@ -1,24 +1,32 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;600;700;800&display=swap');
 
 :root {
-    /* Global design system (new) */
-    --bg-color: #FAF9F7; /* main app background (soft) */
-    --primary-color: #016A6d; /* primary actions, CTAs */
-    --secondary-color: #043E52; /* headings, footer bg */
-    --text-color: #043E52; /* default text color */
-    --card-bg: #FFFFFF; /* card background */
-    --muted-color: #6c757d;
-    --padding-sides: 40px; /* default horizontal padding */
+    /* Light mode - Brand colors */
+    --bg-color: #F7F3EA;
+    --primary-color: #3A7376;
+    --secondary-color: #24475D;
+    --accent-color: #C67147;
+
+    --text-color: #24475D;
+    --muted-color: #7A8A92;
+
+    --card-bg: #FFFFFF;
+    --border-light: #E6DDD3;
+
+    --padding-sides: 40px;
 
     /* Legacy / dark mode variables kept for compatibility */
-    --color-background-light: #fff1e6;
-    --color-accent-blue: #075e7c;
-    --color-background-dark: #1f2124;
-    --color-text-light: #f5f5f5;
-    --color-border-dark: #333;
-    --color-card-dark: #2c2e33;
-    
+    --color-background-light: #F7F3EA;
+    --color-accent-blue: #3A7376;
+    --color-background-dark: #0F1115;
+    --color-text-light: #EDEDED;
+    --color-border-dark: #2A2E36;
+    --color-card-dark: #1A1D23;
 }
+
+
+
+
 
 /* تضمين الخط 29LT Zarid Text: */
 @font-face {
@@ -2203,4 +2211,1019 @@ body.dark-mode .newsletter-editor-item {
 /* This keeps style.css focused on public-facing pages */
 /* ================================================ */
 
+/* ================================
+   Amal Light Mode UI Refinements
+   ================================ */
+
+body:not(.dark-mode) {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+body:not(.dark-mode) #main-header {
+    background-color: var(--bg-color);
+    border-bottom: 2px solid var(--secondary-color);
+}
+
+body:not(.dark-mode) .header-text h1,
+body:not(.dark-mode) #hero-section h2,
+body:not(.dark-mode) .section-title,
+body:not(.dark-mode) .subsection-title,
+body:not(.dark-mode) .card-title,
+body:not(.dark-mode) .news-card .news-title {
+    color: var(--secondary-color);
+}
+
+body:not(.dark-mode) .header-text p,
+body:not(.dark-mode) #hero-section p,
+body:not(.dark-mode) .section-description,
+body:not(.dark-mode) .news-card .news-snippet,
+body:not(.dark-mode) .news-date {
+    color: var(--text-color);
+}
+
+body:not(.dark-mode) .main-nav ul li a,
+body:not(.dark-mode) .btn-primary,
+body:not(.dark-mode) .subscribe-cta-link,
+body:not(.dark-mode) .join-fixed-bottom a,
+body:not(.dark-mode) .submit-button,
+body:not(.dark-mode) .join-cta-button {
+    background-color: var(--primary-color);
+    color: #FFFFFF !important;
+}
+
+body:not(.dark-mode) .main-nav ul li a:hover,
+body:not(.dark-mode) .main-nav ul li a[aria-current="page"],
+body:not(.dark-mode) .subscribe-cta-link:hover,
+body:not(.dark-mode) .join-fixed-bottom a:hover,
+body:not(.dark-mode) .submit-button:hover,
+body:not(.dark-mode) .join-cta-button:hover {
+    background-color: var(--secondary-color);
+    color: #FFFFFF !important;
+}
+
+body:not(.dark-mode) .episode-card,
+body:not(.dark-mode) .news-card,
+body:not(.dark-mode) .newsletter-card,
+body:not(.dark-mode) .recruitment-form,
+body:not(.dark-mode) .team-member-card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-light);
+    box-shadow: 0 8px 24px rgba(36, 71, 93, 0.08);
+}
+
+body:not(.dark-mode) .episode-card:hover,
+body:not(.dark-mode) .news-card:hover {
+    box-shadow: 0 16px 36px rgba(36, 71, 93, 0.14);
+}
+
+body:not(.dark-mode) .news-category {
+    background-color: rgba(58, 115, 118, 0.12);
+    color: var(--primary-color);
+}
+
+body:not(.dark-mode) .news-source {
+    color: var(--secondary-color);
+    border-color: var(--border-light);
+    background-color: rgba(247, 243, 234, 0.7);
+}
+
+body:not(.dark-mode) .card-image-container,
+body:not(.dark-mode) .news-image-placeholder {
+    background-color: #F1E8DC;
+}
+
+body:not(.dark-mode) .header-tool-button {
+    color: var(--secondary-color);
+}
+
+body:not(.dark-mode) .header-tool-button:hover {
+    background-color: rgba(58, 115, 118, 0.12);
+    color: var(--primary-color);
+}
+
+body:not(.dark-mode) #search-input {
+    background-color: #FFFFFF;
+    color: var(--secondary-color);
+    border: 1px solid var(--border-light);
+}
+
+body:not(.dark-mode) #search-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(58, 115, 118, 0.12);
+    outline: none;
+}
+
+/* Header nav - light calm buttons */
+body:not(.dark-mode) .main-nav ul li a {
+    background-color: #F7F3EA;
+    color: #24475D !important;
+    border: 1px solid #E6DDD3;
+    box-shadow: none;
+}
+
+body:not(.dark-mode) .main-nav ul li a:hover {
+    background-color: #3A7376;
+    color: #FFFFFF !important;
+    border-color: #3A7376;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(58, 115, 118, 0.18);
+}
+
+body:not(.dark-mode) .main-nav ul li a[aria-current="page"] {
+    background-color: #F7F3EA;
+    color: #24475D !important;
+    border-color: #E6DDD3;
+}
+
+/* Nav container as one box */
+body:not(.dark-mode) .main-nav ul {
+    background-color: #F7F3EA;
+    border: 1px solid #E6DDD3;
+    border-radius: 16px;
+    padding: 6px;
+    display: inline-flex;
+    gap: 4px;
+}
+
+/* remove individual button backgrounds */
+body:not(.dark-mode) .main-nav ul li a {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: #24475D !important;
+    border-radius: 10px;
+    padding: 8px 14px;
+}
+
+/* hover effect */
+body:not(.dark-mode) .main-nav ul li a:hover {
+    background-color: #3A7376;
+    color: #FFFFFF !important;
+}
+
+/* active page */
+body:not(.dark-mode) .main-nav ul li a[aria-current="page"] {
+    background-color: #24475D;
+    color: #FFFFFF !important;
+}
+
+/* ================================
+   Dark Mode - Clean Neutral (Not blue)
+   ================================ */
+
+body.dark-mode {
+    background-color: #0F1115; /* أسود ناعم */
+    color: #EDEDED;
+}
+
+/* Header */
+body.dark-mode #main-header {
+    background-color: #0F1115;
+    border-bottom: 1px solid #23262D;
+}
+
+/* Nav container (box واحد) */
+body.dark-mode .main-nav ul {
+    background-color: #1A1D23;
+    border: 1px solid #2A2E36;
+    border-radius: 16px;
+    padding: 6px;
+    display: inline-flex;
+    gap: 4px;
+}
+
+/* Nav buttons (hidden by default) */
+body.dark-mode .main-nav ul li a {
+    background: transparent !important;
+    color: #EDEDED !important;
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 10px;
+    padding: 8px 14px;
+}
+
+/* Hover = لون الهوية */
+body.dark-mode .main-nav ul li a:hover {
+    background-color: #3A7376 !important;
+    color: #FFFFFF !important;
+}
+
+/* الصفحة الحالية */
+body.dark-mode .main-nav ul li a[aria-current="page"] {
+    background-color: #2A2E36 !important;
+    color: #FFFFFF !important;
+}
+
+/* Cards */
+body.dark-mode .episode-card,
+body.dark-mode .news-card,
+body.dark-mode .newsletter-card,
+body.dark-mode .recruitment-form,
+body.dark-mode .team-member-card {
+    background-color: #1A1D23 !important;
+    border: 1px solid #2A2E36 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* Text */
+body.dark-mode #hero-section h2,
+body.dark-mode .section-title,
+body.dark-mode .news-card .news-title,
+body.dark-mode .card-title {
+    color: #FFFFFF !important;
+}
+
+body.dark-mode #hero-section p,
+body.dark-mode .news-card .news-snippet,
+body.dark-mode .section-description {
+    color: #B0B3B8 !important;
+}
+
+/* Buttons */
+body.dark-mode .subscribe-cta-link,
+body.dark-mode .join-fixed-bottom a,
+body.dark-mode .submit-button,
+body.dark-mode .join-cta-button {
+    background-color: #3A7376 !important;
+    color: #FFFFFF !important;
+}
+
+body.dark-mode .subscribe-cta-link:hover,
+body.dark-mode .join-fixed-bottom a:hover,
+body.dark-mode .submit-button:hover,
+body.dark-mode .join-cta-button:hover {
+    background-color: #24475D !important;
+}
+
+/* ================================
+   Unified Card Animation
+   Light + Dark
+   ================================ */
+
+.episode-card,
+.news-card {
+    transition:
+        transform 0.28s ease,
+        box-shadow 0.28s ease,
+        border-color 0.28s ease;
+}
+
+/* نفس حركة الكارد في اللايت والدارك */
+.episode-card:hover,
+.news-card:hover {
+    transform: translateY(-6px);
+}
+
+/* الصورة داخل الكارد */
+.episode-card .card-image-container img,
+.news-card .news-image {
+    transition: transform 0.45s ease;
+}
+
+/* نفس زوم الصورة في اللايت والدارك */
+.episode-card:hover .card-image-container img,
+.news-card:hover .news-image {
+    transform: scale(1.04);
+}
+
+/* Light shadow */
+body:not(.dark-mode) .episode-card:hover,
+body:not(.dark-mode) .news-card:hover {
+    box-shadow: 0 16px 36px rgba(36, 71, 93, 0.14);
+}
+
+/* Dark shadow */
+body.dark-mode .episode-card:hover,
+body.dark-mode .news-card:hover {
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42);
+}
+
+/* Professional Search Bar */
+#search-bar-container {
+    position: fixed;
+    top: 105px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1500;
+    width: min(900px, calc(100% - 48px)) !important;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #E6DDD3;
+    border-radius: 22px;
+    padding: 14px;
+    box-shadow: 0 20px 50px rgba(36, 71, 93, 0.14);
+    backdrop-filter: blur(12px);
+}
+
+#search-bar-container.hidden {
+    display: none !important;
+}
+
+#search-bar-container .search-controls {
+    display: grid;
+    grid-template-columns: 1fr 170px auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 0;
+}
+
+#search-input,
+#category-filter {
+    height: 46px;
+    border: 1px solid #E6DDD3;
+    border-radius: 14px;
+    background: #F7F3EA;
+    color: #24475D;
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 0 14px;
+}
+
+#search-input:focus,
+#category-filter:focus {
+    outline: none;
+    border-color: #3A7376;
+    box-shadow: 0 0 0 4px rgba(58, 115, 118, 0.12);
+}
+
+#search-execute-btn,
+#close-search-btn {
+    height: 46px;
+    border-radius: 14px;
+    padding: 0 18px;
+}
+
+#search-execute-btn {
+    background: #3A7376;
+}
+
+#close-search-btn {
+    background: transparent;
+    color: #24475D;
+    border: 1px solid #E6DDD3;
+}
+
+/* Dark mode search */
+body.dark-mode #search-bar-container {
+    background: rgba(26, 29, 35, 0.94);
+    border-color: #2A2E36;
+    box-shadow: 0 22px 55px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-mode #search-input,
+body.dark-mode #category-filter {
+    background: #0F1115;
+    color: #EDEDED;
+    border-color: #2A2E36;
+}
+
+body.dark-mode #close-search-btn {
+    color: #EDEDED;
+    border-color: #2A2E36;
+}
+
+/* Professional Search Bar */
+#search-bar-container {
+    position: fixed;
+    top: 105px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1500;
+    width: min(900px, calc(100% - 48px)) !important;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #E6DDD3;
+    border-radius: 22px;
+    padding: 14px;
+    box-shadow: 0 20px 50px rgba(36, 71, 93, 0.14);
+    backdrop-filter: blur(12px);
+}
+
+#search-bar-container.hidden {
+    display: none !important;
+}
+
+#search-bar-container .search-controls {
+    display: grid;
+    grid-template-columns: 1fr 170px auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 0;
+}
+
+#search-input,
+#category-filter {
+    height: 46px;
+    border: 1px solid #E6DDD3;
+    border-radius: 14px;
+    background: #F7F3EA;
+    color: #24475D;
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 0 14px;
+}
+
+#search-input:focus,
+#category-filter:focus {
+    outline: none;
+    border-color: #3A7376;
+    box-shadow: 0 0 0 4px rgba(58, 115, 118, 0.12);
+}
+
+#search-execute-btn,
+#close-search-btn {
+    height: 46px;
+    border-radius: 14px;
+    padding: 0 18px;
+}
+
+#search-execute-btn {
+    background: #3A7376;
+}
+
+#close-search-btn {
+    background: transparent;
+    color: #24475D;
+    border: 1px solid #E6DDD3;
+}
+
+/* Dark mode search */
+body.dark-mode #search-bar-container {
+    background: rgba(26, 29, 35, 0.94);
+    border-color: #2A2E36;
+    box-shadow: 0 22px 55px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-mode #search-input,
+body.dark-mode #category-filter {
+    background: #0F1115;
+    color: #EDEDED;
+    border-color: #2A2E36;
+}
+
+body.dark-mode #close-search-btn {
+    color: #EDEDED;
+    border-color: #2A2E36;
+}
+
+/* Professional Search Bar */
+#search-bar-container {
+    position: fixed;
+    top: 105px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1500;
+    width: min(900px, calc(100% - 48px)) !important;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #E6DDD3;
+    border-radius: 22px;
+    padding: 14px;
+    box-shadow: 0 20px 50px rgba(36, 71, 93, 0.14);
+    backdrop-filter: blur(12px);
+}
+
+#search-bar-container.hidden {
+    display: none !important;
+}
+
+#search-bar-container .search-controls {
+    display: grid;
+    grid-template-columns: 1fr 170px auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 0;
+}
+
+#search-input,
+#category-filter {
+    height: 46px;
+    border: 1px solid #E6DDD3;
+    border-radius: 14px;
+    background: #F7F3EA;
+    color: #24475D;
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 0 14px;
+}
+
+#search-input:focus,
+#category-filter:focus {
+    outline: none;
+    border-color: #3A7376;
+    box-shadow: 0 0 0 4px rgba(58, 115, 118, 0.12);
+}
+
+#search-execute-btn,
+#close-search-btn {
+    height: 46px;
+    border-radius: 14px;
+    padding: 0 18px;
+}
+
+#search-execute-btn {
+    background: #3A7376;
+}
+
+#close-search-btn {
+    background: transparent;
+    color: #24475D;
+    border: 1px solid #E6DDD3;
+}
+
+/* Dark mode search */
+body.dark-mode #search-bar-container {
+    background: rgba(26, 29, 35, 0.94);
+    border-color: #2A2E36;
+    box-shadow: 0 22px 55px rgba(0, 0, 0, 0.45);
+}
+
+body.dark-mode #search-input,
+body.dark-mode #category-filter {
+    background: #0F1115;
+    color: #EDEDED;
+    border-color: #2A2E36;
+}
+
+body.dark-mode #close-search-btn {
+    color: #EDEDED;
+    border-color: #2A2E36;
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+    #search-bar-container {
+        top: 145px;
+        width: calc(100% - 24px) !important;
+        padding: 12px;
+    }
+
+    #search-bar-container .search-controls {
+        grid-template-columns: 1fr;
+    }
+
+    #search-execute-btn,
+    #close-search-btn {
+        width: 100%;
+    }
+}
+
+/* Stronger light mode brand colors */
+body:not(.dark-mode) {
+    background-color: #F3E7D8 !important;
+    color: #24475D !important;
+}
+
+body:not(.dark-mode) #main-header {
+    background-color: #F3E7D8 !important;
+    border-bottom: 2px solid #24475D !important;
+}
+
+body:not(.dark-mode) .episode-card,
+body:not(.dark-mode) .news-card,
+body:not(.dark-mode) .newsletter-card {
+    background-color: #FFFFFF !important;
+    border: 1px solid #D8C8B8 !important;
+}
+
+body:not(.dark-mode) .main-nav ul {
+    background-color: #F7F3EA !important;
+    border: 1px solid #D8C8B8 !important;
+}
+
+body:not(.dark-mode) .main-nav ul li a[aria-current="page"] {
+    background-color: #24475D !important;
+    color: #FFFFFF !important;
+}
+
+body:not(.dark-mode) .main-nav ul li a:hover {
+    background-color: #C67147 !important;
+    color: #FFFFFF !important;
+}
+
+/* ================================
+   FIX NAV COLORS (FINAL)
+   ================================ */
+
+body:not(.dark-mode) .main-nav ul li a:hover,
+body:not(.dark-mode) .main-nav ul li a[aria-current="page"] {
+    background-color: var(--accent-color) !important;
+    color: #fff !important;
+}
+
+body.dark-mode .main-nav ul li a:hover,
+body.dark-mode .main-nav ul li a[aria-current="page"] {
+    background-color: var(--accent-color) !important;
+    color: #fff !important;
+}
+
+/* زر الانضمام الجانبي */
+.join-fixed-bottom a {
+    background: var(--accent-color) !important;
+    color: #fff !important;
+}
+
+/* =========================
+   FINAL NAV COLORS
+   Light = Orange / Dark = Blue
+========================= */
+
+/* Light Mode */
+body:not(.dark-mode) .main-nav ul li a:hover,
+body:not(.dark-mode) .main-nav ul li a[aria-current="page"] {
+    background-color: #C67147 !important;
+    color: #FFFFFF !important;
+    border-color: #C67147 !important;
+}
+
+/* Dark Mode */
+body.dark-mode .main-nav ul li a:hover,
+body.dark-mode .main-nav ul li a[aria-current="page"] {
+    background-color: #3A7376 !important;
+    color: #FFFFFF !important;
+    border-color: #3A7376 !important;
+}
+
+/* Dark mode join button stays blue */
+body.dark-mode .join-fixed-bottom a {
+    background-color: #3A7376 !important;
+    color: #FFFFFF !important;
+}
+
+body.dark-mode .join-fixed-bottom a:hover {
+    background-color: #24475D !important;
+    color: #FFFFFF !important;
+}
+
+/* =========================
+   GLOBAL COLOR SYSTEM
+========================= */
+
+/* Light Mode (برتقالي) */
+body:not(.dark-mode) .btn,
+body:not(.dark-mode) button,
+body:not(.dark-mode) .join-fixed-bottom a,
+body:not(.dark-mode) .alert,
+body:not(.dark-mode) .badge,
+body:not(.dark-mode) .notice-box {
+    background-color: #C67147 !important;
+    color: #fff !important;
+    border-color: #C67147 !important;
+}
+
+/* Dark Mode (أزرق) */
+body.dark-mode .btn,
+body.dark-mode button,
+body.dark-mode .join-fixed-bottom a,
+body.dark-mode .alert,
+body.dark-mode .badge,
+body.dark-mode .notice-box {
+    background-color: #3A7376 !important;
+    color: #fff !important;
+    border-color: #3A7376 !important;
+}
+
+/* =========================
+   HOVER EFFECT
+========================= */
+
+/* Light Hover (أغمق شوي) */
+body:not(.dark-mode) .btn:hover,
+body:not(.dark-mode) button:hover,
+body:not(.dark-mode) .join-fixed-bottom a:hover {
+    background-color: #a85c38 !important;
+}
+
+/* Dark Hover */
+body.dark-mode .btn:hover,
+body.dark-mode button:hover,
+body.dark-mode .join-fixed-bottom a:hover {
+    background-color: #2b585c !important;
+}
+
+/* Join page note - Light orange / Dark blue */
+body:not(.dark-mode) .form-note {
+    border-color: #C67147 !important;
+    border-right-color: #C67147 !important;
+    background: rgba(198, 113, 71, 0.10) !important;
+}
+
+body:not(.dark-mode) .form-note-label {
+    background-color: #C67147 !important;
+    color: #FFFFFF !important;
+}
+
+body.dark-mode .form-note {
+    border-color: #3A7376 !important;
+    border-right-color: #3A7376 !important;
+    background: rgba(58, 115, 118, 0.16) !important;
+}
+
+body.dark-mode .form-note-label {
+    background-color: #3A7376 !important;
+    color: #FFFFFF !important;
+}
+
+
+
+/* Fix top CTA bar color and visibility */
+.top-cta-bar {
+    background-color: #C67147 !important;
+    color: #FFFFFF !important;
+    height: 34px;
+    line-height: 34px;
+    padding: 0 !important;
+    overflow: visible !important;
+    text-align: center;
+    font-weight: 700;
+}
+
+.top-cta-bar a {
+    color: #FFFFFF !important;
+    display: inline-block;
+    line-height: 34px;
+}
+
+/* Dark mode = blue */
+body.dark-mode .top-cta-bar {
+    background-color: #3A7376 !important;
+}
+
+body.dark-mode .top-cta-bar a {
+    color: #FFFFFF !important;
+}
+
+/* =========================
+   News Cards UI تحسين
+========================= */
+
+/* العناوين الصغيرةج) */
+body:not(.dark-mode) .news-category,
+body:not(.dark-mode) .news-tag {
+    background-color: rgba(198, 113, 71, 0.15);
+    color: #C67147;
+    font-weight: 600;
+}
+
+/* دارك مود */
+body.dark-mode .news-category,
+body.dark-mode .news-tag {
+    background-color: rgba(58, 115, 118, 0.2);
+    color: #3A7376;
+}
+
+/* =========================
+   2️ المصدر (Hover)
+========================= */
+
+.news-source {
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+body:not(.dark-mode) .news-source:hover {
+    background-color: #C67147;
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+/* دارك */
+body.dark-mode .news-source:hover {
+    background-color: #3A7376;
+    color: #fff;
+}
+
+
+
+.read-more {
+    transition: all 0.25s ease;
+    font-weight: 600;
+}
+
+body:not(.dark-mode) .read-more:hover {
+    color: #C67147;
+    transform: translateX(-5px);
+}
+
+body.dark-mode .read-more:hover {
+    color: #3A7376;
+    transform: translateX(-5px);
+}
+
+/* توحيد أنميشن المصدر */
+
+.news-source {
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+/* Hover - نفس الحركة في اللايت والدارك */
+.news-source:hover {
+    transform: translateY(-2px);
+}
+
+/* Light Mode */
+body:not(.dark-mode) .news-source:hover {
+    background-color: #C67147;
+    color: #fff;
+}
+
+/* Dark Mode */
+body.dark-mode .news-source:hover {
+    background-color: #3A7376;
+    color: #fff;
+}
+
+
+/* Fix English titles direction */
+.news-card h3:lang(en),
+.news-card .news-title:lang(en) {
+    direction: ltr;
+    text-align: left;
+}
+
+#hero-section p,
+.hero-text p {
+    text-align: center;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.9;
+    max-width: 650px;
+    margin: 10px auto 0;
+    opacity: 0.9;
+}
+
+/* =========================
+   Smooth & subtle card animation
+========================= */
+
+.episode-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.episode-card:hover {
+    transform: translateY(-4px); /* حركة خفيفة بس */
+}
+
+/* الصورة */
+.episode-card .card-image-container img {
+    transition: transform 0.4s ease;
+}
+
+.episode-card:hover .card-image-container img {
+    transform: scale(1.03); /* زووم خفيف جدًا */
+}
+
+/* شادو ناعم */
+body:not(.dark-mode) .episode-card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+body.dark-mode .episode-card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+/* Home page episode cards - same animation as all newsletters */
+#latest-episodes-grid .episode-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+}
+
+#latest-episodes-grid .episode-card:hover {
+    transform: translateY(-4px) !important;
+}
+
+#latest-episodes-grid .episode-card .card-image-container img {
+    transition: transform 0.4s ease !important;
+}
+
+#latest-episodes-grid .episode-card:hover .card-image-container img {
+    transform: scale(1.03) !important;
+}
+
+body:not(.dark-mode) #latest-episodes-grid .episode-card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08) !important;
+}
+
+body.dark-mode #latest-episodes-grid .episode-card:hover {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Keep content images visible in dark mode */
+body.dark-mode img {
+    filter: none !important;
+}
+
+body.dark-mode .episode-image,
+body.dark-mode .episode-body img,
+body.dark-mode .newsletter-card img,
+body.dark-mode #dynamic-episode-details img,
+body.dark-mode .card-image-container img,
+body.dark-mode .news-card img,
+body.dark-mode .full-team-photo {
+    filter: none !important;
+}
+
+/* Fix text visibility for inner buttons (like Hide) */
+.toggle-btn,
+.filter-toggle-btn,
+button.toggle-btn {
+    color: var(--text-color) !important;
+}
+
+/* Light mode */
+body:not(.dark-mode) .toggle-btn,
+body:not(.dark-mode) .filter-toggle-btn {
+    color: #2c3e50 !important; /* لون واضح */
+}
+
+/* Dark mode */
+body.dark-mode .toggle-btn,
+body.dark-mode .filter-toggle-btn {
+    color: #ffffff !important;
+}
+
+/* Hover - خليه ما يختفي */
+.toggle-btn:hover,
+.filter-toggle-btn:hover {
+    color: #ffffff !important;
+}
+
+/* Fix Hide button specifically */
+.section-toggle-btn {
+    color: #24475D !important;
+}
+
+/* Light mode */
+body:not(.dark-mode) .section-toggle-btn {
+    color: #24475D !important;
+    border: 1px solid #C67147;
+    background-color: transparent;
+}
+
+/* Hover (Light) */
+body:not(.dark-mode) .section-toggle-btn:hover {
+    background-color: #C67147;
+    color: #ffffff !important;
+}
+
+/* Dark mode */
+body.dark-mode .section-toggle-btn {
+    color: #ffffff !important;
+    border: 1px solid #3A7376;
+}
+
+/* Hover (Dark) */
+body.dark-mode .section-toggle-btn:hover {
+    background-color: #3A7376;
+    color: #ffffff !important;
+}
+
+/* Match search buttons font with navbar */
+#search-execute-btn,
+#close-search-btn {
+    font-family: var(--font-family), 'Cairo', sans-serif !important;
+    font-weight: 600;
+}
+
+/* توحيد خط عناصر السيرش */
+#search-execute-btn,
+#close-search-btn,
+.search-btn,
+.search-button,
+.search-bar-container button,
+#search-bar-container button,
+#search-bar-container select,
+#search-bar-container input {
+    font-family: var(--font-family), 'Cairo', sans-serif !important;
+    font-weight: 600 !important;
+}
+
+/* Fix ONLY search button font */
+#search-execute-btn {
+    font-family: inherit !important;
+    font-weight: 600 !important;
+}
+
+/* لو عنده كلاس ثاني */
+.search-submit-btn,
+.search-btn {
+    font-family: inherit !important;
+    font-weight: 600 !important;
+}
+
+/* Force Search button to match Close button */
+#search-execute-btn,
+#search-execute-btn.btn,
+#search-bar-container #search-execute-btn {
+    font-family: 'IBM Plex Sans Arabic', Tahoma, Arial, sans-serif !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    line-height: 1.6 !important;
+    letter-spacing: 0 !important;
+}
+
+/* Move only the select arrow */
+#category-filter {
+    padding-right: 14px !important;
+    padding-left: 14px !important;
+    background-position: left 20px center !important;
+}
 
