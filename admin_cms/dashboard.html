@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Admin CMS — Dashboard</title>
+  <title>لوحة الإدارة — نشرة الحاسوبي</title>
   <script type="module" src="/admin_cms/js/auth-guard.js"></script>
   <link rel="stylesheet" href="/admin_cms/styles.css">
 </head>
@@ -11,46 +11,45 @@
   <div class="admin-wrapper">
 
     <div class="admin-layout">
-      
-      <!-- Right Sidebar Area -->
-      <aside class="admin-sidebar">
+
+      <aside class="admin-sidebar" id="admin-sidebar">
         <div class="sidebar-logo">
-           <img src="/assets/img/شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار النشرة">
+          <img src="/assets/img/شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار النشرة">
         </div>
-        <nav class="nav-list" id="sidebar-nav">
-          <button id="nav-news-2" class="btn active">الأعداد</button>
-          <button id="nav-categories-2" class="btn">التصنيفات</button>
-          <button id="nav-join-2" class="btn">طلبات الانضمام</button>
-          <button id="nav-audit-2" class="btn">سجل التدقيق</button>
+        <nav class="nav-list" id="sidebar-nav" aria-label="القائمة الرئيسية">
+          <button id="nav-news-2"        class="nav-item active" data-key="news">📰 الأعداد</button>
+          <button id="nav-categories-2"  class="nav-item"        data-key="categories">🏷️ التصنيفات</button>
+          <button id="nav-join-2"        class="nav-item"        data-key="join">✉️ طلبات الانضمام</button>
+          <button id="nav-audit-2"       class="nav-item"        data-key="audit">🧾 سجل التدقيق</button>
         </nav>
-        
-        <!-- User block injected dynamically via auth-guard -->
-        <div class="sidebar-user-block" id="user-profile-widget">
-        </div>
+
+        <div class="sidebar-user-block" id="user-profile-widget"></div>
       </aside>
 
-      <!-- Left Main Content Area -->
       <main class="admin-main">
         <header class="dashboard-header">
-           <div class="header-titles" style="text-align: right;">
-              <p style="color: var(--muted-color); font-size: 0.9rem; margin: 0;">لوحة التحكم</p>
-              <h1 id="page-title" style="margin: 0;">الأعداد</h1>
-           </div>
-
-           <div class="header-actions">
-              <!-- Replaced dynamically by JS based on current view -->
-           </div>
+          <div class="row" style="gap:12px; flex:1; min-width:0;">
+            <button id="hamburger" class="hamburger" aria-label="فتح القائمة" aria-controls="admin-sidebar">☰</button>
+            <div class="header-titles">
+              <p>لوحة التحكم</p>
+              <h1 id="page-title">الأعداد</h1>
+            </div>
+          </div>
+          <div class="header-actions" id="page-actions"></div>
         </header>
 
-        <div id="content-area"><p class="muted">يتم تحميل البيانات...</p></div>
+        <div id="content-area">
+          <div class="empty-state">
+            <div class="empty-state-icon">⏳</div>
+            <div class="empty-state-title">يتم تحميل البيانات…</div>
+          </div>
+        </div>
       </main>
 
     </div>
-
-    <script type="module" src="/admin_cms/main.js"></script>
   </div>
-  
+
+  <script type="module" src="/admin_cms/main.js"></script>
   <script type="module" src="/js/footer-year.js"></script>
-  <script type="module" src="/js/layout.js"></script>
 </body>
 </html>
