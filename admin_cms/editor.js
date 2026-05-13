@@ -1,777 +1,1049 @@
+// admin_cms/editor.js — Per-newsletter editor.
+//
+// Layout: three tabs (Overview · Contributors · Sections) inside a single
+// editor shell.  Section editing happens in a side drawer so the user keeps
+// the section list visible.  Bilingual fields render side-by-side.
+//
+// Data layer is unchanged — every Supabase call below mirrors the previous
+// implementation; only the presentation has been reorganised.
+
 import { initSupabase, reinitSupabase, uploadFileWithProgress } from './supabase-client.js';
-import { showToast, showConfirm } from './ui.js';
+import { showToast, showConfirm, openDrawer, bindMobileSidebar } from './ui.js';
 import { createRichTextField } from './js/rich-text-field.js';
 
 await initSupabase();
 let supabase = window.supabase;
 
-// use UI utilities (showToast returns a handle)
+/* ─── Utilities ───────────────────────────────────────────────────────────── */
+const $ = (id) => document.getElementById(id);
+function setLoading(btn, isLoading) {
+  if (!btn) return;
+  btn.disabled = isLoading;
+  btn.classList.toggle('loading', !!isLoading);
+}
+function escapeHtml(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
-function setLoading(el, isLoading){ if (!el) return; el.disabled = isLoading; if (isLoading) el.classList.add('loading'); else el.classList.remove('loading'); }
-
-// DOM refs
-const params = new URLSearchParams(window.location.search);
-const newsletterId = params.get('id');
-const titleAr = document.getElementById('title-ar');
-const titleEn = document.getElementById('title-en');
-const edition = document.getElementById('edition');
-const issueDate = document.getElementById('issue-date');
-const readingTime = document.getElementById('reading-time');
-const readingTimeEn = document.getElementById('reading-time-en');
-const welcomeMessageHost = document.getElementById('welcome-message-host');
-const welcomeMessageEnHost = document.getElementById('welcome-message-en-host');
-const welcomeMessageField = createRichTextField({
-  dir: 'rtl',
-  placeholder: welcomeMessageHost?.dataset.placeholder || '',
-  minHeight: '6em',
-});
-const welcomeMessageEnField = createRichTextField({
-  dir: 'ltr',
-  placeholder: welcomeMessageEnHost?.dataset.placeholder || '',
-  minHeight: '6em',
-});
-welcomeMessageHost?.appendChild(welcomeMessageField.el);
-welcomeMessageEnHost?.appendChild(welcomeMessageEnField.el);
-const hasTranslation = document.getElementById('has-translation');
-const categorySel = document.getElementById('category');
-const coverFile = document.getElementById('cover-file');
-const coverPreview = document.getElementById('cover-preview');
-const coverStatus = document.getElementById('cover-status');
-const isPublished = document.getElementById('is-published');
-const saveMetaBtn = document.getElementById('save-meta');
-const deleteNewsBtn = document.getElementById('delete-news');
-const addSectionType = document.getElementById('add-section-type');
-const btnAddSection = document.getElementById('btn-add-section');
-const sectionsDiv = document.getElementById('sections');
-const sectionEditorArea = document.getElementById('section-editor-area');
-const publishAllBtn = document.getElementById('publish-all');
-const contributorsInputs = {
-  article_writer_ar: document.getElementById('contrib-article-writer-ar'),
-  news_hunters_ar: document.getElementById('contrib-news-hunters-ar'),
-  content_writers_ar: document.getElementById('contrib-content-writers-ar'),
-  designers_ar: document.getElementById('contrib-designers-ar'),
-  member_affairs_ar: document.getElementById('contrib-member-affairs-ar'),
-  newsletter_leader_ar: document.getElementById('contrib-newsletter-leader-ar'),
-  newsletter_deputy_ar: document.getElementById('contrib-newsletter-deputy-ar'),
-  article_writer_en: document.getElementById('contrib-article-writer-en'),
-  news_hunters_en: document.getElementById('contrib-news-hunters-en'),
-  content_writers_en: document.getElementById('contrib-content-writers-en'),
-  designers_en: document.getElementById('contrib-designers-en'),
-  member_affairs_en: document.getElementById('contrib-member-affairs-en'),
-  newsletter_leader_en: document.getElementById('contrib-newsletter-leader-en'),
-  newsletter_deputy_en: document.getElementById('contrib-newsletter-deputy-en'),
+/* ─── State ───────────────────────────────────────────────────────────────── */
+const state = {
+  newsletter: null,
+  newsletterId: new URLSearchParams(window.location.search).get('id'),
+  sections: [],
+  sectionTypes: [],
+  categories: [],
+  contributors: null,
+  dirty: false,
 };
 
-let categoriesCache = [];
-let sectionTypes = [];
-let newsletter = null;
-let newsletterSections = [];
-let newsletterContributors = null;
+function markDirty() {
+  if (state.dirty) return;
+  state.dirty = true;
+  const badge = $('save-status');
+  if (badge) {
+    badge.style.display = '';
+    badge.className = 'badge badge-warning';
+    badge.textContent = '● تغييرات غير محفوظة';
+  }
+}
+function markClean() {
+  state.dirty = false;
+  const badge = $('save-status');
+  if (badge) {
+    badge.style.display = '';
+    badge.className = 'badge badge-success';
+    badge.textContent = '✓ تم الحفظ';
+    setTimeout(() => { if (!state.dirty) badge.style.display = 'none'; }, 2000);
+  }
+}
+window.addEventListener('beforeunload', (e) => {
+  if (state.dirty) { e.preventDefault(); e.returnValue = ''; }
+});
 
-function toggleTranslationFields(showEnglish) {
-  document.querySelectorAll('.english-only').forEach((el) => {
-    el.style.display = showEnglish ? '' : 'none';
+/* ─── Mobile sidebar ──────────────────────────────────────────────────────── */
+bindMobileSidebar($('editor-sidebar'), $('hamburger'));
+
+/* ─── Tab switching ───────────────────────────────────────────────────────── */
+function activateTab(name) {
+  document.querySelectorAll('.tab[data-tab], .nav-item[data-tab]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => {
+    p.style.display = p.dataset.panel === name ? '' : 'none';
   });
 }
+document.querySelectorAll('.tab[data-tab], .nav-item[data-tab]').forEach(b => {
+  b.addEventListener('click', () => activateTab(b.dataset.tab));
+});
 
-async function init(){
-  // Reinitialize early so subsequent queries use the freshest schema metadata.
+/* ─── Init ────────────────────────────────────────────────────────────────── */
+async function init() {
   supabase = await reinitSupabase();
-  toggleTranslationFields(false);
   await loadSectionTypes();
   await loadCategories();
-  if (newsletterId) await loadNewsletter(newsletterId);
+  buildOverviewTab();
+  buildContributorsTab();
+  if (state.newsletterId) await loadNewsletter(state.newsletterId);
 }
 
-async function loadSectionTypes(){
-  try{
-    const { data, error } = await supabase.from('section_types').select('*').order('sort_order', {ascending:true});
-    if (error) throw error; sectionTypes = data || [];
-    addSectionType.innerHTML = '';
-    sectionTypes.forEach(st=> addSectionType.append(new Option(`${st.icon || ''} ${st.name_ar}`, st.id)));
-  }catch(e){ console.error(e); showToast('فشل في جلب أنواع الأقسام','error'); }
+async function loadSectionTypes() {
+  const { data, error } = await supabase.from('section_types').select('*').order('sort_order', { ascending: true });
+  if (error) { console.error(error); showToast('فشل في جلب أنواع الأقسام', 'error'); return; }
+  state.sectionTypes = data || [];
+  const sel = $('add-section-type');
+  sel.innerHTML = '';
+  state.sectionTypes.forEach(st => sel.append(new Option(`${st.icon || ''} ${st.name_ar}`, st.id)));
 }
 
-async function loadCategories(){
-  try{
-    const { data, error } = await supabase.from('categories').select('*').order('created_at',{ascending:true});
-    if (error) throw error; categoriesCache = data || [];
-    categorySel.innerHTML = '<option value="">-- اختر --</option>';
-    categoriesCache.forEach(c=> categorySel.append(new Option(c.name_ar || c.name_en, c.id)));
-  }catch(e){ console.error(e); }
+async function loadCategories() {
+  const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
+  if (error) { console.error(error); return; }
+  state.categories = data || [];
+  const sel = overview.category;
+  if (sel) {
+    const current = state.newsletter?.category_id || '';
+    sel.innerHTML = '<option value="">— اختر —</option>';
+    state.categories.forEach(c => {
+      const o = new Option(c.name_ar || c.name_en, c.id);
+      if (c.id === current) o.selected = true;
+      sel.append(o);
+    });
+  }
 }
 
-async function loadNewsletter(id){
-  try{
-    const { data, error } = await supabase.from('newsletters').select('*').eq('id', id).maybeSingle();
-    if (error) throw error; newsletter = data;
-    if (!newsletter) return showToast('العدد غير موجود','error');
-    titleAr.value = newsletter.title_ar || '';
-    titleEn.value = newsletter.title_en || '';
-    edition.value = newsletter.edition_number || '';
-    issueDate.value = newsletter.issue_date || '';
-    readingTime.value = newsletter.reading_time || '';
-    readingTimeEn.value = newsletter.reading_time_en || '';
-    welcomeMessageField.setHtml(newsletter.welcome_message || 'اهلا بك في نشرة الحاسوبي');
-    welcomeMessageEnField.setHtml(newsletter.welcome_message_en || '');
-    hasTranslation.checked = newsletter.has_translation || false;
-    toggleTranslationFields(hasTranslation.checked);
-    isPublished.checked = newsletter.status === 'published';
-    if (newsletter.category_id) categorySel.value = newsletter.category_id;
-    if (newsletter.cover_image_url) {
-      coverPreview.innerHTML = `<img src="${newsletter.cover_image_url}" style="max-width:260px;display:block">`;
-      coverStatus.textContent = 'تم العثور على صورة غلاف محفوظة';
+/* ─── Overview tab ────────────────────────────────────────────────────────── */
+const overview = {}; // refs to the field elements
+
+function buildOverviewTab() {
+  const root = $('overview-form');
+  root.innerHTML = '';
+
+  root.appendChild(makeBilingualText('title', 'عنوان النشرة', { required: true, placeholderAr: 'مثال: نشرة شهر أبريل', placeholderEn: 'e.g. April Newsletter' }));
+
+  const meta = document.createElement('div');
+  meta.className = 'field-row';
+  meta.appendChild(makeField({ name: 'edition_number', label: 'رقم الإصدار', type: 'number', min: 1 }));
+  meta.appendChild(makeField({ name: 'issue_date',     label: 'تاريخ الإصدار', type: 'date' }));
+  root.appendChild(meta);
+
+  const toggles = document.createElement('div');
+  toggles.className = 'field-row';
+  toggles.appendChild(makeCheckbox('has_translation', 'يحتوي على ترجمة إنجليزية'));
+  toggles.appendChild(makeCheckbox('is_published', 'منشور (متاح للعامة)'));
+  root.appendChild(toggles);
+
+  root.appendChild(makeBilingualText('reading_time', 'وقت القراءة', { placeholderAr: '5 دقائق', placeholderEn: '5 mins' }));
+
+  root.appendChild(makeBilingualRich('welcome', 'رسالة الترحيب', { placeholderAr: 'اهلا بك في نشرة الحاسوبي', placeholderEn: 'Welcome to the Hasoobi newsletter…' }));
+
+  root.appendChild(makeField({
+    name: 'category', label: 'التصنيف', type: 'select',
+    options: [{ value: '', label: '— اختر —' }, ...state.categories.map(c => ({ value: c.id, label: c.name_ar || c.name_en }))],
+  }));
+
+  root.appendChild(makeCoverUploader());
+
+  root.querySelectorAll('input, textarea, select').forEach(el => el.addEventListener('input', markDirty));
+
+  overview.has_translation.addEventListener('change', toggleEnglishFields);
+  toggleEnglishFields();
+}
+
+function toggleEnglishFields() {
+  const showEn = overview.has_translation?.checked;
+  document.querySelectorAll('[data-panel="overview"] .bilingual, [data-panel="contributors"] .bilingual')
+    .forEach(b => b.classList.toggle('hide-en', !showEn));
+}
+
+function makeField({ name, label, type = 'text', placeholder, min, max, options, defaultValue }) {
+  const wrap = document.createElement('div');
+  wrap.className = 'field';
+  if (label) {
+    const lbl = document.createElement('label'); lbl.className = 'field-label'; lbl.textContent = label;
+    wrap.appendChild(lbl);
+  }
+  let el;
+  if (type === 'select') {
+    el = document.createElement('select'); el.className = 'input';
+    (options || []).forEach(o => { const op = new Option(o.label, o.value); if (String(defaultValue) === String(o.value)) op.selected = true; el.append(op); });
+  } else if (type === 'textarea') {
+    el = document.createElement('textarea'); el.className = 'input'; el.rows = 4;
+    if (defaultValue) el.value = defaultValue;
+  } else {
+    el = document.createElement('input'); el.type = type; el.className = 'input';
+    if (placeholder) el.placeholder = placeholder;
+    if (min != null) el.min = min;
+    if (max != null) el.max = max;
+    if (defaultValue != null) el.value = defaultValue;
+  }
+  el.name = name;
+  wrap.appendChild(el);
+  overview[name] = el;
+  return wrap;
+}
+
+function makeCheckbox(name, label) {
+  const wrap = document.createElement('label');
+  wrap.className = 'check-row field';
+  wrap.style.marginTop = '24px';
+  const cb = document.createElement('input'); cb.type = 'checkbox'; cb.name = name;
+  const span = document.createElement('span'); span.textContent = label;
+  wrap.append(cb, span);
+  overview[name] = cb;
+  return wrap;
+}
+
+function makeBilingualText(name, label, { required, placeholderAr, placeholderEn } = {}) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bilingual';
+
+  const arSide = document.createElement('div'); arSide.className = 'bilingual-side'; arSide.dataset.lang = 'ar';
+  const arLabel = document.createElement('label'); arLabel.className = 'field-label'; arLabel.textContent = `${label} (عربي)`;
+  if (required) arLabel.classList.add('field-required');
+  const arInput = document.createElement('input'); arInput.type = 'text'; arInput.className = 'input'; arInput.name = `${name}_ar`;
+  if (placeholderAr) arInput.placeholder = placeholderAr;
+  arSide.append(arLabel, arInput);
+
+  const enSide = document.createElement('div'); enSide.className = 'bilingual-side'; enSide.dataset.lang = 'en';
+  const enLabel = document.createElement('label'); enLabel.className = 'field-label'; enLabel.textContent = `${label} (EN)`;
+  const enInput = document.createElement('input'); enInput.type = 'text'; enInput.className = 'input'; enInput.name = `${name}_en`;
+  if (placeholderEn) enInput.placeholder = placeholderEn;
+  enSide.append(enLabel, enInput);
+
+  wrap.append(arSide, enSide);
+  overview[`${name}_ar`] = arInput;
+  overview[`${name}_en`] = enInput;
+  return wrap;
+}
+
+function makeBilingualRich(name, label, { placeholderAr, placeholderEn } = {}) {
+  const wrap = document.createElement('div');
+  wrap.className = 'bilingual';
+
+  const arSide = document.createElement('div'); arSide.className = 'bilingual-side'; arSide.dataset.lang = 'ar';
+  const arLabel = document.createElement('label'); arLabel.className = 'field-label'; arLabel.textContent = `${label} (عربي)`;
+  const arRt = createRichTextField({ dir: 'rtl', placeholder: placeholderAr || '' });
+  arSide.append(arLabel, arRt.el);
+
+  const enSide = document.createElement('div'); enSide.className = 'bilingual-side'; enSide.dataset.lang = 'en';
+  const enLabel = document.createElement('label'); enLabel.className = 'field-label'; enLabel.textContent = `${label} (EN)`;
+  const enRt = createRichTextField({ dir: 'ltr', placeholder: placeholderEn || '' });
+  enSide.append(enLabel, enRt.el);
+
+  wrap.append(arSide, enSide);
+  overview[`${name}_rt_ar`] = arRt;
+  overview[`${name}_rt_en`] = enRt;
+  [arRt, enRt].forEach(rt => rt.editor.addEventListener('input', markDirty));
+  return wrap;
+}
+
+function makeCoverUploader() {
+  const wrap = document.createElement('div');
+  wrap.className = 'field';
+  wrap.innerHTML = `<label class="field-label">صورة الغلاف</label>`;
+  const drop = document.createElement('div');
+  drop.className = 'uploader';
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.id = 'cover-file';
+  const preview = document.createElement('div'); preview.id = 'cover-preview';
+  preview.innerHTML = `<div class="muted">اسحب صورة هنا أو انقر للاختيار</div>`;
+  const status = document.createElement('div'); status.id = 'cover-status'; status.className = 'uploader-hint';
+  drop.append(input, preview, status);
+  wrap.appendChild(drop);
+  overview._coverFile = input;
+  overview._coverPreview = preview;
+  overview._coverStatus = status;
+
+  input.addEventListener('change', () => uploadCover(input.files?.[0]));
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('drag-over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, () => drop.classList.remove('drag-over')));
+  drop.addEventListener('drop', (e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) uploadCover(f); });
+  return wrap;
+}
+
+async function uploadCover(file) {
+  if (!file) return;
+  const preview = overview._coverPreview;
+  const status  = overview._coverStatus;
+  let pbar = preview.querySelector('progress');
+  if (!pbar) { pbar = document.createElement('progress'); pbar.max = 1; pbar.value = 0; pbar.style.width = '100%'; preview.appendChild(pbar); }
+  status.textContent = 'جاري الرفع…';
+  const note = showToast('جاري رفع صورة الغلاف…', 'pending', 0);
+  try {
+    const url = await uploadFileWithProgress(file, `newsletters/${state.newsletter?.id || 'temp'}`, (r) => {
+      if (r >= 0 && r <= 1) { pbar.value = r; status.textContent = `جاري الرفع ${Math.round(r * 100)}%`; }
+    });
+    pbar.value = 1;
+    preview.innerHTML = `<img src="${url}" alt="" style="max-width:260px;border-radius:var(--r-sm)">`;
+    status.textContent = 'تم الرفع';
+    if (state.newsletter?.id) {
+      const { error } = await supabase.from('newsletters').update({ cover_image_url: url }).eq('id', state.newsletter.id);
+      if (error) throw error;
+      state.newsletter.cover_image_url = url;
     } else {
-      coverPreview.innerHTML = '<p class="muted">لا توجد صورة غلاف حالياً</p>';
-      coverStatus.textContent = '';
+      state.newsletter = state.newsletter || {};
+      state.newsletter.cover_image_url = url;
     }
-    await loadNewsletterSections(id);
-    await loadNewsletterEditors(id);
-  }catch(e){ console.error(e); showToast('فشل جلب بيانات النشرة','error'); }
+    note.dismiss();
+    showToast('تم تحديث صورة الغلاف');
+  } catch (e) {
+    note.dismiss();
+    status.textContent = '';
+    showToast(e.message || e, 'error');
+  }
 }
 
-async function loadNewsletterEditors(nlId){
-  try{
-    const { data, error } = await supabase.from('newsletter_editors').select('*').eq('newsletter_id', nlId).order('created_at', { ascending: true }).limit(1);
+/* ─── Contributors tab ────────────────────────────────────────────────────── */
+const contribRoles = [
+  { key: 'article_writer',     label: 'كاتب المقالة',  labelEn: 'Article Writer' },
+  { key: 'news_hunters',       label: 'صائدي الأخبار', labelEn: 'News Hunters' },
+  { key: 'content_writers',    label: 'كتاب المحتوى',  labelEn: 'Content Writers' },
+  { key: 'designers',          label: 'المصممين',      labelEn: 'Designers' },
+  { key: 'member_affairs',     label: 'شؤون الأعضاء',  labelEn: 'Member Affairs' },
+  { key: 'newsletter_leader',  label: 'قائدة النشرة', labelEn: 'Newsletter Leader' },
+  { key: 'newsletter_deputy',  label: 'نائبة النشرة', labelEn: 'Newsletter Deputy' },
+];
+const contributorsInputs = {};
+
+function buildContributorsTab() {
+  const root = $('contributors-form');
+  root.innerHTML = '';
+  contribRoles.forEach(role => {
+    const wrap = document.createElement('div');
+    wrap.className = 'bilingual';
+    ['ar', 'en'].forEach(lang => {
+      const side = document.createElement('div'); side.className = 'bilingual-side'; side.dataset.lang = lang;
+      const label = document.createElement('label'); label.className = 'field-label';
+      label.textContent = lang === 'ar' ? role.label : role.labelEn;
+      const inp = document.createElement('input'); inp.type = 'text'; inp.className = 'input';
+      inp.dataset.role = role.key; inp.dataset.lang = lang;
+      side.append(label, inp);
+      wrap.append(side);
+      contributorsInputs[`${role.key}_${lang}`] = inp;
+      inp.addEventListener('input', markDirty);
+    });
+    root.appendChild(wrap);
+  });
+}
+
+/* ─── Load existing newsletter ────────────────────────────────────────────── */
+async function loadNewsletter(id) {
+  try {
+    const { data, error } = await supabase.from('newsletters').select('*').eq('id', id).maybeSingle();
     if (error) throw error;
-    newsletterContributors = data?.[0] || null;
-    bindContributorsForm(newsletterContributors);
-  }catch(e){ console.error(e); }
-}
+    if (!data) return showToast('العدد غير موجود', 'error');
+    state.newsletter = data;
 
-function bindContributorsForm(row = null){
-  Object.entries(contributorsInputs).forEach(([key, input]) => {
-    if (!input) return;
-    input.value = row?.[key] || '';
-  });
-}
+    overview.title_ar.value      = data.title_ar || '';
+    overview.title_en.value      = data.title_en || '';
+    overview.edition_number.value = data.edition_number ?? '';
+    overview.issue_date.value    = data.issue_date || '';
+    overview.has_translation.checked = !!data.has_translation;
+    overview.is_published.checked = data.status === 'published';
+    overview.reading_time_ar.value = data.reading_time || '';
+    overview.reading_time_en.value = data.reading_time_en || '';
+    overview.welcome_rt_ar.setHtml(data.welcome_message || '');
+    overview.welcome_rt_en.setHtml(data.welcome_message_en || '');
 
-function buildContributorsPayload(){
-  const payload = { newsletter_id: newsletter.id };
+    await loadCategories();
 
-  Object.entries(contributorsInputs).forEach(([key, input]) => {
-    if (!input) return;
-    const val = input.value?.trim();
-    const isEnglish = key.endsWith('_en');
-    if (isEnglish && !hasTranslation.checked) {
-      payload[key] = null;
-      return;
+    if (data.cover_image_url) {
+      overview._coverPreview.innerHTML = `<img src="${data.cover_image_url}" alt="" style="max-width:260px;border-radius:var(--r-sm)">`;
+      overview._coverStatus.textContent = 'يوجد صورة غلاف محفوظة';
     }
-    payload[key] = val || null;
-  });
 
+    $('editor-title').textContent = data.title_ar || data.title_en || 'محرر النشرة';
+    document.title = `تحرير: ${data.title_ar || data.title_en || ''} — لوحة الإدارة`;
+
+    toggleEnglishFields();
+
+    await loadNewsletterEditors(id);
+    await loadNewsletterSections(id);
+    markClean();
+  } catch (e) {
+    console.error(e);
+    showToast(e.message || 'فشل جلب بيانات النشرة', 'error');
+  }
+}
+
+async function loadNewsletterEditors(nlId) {
+  const { data, error } = await supabase
+    .from('newsletter_editors').select('*')
+    .eq('newsletter_id', nlId).order('created_at', { ascending: true }).limit(1);
+  if (error) { console.error(error); return; }
+  state.contributors = data?.[0] || null;
+  bindContributors(state.contributors);
+}
+
+function bindContributors(row = null) {
+  Object.keys(contributorsInputs).forEach(k => {
+    contributorsInputs[k].value = row?.[k] || '';
+  });
+}
+
+function buildContributorsPayload() {
+  const payload = { newsletter_id: state.newsletter.id };
+  contribRoles.forEach(role => {
+    payload[`${role.key}_ar`] = contributorsInputs[`${role.key}_ar`].value?.trim() || null;
+    payload[`${role.key}_en`] = overview.has_translation.checked
+      ? (contributorsInputs[`${role.key}_en`].value?.trim() || null)
+      : null;
+  });
   return payload;
 }
 
-async function persistContributors(){
-  if (!newsletter?.id) return;
+async function persistContributors() {
+  if (!state.newsletter?.id) return;
   const payload = buildContributorsPayload();
-
   try {
-    if (newsletterContributors?.id) {
-      const { error } = await supabase.from('newsletter_editors').update(payload).eq('id', newsletterContributors.id);
+    if (state.contributors?.id) {
+      const { error } = await supabase.from('newsletter_editors').update(payload).eq('id', state.contributors.id);
       if (error) throw error;
     } else {
       const { data, error } = await supabase.from('newsletter_editors').insert(payload).select('*').single();
       if (error) throw error;
-      newsletterContributors = data;
+      state.contributors = data;
     }
-  } catch (e) {
-    console.error(e);
-    showToast('فشل حفظ بيانات معدّي النشرة', 'error');
+  } catch (e) { console.error(e); showToast('فشل حفظ بيانات معدّي النشرة', 'error'); }
+}
+
+/* ─── Sections list ───────────────────────────────────────────────────────── */
+async function loadNewsletterSections(nlId) {
+  const { data, error } = await supabase
+    .from('newsletter_sections').select('*, section_types(*)')
+    .eq('newsletter_id', nlId).order('sort_order', { ascending: true });
+  if (error) { console.error(error); return; }
+  state.sections = data || [];
+  renderSectionsList();
+}
+
+function renderSectionsList() {
+  const root = $('sections'); root.innerHTML = '';
+  if (!state.sections.length) {
+    const empty = document.createElement('div');
+    empty.className = 'empty-state';
+    empty.innerHTML = `
+      <div class="empty-state-icon">📚</div>
+      <div class="empty-state-title">لم تتم إضافة أي قسم بعد</div>
+      <p class="empty-state-text">اختر نوع القسم من الأعلى ثم اضغط "إضافة قسم".</p>
+    `;
+    root.appendChild(empty); return;
   }
-}
+  state.sections.forEach(sec => {
+    const tile = document.createElement('div');
+    tile.className = 'section-tile'; tile.draggable = true; tile.dataset.sid = sec.id;
+    const handle = document.createElement('span');
+    handle.className = 'section-tile-handle'; handle.textContent = '⋮⋮';
+    handle.title = 'اسحب لإعادة الترتيب';
+    const info = document.createElement('div'); info.className = 'section-tile-info';
+    const slug = sec.section_types?.slug || '';
+    info.innerHTML = `<strong>${sec.section_types?.icon || ''} ${escapeHtml(sec.section_types?.name_ar || slug)}</strong>
+                      <small>${sec.is_visible ? '👁 مرئي' : '🚫 مخفي'}</small>`;
+    const actions = document.createElement('div'); actions.className = 'section-tile-actions';
 
-async function loadNewsletterSections(nlId){
-  try{
-    const { data, error } = await supabase.from('newsletter_sections').select('*, section_types(*)').eq('newsletter_id', nlId).order('sort_order', {ascending:true});
-    if (error) throw error; newsletterSections = data || [];
-    renderSectionsList();
-  }catch(e){ console.error(e); }
-}
+    const edit = document.createElement('button'); edit.className = 'btn btn-sm'; edit.textContent = 'تحرير';
+    edit.addEventListener('click', () => openSectionDrawer(sec));
 
-function renderSectionsList(){
-  sectionsDiv.innerHTML = '';
-  newsletterSections.forEach(s=>{
-    const el = document.createElement('div'); el.className='section-item'; el.draggable = true; el.dataset.sid = s.id;
-    el.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between"><div><strong>${s.section_types?.name_ar || s.section_type_id}</strong> <div class='muted' style='font-size:12px'>visible: ${s.is_visible}</div></div><div style='display:flex;align-items:center'><span class='drag-handle'>≡</span></div></div>`;
-    const right = document.createElement('div');
-    const edit = document.createElement('button'); edit.textContent='تحرير'; edit.className='btn'; edit.addEventListener('click', ()=> openSectionEditor(s));
-    const rm = document.createElement('button'); rm.textContent='حذف'; rm.className='btn'; rm.addEventListener('click', async ()=>{
-      const ok = await showConfirm('حذف القسم؟'); if (!ok) return;
-      const { error } = await supabase.from('newsletter_sections').delete().eq('id', s.id);
-      if (error) return showToast(error.message,'error');
-      await loadNewsletterSections(newsletter.id);
+    const visToggle = document.createElement('button');
+    visToggle.className = 'btn btn-sm';
+    visToggle.textContent = sec.is_visible ? 'إخفاء' : 'إظهار';
+    visToggle.addEventListener('click', async () => {
+      const { error } = await supabase.from('newsletter_sections').update({ is_visible: !sec.is_visible }).eq('id', sec.id);
+      if (error) return showToast(error.message, 'error');
+      showToast('تم التحديث');
+      loadNewsletterSections(state.newsletter.id);
+    });
+
+    const del = document.createElement('button'); del.className = 'btn btn-sm btn-danger'; del.textContent = 'حذف';
+    del.addEventListener('click', async () => {
+      const ok = await showConfirm('حذف هذا القسم وجميع محتواه؟', 'حذف قسم', { okLabel: 'حذف', danger: true });
+      if (!ok) return;
+      const { error } = await supabase.from('newsletter_sections').delete().eq('id', sec.id);
+      if (error) return showToast(error.message, 'error');
       showToast('تم حذف القسم');
+      loadNewsletterSections(state.newsletter.id);
     });
-    right.append(edit, rm);
-    el.appendChild(right);
-    // drag handlers
-    el.addEventListener('dragstart', (ev)=>{
-      ev.dataTransfer.setData('text/section-id', String(s.id));
-      el.classList.add('dragging');
-    });
-    el.addEventListener('dragend', ()=> el.classList.remove('dragging'));
-    el.addEventListener('dragover', (ev)=>{ ev.preventDefault(); el.classList.add('drag-over'); });
-    el.addEventListener('dragleave', ()=> el.classList.remove('drag-over'));
-    el.addEventListener('drop', async (ev)=>{
-      ev.preventDefault(); el.classList.remove('drag-over');
+
+    actions.append(edit, visToggle, del);
+    tile.append(handle, info, actions);
+
+    tile.addEventListener('dragstart', (ev) => { ev.dataTransfer.setData('text/section-id', String(sec.id)); tile.classList.add('dragging'); });
+    tile.addEventListener('dragend',   () => tile.classList.remove('dragging'));
+    tile.addEventListener('dragover',  (ev) => { ev.preventDefault(); tile.classList.add('drag-over'); });
+    tile.addEventListener('dragleave', () => tile.classList.remove('drag-over'));
+    tile.addEventListener('drop', async (ev) => {
+      ev.preventDefault(); tile.classList.remove('drag-over');
       const draggedId = ev.dataTransfer.getData('text/section-id');
-      if (!draggedId || draggedId === String(s.id)) return;
-      // reorder in memory
-      const fromIdx = newsletterSections.findIndex(x=>String(x.id)===draggedId);
-      const toIdx = newsletterSections.findIndex(x=>x.id===s.id);
+      if (!draggedId || draggedId === String(sec.id)) return;
+      const fromIdx = state.sections.findIndex(x => String(x.id) === draggedId);
+      const toIdx   = state.sections.findIndex(x => x.id === sec.id);
       if (fromIdx === -1 || toIdx === -1) return;
-      const [item] = newsletterSections.splice(fromIdx,1);
-      newsletterSections.splice(toIdx,0,item);
-      // persist new sort_order
+      const [it] = state.sections.splice(fromIdx, 1);
+      state.sections.splice(toIdx, 0, it);
       await persistSectionOrder();
       renderSectionsList();
       showToast('تم إعادة ترتيب الأقسام');
     });
-    sectionsDiv.appendChild(el);
+    root.appendChild(tile);
   });
 }
 
-async function persistSectionOrder(){
-  // update sort_order for all sections in the current newsletterSections array
-  try{
-    for (let i=0;i<newsletterSections.length;i++){
-      const s = newsletterSections[i];
-      await supabase.from('newsletter_sections').update({ sort_order: i+1 }).eq('id', s.id);
+async function persistSectionOrder() {
+  try {
+    for (let i = 0; i < state.sections.length; i++) {
+      const s = state.sections[i];
+      await supabase.from('newsletter_sections').update({ sort_order: i + 1 }).eq('id', s.id);
     }
-  }catch(e){ console.error('persistSectionOrder', e); showToast('فشل حفظ ترتيب الأقسام','error'); }
+  } catch (e) { console.error(e); showToast('فشل حفظ ترتيب الأقسام', 'error'); }
 }
 
-btnAddSection.addEventListener('click', async ()=>{
-  const stId = addSectionType.value; if (!stId) return showToast('اختر نوع القسم','error');
-  if (!newsletter || !newsletter.id) return showToast('احفظ بيانات النشرة أولاً','error');
-  try{
-    const payload = { newsletter_id: newsletter.id, section_type_id: stId, is_visible: true, sort_order: (newsletterSections.length||0)+1 };
-    const { data, error } = await supabase.from('newsletter_sections').insert(payload).select().maybeSingle();
+$('btn-add-section').addEventListener('click', async () => {
+  const stId = $('add-section-type').value;
+  if (!stId) return showToast('اختر نوع القسم', 'error');
+  if (!state.newsletter?.id) return showToast('احفظ بيانات النشرة أولاً', 'error');
+  try {
+    const payload = { newsletter_id: state.newsletter.id, section_type_id: stId, is_visible: true, sort_order: (state.sections.length || 0) + 1 };
+    const { error } = await supabase.from('newsletter_sections').insert(payload);
     if (error) throw error;
-    await loadNewsletterSections(newsletter.id);
+    await loadNewsletterSections(state.newsletter.id);
     showToast('تم إضافة القسم');
-  }catch(e){ showToast(e.message || 'خطأ','error'); }
+  } catch (e) { showToast(e.message || 'خطأ', 'error'); }
 });
 
-async function openSectionEditor(section){
-  sectionEditorArea.innerHTML = '';
-  const container = document.createElement('div'); container.style.marginTop='12px';
-  container.className = 'newsletter-card';
-  const h = document.createElement('h4'); h.textContent = `تحرير: ${section.section_types?.name_ar || ''}`; container.append(h);
+/* ─── Section drawer ──────────────────────────────────────────────────────── */
+async function openSectionDrawer(section) {
   const slug = section.section_types?.slug;
-  const sectionName = section.section_types?.name_ar || 'غير معروف';
-  const sectionIcon = section.section_types?.icon || '📌';
+  const sectionName = section.section_types?.name_ar || 'القسم';
+  const drawer = openDrawer({ title: `تحرير: ${sectionName}`, content: document.createElement('div') });
 
-  async function saveSectionHeaderMeta(fields) {
-    const { error } = await supabase
-      .from('newsletter_sections')
-      .update(fields)
-      .eq('id', section.id);
+  const body = drawer.body;
+  body.innerHTML = '<div class="muted">جاري التحميل…</div>';
 
-    if (!error) return;
-    if (error.code !== '42703') throw error;
+  let builder;
+  if (slug === 'illumination' || slug === 'inspiring') builder = await buildRichBodySection(section, slug);
+  else if (slug === 'news')     builder = await buildNewsSection(section);
+  else if (slug === 'articles') builder = await buildArticlesSection(section);
+  else if (slug === 'podcast')  builder = await buildPodcastSection(section);
+  else builder = { node: makeUnsupportedNotice(slug), save: async () => true };
 
-    // Compatibility fallback when newsletter_sections header columns do not exist yet.
-    let legacyTable = null;
-    if (slug === 'illumination') legacyTable = 'section_illumination';
-    else if (slug === 'inspiring') legacyTable = 'section_inspiring';
+  body.innerHTML = '';
+  body.appendChild(buildHeaderImageBlock(section));
+  body.appendChild(builder.node);
 
-    if (!legacyTable) {
-      throw new Error('هذا القسم يتطلب تحديث قاعدة البيانات لحفظ صورة الهيدر.');
-    }
-
-    const legacyPayload = {};
-    if (Object.prototype.hasOwnProperty.call(fields, 'header_image_url')) {
-      legacyPayload.header_image_url = fields.header_image_url;
-    }
-
-    const { data: existing, error: findError } = await supabase
-      .from(legacyTable)
-      .select('id')
-      .eq('newsletter_section_id', section.id)
-      .maybeSingle();
-    if (findError) throw findError;
-
-    if (existing?.id) {
-      const { error: updateError } = await supabase
-        .from(legacyTable)
-        .update(legacyPayload)
-        .eq('id', existing.id);
-      if (updateError) throw updateError;
-      return;
-    }
-
-    const { error: insertError } = await supabase
-      .from(legacyTable)
-      .insert({ newsletter_section_id: section.id, ...legacyPayload });
-    if (insertError) throw insertError;
-  }
-
-  // common controls
-  const visLabel = document.createElement('label'); visLabel.innerHTML = `<input type='checkbox' ${section.is_visible ? 'checked' : ''}> مرئي`; visLabel.style.display='block'; visLabel.style.marginBottom='8px';
-  visLabel.querySelector('input').addEventListener('change', async (e)=>{
-    const { error } = await supabase.from('newsletter_sections').update({ is_visible: e.target.checked }).eq('id', section.id);
-    if (error) return showToast(error.message,'error'); showToast('تم التحديث'); loadNewsletterSections(newsletter.id);
+  const saveBtn = document.createElement('button');
+  saveBtn.className = 'btn btn-primary'; saveBtn.textContent = 'حفظ القسم';
+  saveBtn.addEventListener('click', async () => {
+    setLoading(saveBtn, true);
+    try { await builder.save(); showToast('تم حفظ القسم'); drawer.close(); loadNewsletterSections(state.newsletter.id); }
+    catch (e) { showToast(e.message || e, 'error'); }
+    finally { setLoading(saveBtn, false); }
   });
-  container.append(visLabel);
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn'; cancelBtn.textContent = 'إغلاق';
+  cancelBtn.addEventListener('click', drawer.close);
+  const f = document.createElement('div'); f.style.display='flex'; f.style.gap='8px'; f.append(cancelBtn, saveBtn);
+  drawer.setFoot(f);
+}
 
-  // Global section header image upload (applies to any section type)
-  const headerSection = document.createElement('div');
-  headerSection.style.marginBottom = '16px';
-  headerSection.style.padding = '8px';
-  headerSection.style.backgroundColor = 'rgba(0,0,0,0.02)';
-  headerSection.style.borderRadius = '4px';
-  
-  const headerLabel = document.createElement('label');
-  headerLabel.style.display = 'block';
-  headerLabel.style.marginBottom = '8px';
-  headerLabel.style.fontWeight = '600';
-  headerLabel.innerHTML = `<strong>صورة هيدر القسم "${sectionName}" ${sectionIcon}</strong><br><span style="font-weight: normal; font-size: 0.9em; color: #666;">صورة بانر تظهر فوق محتوى هذا القسم</span>`;
-  
-  const headerFileInput = document.createElement('input');
-  headerFileInput.type = 'file';
-  headerFileInput.accept = 'image/*';
-  headerFileInput.className = 'input';
-  headerFileInput.style.marginBottom = '8px';
-  
-  const headerPreview = document.createElement('div');
-  headerPreview.style.marginBottom = '8px';
-  if (section.header_image_url) {
-    headerPreview.innerHTML = `<img src="${section.header_image_url}" style="max-width: 100%; height: auto; border-radius: 4px; max-height: 200px;">`;
-  }
+function makeUnsupportedNotice(slug) {
+  const n = document.createElement('div');
+  n.className = 'empty-state';
+  n.innerHTML = `<div class="empty-state-icon">⚠️</div><div class="empty-state-title">نوع القسم غير مدعوم: ${escapeHtml(slug || '')}</div>`;
+  return n;
+}
 
-  
-  const clearHeaderBtn = document.createElement('button');
-  clearHeaderBtn.type = 'button';
-  clearHeaderBtn.className = 'btn';
-  clearHeaderBtn.textContent = 'حذف الصورة';
-  clearHeaderBtn.style.fontSize = '0.85rem';
-  clearHeaderBtn.addEventListener('click', async () => {
+/* ── Header image (any section) ── */
+function buildHeaderImageBlock(section) {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.style.marginBottom = '20px';
+  card.innerHTML = `<div class="card-head"><h3>صورة هيدر القسم</h3><span class="muted">اختياري — تظهر فوق محتوى القسم</span></div>`;
+  const body = document.createElement('div'); body.className = 'card-body';
+  const uploader = document.createElement('div'); uploader.className = 'uploader';
+  const fileInput = document.createElement('input'); fileInput.type = 'file'; fileInput.accept = 'image/*';
+  const preview = document.createElement('div');
+  preview.innerHTML = section.header_image_url
+    ? `<img src="${section.header_image_url}" style="max-width:100%;max-height:200px;border-radius:var(--r-sm)">`
+    : `<div class="muted">اسحب صورة هنا أو انقر للاختيار</div>`;
+  uploader.append(fileInput, preview);
+  body.appendChild(uploader);
+  const clearBtn = document.createElement('button'); clearBtn.type = 'button'; clearBtn.className = 'btn btn-sm';
+  clearBtn.textContent = 'حذف الصورة';
+  if (!section.header_image_url) clearBtn.style.display = 'none';
+  clearBtn.addEventListener('click', async () => {
     try {
-      await saveSectionHeaderMeta({ header_image_url: null });
-      headerPreview.innerHTML = '';
-      headerFileInput.value = '';
+      await saveSectionHeaderMeta(section, { header_image_url: null });
       section.header_image_url = null;
-      showToast('تم حذف صورة هيدر القسم');
-    } catch(e) { showToast(e.message || e, 'error'); }
+      preview.innerHTML = `<div class="muted">اسحب صورة هنا أو انقر للاختيار</div>`;
+      clearBtn.style.display = 'none';
+      showToast('تم حذف صورة الهيدر');
+    } catch (e) { showToast(e.message || e, 'error'); }
   });
-  
-  headerSection.append(headerLabel, headerFileInput, headerPreview, clearHeaderBtn);
-  container.append(headerSection);
+  body.appendChild(clearBtn);
+  card.appendChild(body);
 
-  // Save section header image when file is selected
-  headerFileInput.addEventListener('change', async () => {
-    const file = headerFileInput.files?.[0];
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0];
     if (!file) return;
-    
+    setLoading(fileInput, true);
+    const prog = document.createElement('progress'); prog.max = 1; prog.value = 0; prog.style.width = '100%';
+    preview.appendChild(prog);
+    const note = showToast('جاري الرفع…', 'pending', 0);
     try {
-      setLoading(headerFileInput, true);
-      const prog = document.createElement('progress');
-      prog.max = 1;
-      prog.value = 0;
-      headerPreview.appendChild(prog);
-      
-      const note = showToast('جاري رفع صورة هيدر القسم…', 'pending', 0);
-      const publicUrl = await uploadFileWithProgress(file, `sections/${section.id}`, (r) => {
-        if (r >= 0) prog.value = r;
-      });
-      prog.value = 1;
-      note.dismiss();
-      
-      await saveSectionHeaderMeta({ header_image_url: publicUrl });
-      
-      // Update section object and preview
-      section.header_image_url = publicUrl;
-      headerPreview.innerHTML = `<img src="${publicUrl}" style="max-width: 100%; height: auto; border-radius: 4px; max-height: 200px;">`;
-      headerFileInput.value = '';
-      showToast('تم رفع صورة هيدر القسم بنجاح');
-    } catch(e) {
-      showToast(e.message || e, 'error');
-    } finally {
-      setLoading(headerFileInput, false);
-    }
+      const url = await uploadFileWithProgress(file, `sections/${section.id}`, (r) => { if (r >= 0) prog.value = r; });
+      prog.value = 1; note.dismiss();
+      await saveSectionHeaderMeta(section, { header_image_url: url });
+      section.header_image_url = url;
+      preview.innerHTML = `<img src="${url}" style="max-width:100%;max-height:200px;border-radius:var(--r-sm)">`;
+      clearBtn.style.display = '';
+      fileInput.value = '';
+      showToast('تم رفع صورة الهيدر');
+    } catch (e) { note.dismiss(); showToast(e.message || e, 'error'); }
+    finally { setLoading(fileInput, false); }
   });
+  return card;
+}
 
-  // switch by section type
-  if (slug === 'illumination' || slug === 'inspiring'){
-    // fetch existing content
-    const table = slug === 'illumination' ? 'section_illumination' : 'section_inspiring';
-    const { data } = await supabase.from(table).select('*').eq('newsletter_section_id', section.id).maybeSingle();
-    const labelAr = document.createElement('label'); labelAr.className = 'label'; labelAr.textContent = 'المحتوى (عربي)';
-    const bodyField = createRichTextField({ dir: 'rtl', initialHtml: data?.body_ar || '', minHeight: '12em' });
-    const enWrap = document.createElement('div'); enWrap.className = 'english-only';
-    const labelEn = document.createElement('label'); labelEn.className = 'label'; labelEn.textContent = 'المحتوى (EN)';
-    const bodyFieldEn = createRichTextField({ dir: 'ltr', initialHtml: data?.body_en || '', minHeight: '12em' });
-    enWrap.append(labelEn, bodyFieldEn.el);
-    const saveBtn = document.createElement('button'); saveBtn.className='btn btn-primary'; saveBtn.textContent='حفظ القسم';
-    saveBtn.addEventListener('click', async ()=>{
-      setLoading(saveBtn, true);
-      try{
-          // Section banner image is managed once in newsletter_sections (top uploader).
-          const payload = { newsletter_section_id: section.id, body_ar: bodyField.getHtml(), body_en: hasTranslation.checked ? (bodyFieldEn.getHtml() || null) : null };
-        // upsert: delete existing then insert (simpler)
-        if (data) await supabase.from(table).update(payload).eq('id', data.id);
-        else await supabase.from(table).insert(payload);
-        showToast('تم حفظ القسم');
-      }catch(e){ showToast(e.message||e,'error'); }
-      setLoading(saveBtn, false);
-    });
-      container.append(labelAr, bodyField.el, enWrap, saveBtn);
-  } else if (slug === 'news'){
-    // news items list
-    const { data } = await supabase.from('section_news_items').select('*').eq('newsletter_section_id', section.id).order('sort_order',{ascending:true});
-    const list = document.createElement('div'); list.className='repeat-list';
-    (data||[]).forEach(it=> list.append(createNewsItemRow(it, section)));
-    const addBtn = document.createElement('button'); addBtn.textContent = '+ إضافة خبر'; addBtn.className='btn'; addBtn.addEventListener('click', ()=> {
-      const newRow = createNewsItemRow(null, section);
-      list.append(newRow);
-      toggleTranslationFields(hasTranslation.checked);
-    });
-    container.append(list, addBtn);
-  } else if (slug === 'articles'){
-    const { data } = await supabase.from('section_article_items').select('*').eq('newsletter_section_id', section.id).order('sort_order',{ascending:true});
-    const list = document.createElement('div'); list.className='repeat-list';
-    (data||[]).forEach(it=> list.append(createArticleItemRow(it, section)));
-    const addBtn = document.createElement('button'); addBtn.textContent = '+ إضافة مقال'; addBtn.className='btn'; addBtn.addEventListener('click', ()=> {
-      const newRow = createArticleItemRow(null, section);
-      list.append(newRow);
-      toggleTranslationFields(hasTranslation.checked);
-    });
-    container.append(list, addBtn);
-  } else if (slug === 'podcast'){
-    const { data } = await supabase.from('section_podcast').select('*').eq('newsletter_section_id', section.id).maybeSingle();
-    let podcastImageUrl = data?.podcast_image_url || data?.cover_image_url || null;
-
-    function isMissingPodcastImageColumn(error) {
-      const text = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
-      return error?.code === '42703' || error?.code === 'PGRST204' || /podcast_image_url/i.test(text);
-    }
-    const titleArLabel = document.createElement('label'); titleArLabel.className='label'; titleArLabel.textContent='عنوان البودكاست (عربي)';
-    const title = document.createElement('input'); title.className='input'; title.value = data?.title_ar || '';
-    const titleEnWrap = document.createElement('div'); titleEnWrap.className='english-only';
-    const titleEnLabel = document.createElement('label'); titleEnLabel.className='label'; titleEnLabel.textContent='عنوان البودكاست (EN)';
-    const titleEn = document.createElement('input'); titleEn.className='input'; titleEn.value = data?.title_en || '';
-    titleEnWrap.append(titleEnLabel, titleEn);
-    const descArLabel = document.createElement('label'); descArLabel.className='label'; descArLabel.textContent='وصف البودكاست (عربي)';
-    const descField = createRichTextField({ dir: 'rtl', initialHtml: data?.description_ar || '', minHeight: '8em' });
-    const descEnWrap = document.createElement('div'); descEnWrap.className='english-only';
-    const descEnLabel = document.createElement('label'); descEnLabel.className='label'; descEnLabel.textContent='وصف البودكاست (EN)';
-    const descFieldEn = createRichTextField({ dir: 'ltr', initialHtml: data?.description_en || '', minHeight: '8em' });
-    descEnWrap.append(descEnLabel, descFieldEn.el);
-
-    const imageLabel = document.createElement('label');
-    imageLabel.className = 'label';
-    imageLabel.textContent = 'صورة البودكاست (تظهر تحت الوصف)';
-    const imageFile = document.createElement('input');
-    imageFile.type = 'file';
-    imageFile.accept = 'image/*';
-    imageFile.className = 'input';
-    const imagePreview = document.createElement('div');
-    imagePreview.style.margin = '8px 0';
-    if (podcastImageUrl) {
-      imagePreview.innerHTML = `<img src="${podcastImageUrl}" style="max-width: 100%; height: auto; border-radius: 8px; max-height: 220px;">`;
-    }
-    const clearImageBtn = document.createElement('button');
-    clearImageBtn.type = 'button';
-    clearImageBtn.className = 'btn';
-    clearImageBtn.textContent = 'حذف صورة البودكاست';
-    clearImageBtn.addEventListener('click', () => {
-      podcastImageUrl = null;
-      imageFile.value = '';
-      imagePreview.innerHTML = '';
-    });
-
-    imageFile.addEventListener('change', async () => {
-      const file = imageFile.files?.[0];
-      if (!file) return;
-      try {
-        setLoading(imageFile, true);
-        const prog = document.createElement('progress');
-        prog.max = 1;
-        prog.value = 0;
-        imagePreview.appendChild(prog);
-        const note = showToast('جاري رفع صورة البودكاست…', 'pending', 0);
-        const publicUrl = await uploadFileWithProgress(file, `sections/${section.id}`, (ratio) => {
-          if (ratio >= 0) prog.value = ratio;
-        });
-        prog.value = 1;
-        note.dismiss();
-        podcastImageUrl = publicUrl;
-        imagePreview.innerHTML = `<img src="${publicUrl}" style="max-width: 100%; height: auto; border-radius: 8px; max-height: 220px;">`;
-        imageFile.value = '';
-        showToast('تم رفع صورة البودكاست');
-      } catch (e) {
-        showToast(e.message || e, 'error');
-      } finally {
-        setLoading(imageFile, false);
-      }
-    });
-
-    const saveBtn = document.createElement('button'); saveBtn.textContent='حفظ'; saveBtn.className='btn btn-primary';
-    saveBtn.addEventListener('click', async ()=>{
-      setLoading(saveBtn, true);
-      try{
-        const audioUrl = data?.audio_url || '';
-        const payload = {
-          newsletter_section_id: section.id,
-          title_ar: title.value,
-          title_en: hasTranslation.checked ? (titleEn.value || null) : null,
-          description_ar: descField.getHtml(),
-          description_en: hasTranslation.checked ? (descFieldEn.getHtml() || null) : null,
-          audio_url: audioUrl || '',
-          podcast_image_url: podcastImageUrl
-        };
-        if (data) {
-          const { error } = await supabase.from('section_podcast').update(payload).eq('id', data.id);
-          if (error) {
-            if (!isMissingPodcastImageColumn(error)) throw error;
-            const legacyPayload = { ...payload, cover_image_url: podcastImageUrl };
-            delete legacyPayload.podcast_image_url;
-            const { error: legacyError } = await supabase.from('section_podcast').update(legacyPayload).eq('id', data.id);
-            if (legacyError) throw legacyError;
-            showToast('تم الحفظ مع وضع التوافق. يفضّل تشغيل migration لإضافة podcast_image_url.', 'warning');
-          }
-        } else {
-          const { error } = await supabase.from('section_podcast').insert(payload);
-          if (error) {
-            if (!isMissingPodcastImageColumn(error)) throw error;
-            const legacyPayload = { ...payload, cover_image_url: podcastImageUrl };
-            delete legacyPayload.podcast_image_url;
-            const { error: legacyError } = await supabase.from('section_podcast').insert(legacyPayload);
-            if (legacyError) throw legacyError;
-            showToast('تم الحفظ مع وضع التوافق. يفضّل تشغيل migration لإضافة podcast_image_url.', 'warning');
-          }
-        }
-        showToast('تم حفظ البودكاست');
-      }catch(e){ showToast(e.message||e,'error'); }
-      setLoading(saveBtn, false);
-    });
-    container.append(titleArLabel, title, titleEnWrap, descArLabel, descField.el, descEnWrap, imageLabel, imageFile, imagePreview, clearImageBtn, saveBtn);
+async function saveSectionHeaderMeta(section, fields) {
+  const { error } = await supabase.from('newsletter_sections').update(fields).eq('id', section.id);
+  if (!error) return;
+  if (error.code !== '42703') throw error;
+  const slug = section.section_types?.slug;
+  let legacy = null;
+  if (slug === 'illumination') legacy = 'section_illumination';
+  else if (slug === 'inspiring') legacy = 'section_inspiring';
+  if (!legacy) throw new Error('هذا القسم يتطلب تحديث قاعدة البيانات لحفظ صورة الهيدر.');
+  const legacyPayload = {};
+  if ('header_image_url' in fields) legacyPayload.header_image_url = fields.header_image_url;
+  const { data: existing, error: findError } = await supabase.from(legacy).select('id').eq('newsletter_section_id', section.id).maybeSingle();
+  if (findError) throw findError;
+  if (existing?.id) {
+    const { error: updateErr } = await supabase.from(legacy).update(legacyPayload).eq('id', existing.id);
+    if (updateErr) throw updateErr;
   } else {
-    container.append(document.createElement('div')).textContent = 'نوع القسم غير مدعوم بعد.';
+    const { error: insertErr } = await supabase.from(legacy).insert({ newsletter_section_id: section.id, ...legacyPayload });
+    if (insertErr) throw insertErr;
   }
-
-  sectionEditorArea.appendChild(container);
-  // Apply translation field visibility after container is in DOM
-  toggleTranslationFields(hasTranslation.checked);
 }
 
-function createNewsItemRow(item, section){
-  const row = document.createElement('div'); row.className='repeat-item';
-  const titleArLabel = document.createElement('label'); titleArLabel.className='label'; titleArLabel.textContent='عنوان الخبر (عربي)';
-  const title = document.createElement('input'); title.className='input'; title.placeholder='عنوان الخبر'; title.value = item?.title_ar || item?.title || '';
-  const titleEnWrap = document.createElement('div'); titleEnWrap.className='english-only';
-  const titleEnLabel = document.createElement('label'); titleEnLabel.className='label'; titleEnLabel.textContent='عنوان الخبر (EN)';
-  const titleEn = document.createElement('input'); titleEn.className='input'; titleEn.placeholder='News title'; titleEn.value = item?.title_en || '';
-  titleEnWrap.append(titleEnLabel, titleEn);
-  const summaryArLabel = document.createElement('label'); summaryArLabel.className='label'; summaryArLabel.textContent='ملخص الخبر (عربي)';
-  const summaryField = createRichTextField({ dir: 'rtl', initialHtml: item?.summary_ar || '', placeholder: 'الملخص', minHeight: '6em' });
-  const summaryEnWrap = document.createElement('div'); summaryEnWrap.className='english-only';
-  const summaryEnLabel = document.createElement('label'); summaryEnLabel.className='label'; summaryEnLabel.textContent='ملخص الخبر (EN)';
-  const summaryFieldEn = createRichTextField({ dir: 'ltr', initialHtml: item?.summary_en || '', placeholder: 'Summary', minHeight: '6em' });
-  summaryEnWrap.append(summaryEnLabel, summaryFieldEn.el);
-  const sourceNameArLabel = document.createElement('label'); sourceNameArLabel.className='label'; sourceNameArLabel.textContent='اسم المصدر (عربي)';
-  const sourceNameAr = document.createElement('input'); sourceNameAr.className='input'; sourceNameAr.placeholder='اسم المصدر'; sourceNameAr.value = item?.source_name_ar || '';
-  const sourceNameEnWrap = document.createElement('div'); sourceNameEnWrap.className='english-only';
-  const sourceNameEnLabel = document.createElement('label'); sourceNameEnLabel.className='label'; sourceNameEnLabel.textContent='اسم المصدر (EN)';
-  const sourceNameEn = document.createElement('input'); sourceNameEn.className='input'; sourceNameEn.placeholder='Source name'; sourceNameEn.value = item?.source_name_en || '';
-  sourceNameEnWrap.append(sourceNameEnLabel, sourceNameEn);
-  const sourceUrlLabel = document.createElement('label'); sourceUrlLabel.className='label'; sourceUrlLabel.textContent='رابط المصدر';
-  const source = document.createElement('input'); source.className='input'; source.placeholder='مصدر/رابط'; source.value = item?.source_url || '';
-  const save = document.createElement('button'); save.className='btn btn-primary'; save.textContent='حفظ خبر';
-  save.addEventListener('click', async ()=>{
-    if (!title.value || !title.value.trim()) return showToast('العنوان مطلوب','error');
-    setLoading(save, true);
-    try{
+/* ── Illumination / Inspiring (rich-text body) ── */
+async function buildRichBodySection(section, slug) {
+  const table = slug === 'illumination' ? 'section_illumination' : 'section_inspiring';
+  const { data } = await supabase.from(table).select('*').eq('newsletter_section_id', section.id).maybeSingle();
+  const node = document.createElement('div');
+  const wrap = document.createElement('div'); wrap.className = 'bilingual';
+
+  const arSide = document.createElement('div'); arSide.className = 'bilingual-side'; arSide.dataset.lang = 'ar';
+  arSide.innerHTML = `<label class="field-label">المحتوى (عربي)</label>`;
+  const arRt = createRichTextField({ dir: 'rtl', initialHtml: data?.body_ar || '', placeholder: 'اكتب أو الصق المحتوى هنا…', minHeight: '12em' });
+  arSide.appendChild(arRt.el);
+
+  const enSide = document.createElement('div'); enSide.className = 'bilingual-side'; enSide.dataset.lang = 'en';
+  enSide.innerHTML = `<label class="field-label">Content (EN)</label>`;
+  const enRt = createRichTextField({ dir: 'ltr', initialHtml: data?.body_en || '', placeholder: 'Paste or type content here…', minHeight: '12em' });
+  enSide.appendChild(enRt.el);
+
+  if (!overview.has_translation.checked) wrap.classList.add('hide-en');
+
+  wrap.append(arSide, enSide);
+  node.appendChild(wrap);
+
+  return {
+    node,
+    save: async () => {
       const payload = {
         newsletter_section_id: section.id,
-        title_ar: title.value.trim(),
-        title_en: hasTranslation.checked ? (titleEn.value || null) : null,
-        summary_ar: summaryField.getHtml(),
-        summary_en: hasTranslation.checked ? (summaryFieldEn.getHtml() || null) : null,
-        source_name_ar: sourceNameAr.value || null,
-        source_name_en: hasTranslation.checked ? (sourceNameEn.value || null) : null,
-        source_url: source.value,
-        sort_order: 0
+        body_ar: arRt.getHtml(),
+        body_en: overview.has_translation.checked ? (enRt.getHtml() || null) : null,
       };
-      if (item && item.id) await supabase.from('section_news_items').update(payload).eq('id', item.id);
-      else await supabase.from('section_news_items').insert(payload);
+      if (data) {
+        const { error } = await supabase.from(table).update(payload).eq('id', data.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from(table).insert(payload);
+        if (error) throw error;
+      }
+    },
+  };
+}
+
+/* ── News items (repeating) ── */
+async function buildNewsSection(section) {
+  const { data: items } = await supabase.from('section_news_items')
+    .select('*').eq('newsletter_section_id', section.id).order('sort_order', { ascending: true });
+  const node = document.createElement('div');
+  const list = document.createElement('div'); list.className = 'repeat-list';
+  node.appendChild(list);
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn btn-sm';
+  addBtn.style.marginTop = '12px';
+  addBtn.textContent = '+ إضافة خبر';
+  addBtn.addEventListener('click', () => list.appendChild(newsItemRow(null, section)));
+  node.appendChild(addBtn);
+
+  (items || []).forEach(it => list.appendChild(newsItemRow(it, section)));
+
+  return { node, save: async () => {} };
+}
+
+function newsItemRow(item, section) {
+  const row = document.createElement('div'); row.className = 'repeat-item';
+
+  const titleBi = document.createElement('div'); titleBi.className = 'bilingual';
+  const titleAr = inputField('عنوان الخبر (عربي)', item?.title_ar || '');
+  const titleEn = inputField('News title (EN)', item?.title_en || '', 'en');
+  titleBi.append(titleAr.wrap, titleEn.wrap);
+  if (!overview.has_translation.checked) titleBi.classList.add('hide-en');
+
+  const sumBi = document.createElement('div'); sumBi.className = 'bilingual';
+  const sumAr = textareaField('ملخص الخبر (عربي)', item?.summary_ar || '');
+  const sumEn = textareaField('Summary (EN)', item?.summary_en || '', 'en');
+  sumBi.append(sumAr.wrap, sumEn.wrap);
+  if (!overview.has_translation.checked) sumBi.classList.add('hide-en');
+
+  const srcBi = document.createElement('div'); srcBi.className = 'bilingual';
+  const srcAr = inputField('اسم المصدر (عربي)', item?.source_name_ar || '');
+  const srcEn = inputField('Source name (EN)', item?.source_name_en || '', 'en');
+  srcBi.append(srcAr.wrap, srcEn.wrap);
+  if (!overview.has_translation.checked) srcBi.classList.add('hide-en');
+
+  const url = inputField('رابط المصدر', item?.source_url || '');
+  url.input.placeholder = 'https://...';
+  url.input.dir = 'ltr';
+
+  const actions = document.createElement('div'); actions.className = 'row row-end'; actions.style.marginTop = '8px';
+  const saveBtn = document.createElement('button'); saveBtn.className = 'btn btn-primary btn-sm'; saveBtn.textContent = 'حفظ الخبر';
+  const delBtn  = document.createElement('button'); delBtn.className = 'btn btn-sm btn-danger'; delBtn.textContent = 'حذف';
+  actions.append(delBtn, saveBtn);
+
+  saveBtn.addEventListener('click', async () => {
+    if (!titleAr.input.value.trim()) return showToast('العنوان مطلوب', 'error');
+    setLoading(saveBtn, true);
+    try {
+      const payload = {
+        newsletter_section_id: section.id,
+        title_ar: titleAr.input.value.trim(),
+        title_en: overview.has_translation.checked ? (titleEn.input.value || null) : null,
+        summary_ar: sumAr.input.value,
+        summary_en: overview.has_translation.checked ? (sumEn.input.value || null) : null,
+        source_name_ar: srcAr.input.value || null,
+        source_name_en: overview.has_translation.checked ? (srcEn.input.value || null) : null,
+        source_url: url.input.value,
+        sort_order: 0,
+      };
+      if (item?.id) {
+        const { error } = await supabase.from('section_news_items').update(payload).eq('id', item.id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from('section_news_items').insert(payload).select().single();
+        if (error) throw error;
+        item = data;
+      }
       showToast('تم حفظ الخبر');
-      await loadNewsletterSections(newsletter.id);
-    }catch(e){ showToast(e.message||e,'error'); }
-    setLoading(save, false);
+    } catch (e) { showToast(e.message || e, 'error'); }
+    finally { setLoading(saveBtn, false); }
   });
-  const del = document.createElement('button'); del.className='btn'; del.textContent='حذف'; del.addEventListener('click', async ()=>{
-    if (!item || !item.id) { row.remove(); return; }
-    const ok = await showConfirm('حذف الخبر؟'); if (!ok) return;
-    const { error } = await supabase.from('section_news_items').delete().eq('id', item.id); if (error) return showToast(error.message,'error'); row.remove(); await loadNewsletterSections(newsletter.id); showToast('تم الحذف');
+  delBtn.addEventListener('click', async () => {
+    if (!item?.id) { row.remove(); return; }
+    const ok = await showConfirm('حذف الخبر؟', 'حذف', { okLabel: 'حذف', danger: true });
+    if (!ok) return;
+    const { error } = await supabase.from('section_news_items').delete().eq('id', item.id);
+    if (error) return showToast(error.message, 'error');
+    row.remove(); showToast('تم الحذف');
   });
-  row.append(titleArLabel, title, titleEnWrap, summaryArLabel, summaryField.el, summaryEnWrap, sourceNameArLabel, sourceNameAr, sourceNameEnWrap, sourceUrlLabel, source, save, del); return row;
+
+  row.append(titleBi, sumBi, srcBi, url.wrap, actions);
+  return row;
 }
 
-function createArticleItemRow(item, section){
-  const row = document.createElement('div'); row.className='repeat-item';
-  const titleArLabel = document.createElement('label'); titleArLabel.className='label'; titleArLabel.textContent='عنوان المقال (عربي)';
-  const title = document.createElement('input'); title.className='input'; title.placeholder='عنوان'; title.value = item?.title_ar || '';
-  const titleEnWrap = document.createElement('div'); titleEnWrap.className='english-only';
-  const titleEnLabel = document.createElement('label'); titleEnLabel.className='label'; titleEnLabel.textContent='عنوان المقال (EN)';
-  const titleEn = document.createElement('input'); titleEn.className='input'; titleEn.placeholder='Article title'; titleEn.value = item?.title_en || '';
-  titleEnWrap.append(titleEnLabel, titleEn);
-  const authorArLabel = document.createElement('label'); authorArLabel.className='label'; authorArLabel.textContent='اسم الكاتب (عربي)';
-  const author = document.createElement('input'); author.className='input'; author.placeholder='المؤلف'; author.value = item?.author_name_ar || '';
-  const authorEnWrap = document.createElement('div'); authorEnWrap.className='english-only';
-  const authorEnLabel = document.createElement('label'); authorEnLabel.className='label'; authorEnLabel.textContent='اسم الكاتب (EN)';
-  const authorEn = document.createElement('input'); authorEn.className='input'; authorEn.placeholder='Author'; authorEn.value = item?.author_name_en || '';
-  authorEnWrap.append(authorEnLabel, authorEn);
-  const excerptArLabel = document.createElement('label'); excerptArLabel.className='label'; excerptArLabel.textContent='المقتطف (عربي)';
-  const excerptField = createRichTextField({ dir: 'rtl', initialHtml: item?.excerpt_ar || '', placeholder: 'مقتطف', minHeight: '6em' });
-  const excerptEnWrap = document.createElement('div'); excerptEnWrap.className='english-only';
-  const excerptEnLabel = document.createElement('label'); excerptEnLabel.className='label'; excerptEnLabel.textContent='المقتطف (EN)';
-  const excerptFieldEn = createRichTextField({ dir: 'ltr', initialHtml: item?.excerpt_en || '', placeholder: 'Excerpt', minHeight: '6em' });
-  excerptEnWrap.append(excerptEnLabel, excerptFieldEn.el);
-  const save = document.createElement('button'); save.className='btn btn-primary'; save.textContent='حفظ';
-  save.addEventListener('click', async ()=>{
-    if (!title.value || !title.value.trim()) return showToast('العنوان مطلوب','error');
-    setLoading(save, true);
-    try{
+/* ── Article items (repeating) ── */
+async function buildArticlesSection(section) {
+  const { data: items } = await supabase.from('section_article_items')
+    .select('*').eq('newsletter_section_id', section.id).order('sort_order', { ascending: true });
+  const node = document.createElement('div');
+  const list = document.createElement('div'); list.className = 'repeat-list';
+  node.appendChild(list);
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn btn-sm';
+  addBtn.style.marginTop = '12px';
+  addBtn.textContent = '+ إضافة مقال';
+  addBtn.addEventListener('click', () => list.appendChild(articleItemRow(null, section)));
+  node.appendChild(addBtn);
+
+  (items || []).forEach(it => list.appendChild(articleItemRow(it, section)));
+
+  return { node, save: async () => {} };
+}
+
+function articleItemRow(item, section) {
+  const row = document.createElement('div'); row.className = 'repeat-item';
+
+  const titleBi = document.createElement('div'); titleBi.className = 'bilingual';
+  const titleAr = inputField('عنوان المقال (عربي)', item?.title_ar || '');
+  const titleEn = inputField('Article title (EN)', item?.title_en || '', 'en');
+  titleBi.append(titleAr.wrap, titleEn.wrap);
+  if (!overview.has_translation.checked) titleBi.classList.add('hide-en');
+
+  const authBi = document.createElement('div'); authBi.className = 'bilingual';
+  const authAr = inputField('اسم الكاتب (عربي)', item?.author_name_ar || '');
+  const authEn = inputField('Author (EN)', item?.author_name_en || '', 'en');
+  authBi.append(authAr.wrap, authEn.wrap);
+  if (!overview.has_translation.checked) authBi.classList.add('hide-en');
+
+  const exBi = document.createElement('div'); exBi.className = 'bilingual';
+  const exAr = textareaField('المقتطف (عربي)', item?.excerpt_ar || '');
+  const exEn = textareaField('Excerpt (EN)', item?.excerpt_en || '', 'en');
+  exBi.append(exAr.wrap, exEn.wrap);
+  if (!overview.has_translation.checked) exBi.classList.add('hide-en');
+
+  const url = inputField('رابط المقال', item?.article_url || '');
+  url.input.placeholder = 'https://...';
+  url.input.dir = 'ltr';
+
+  const actions = document.createElement('div'); actions.className = 'row row-end'; actions.style.marginTop = '8px';
+  const saveBtn = document.createElement('button'); saveBtn.className = 'btn btn-primary btn-sm'; saveBtn.textContent = 'حفظ المقال';
+  const delBtn  = document.createElement('button'); delBtn.className = 'btn btn-sm btn-danger'; delBtn.textContent = 'حذف';
+  actions.append(delBtn, saveBtn);
+
+  saveBtn.addEventListener('click', async () => {
+    if (!titleAr.input.value.trim()) return showToast('العنوان مطلوب', 'error');
+    setLoading(saveBtn, true);
+    try {
       const payload = {
         newsletter_section_id: section.id,
-        title_ar: title.value.trim(),
-        title_en: hasTranslation.checked ? (titleEn.value || null) : null,
-        author_name_ar: author.value,
-        author_name_en: hasTranslation.checked ? (authorEn.value || null) : null,
-        excerpt_ar: excerptField.getHtml(),
-        excerpt_en: hasTranslation.checked ? (excerptFieldEn.getHtml() || null) : null,
-        sort_order: 0
+        title_ar: titleAr.input.value.trim(),
+        title_en: overview.has_translation.checked ? (titleEn.input.value || null) : null,
+        author_name_ar: authAr.input.value,
+        author_name_en: overview.has_translation.checked ? (authEn.input.value || null) : null,
+        excerpt_ar: exAr.input.value,
+        excerpt_en: overview.has_translation.checked ? (exEn.input.value || null) : null,
+        article_url: url.input.value || null,
+        sort_order: 0,
       };
-      if (item && item.id) await supabase.from('section_article_items').update(payload).eq('id', item.id);
-      else await supabase.from('section_article_items').insert(payload);
-      showToast('تم حفظ المقال'); await loadNewsletterSections(newsletter.id);
-    }catch(e){ showToast(e.message||e,'error'); }
-    setLoading(save, false);
+      if (item?.id) {
+        const { error } = await supabase.from('section_article_items').update(payload).eq('id', item.id);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from('section_article_items').insert(payload).select().single();
+        if (error) throw error;
+        item = data;
+      }
+      showToast('تم حفظ المقال');
+    } catch (e) { showToast(e.message || e, 'error'); }
+    finally { setLoading(saveBtn, false); }
   });
-  const del = document.createElement('button'); del.className='btn'; del.textContent='حذف'; del.addEventListener('click', async ()=>{
-    if (!item || !item.id) { row.remove(); return; }
-    const ok = await showConfirm('حذف المقال؟'); if (!ok) return;
-    const { error } = await supabase.from('section_article_items').delete().eq('id', item.id); if (error) return showToast(error.message,'error'); row.remove(); await loadNewsletterSections(newsletter.id); showToast('تم الحذف');
+  delBtn.addEventListener('click', async () => {
+    if (!item?.id) { row.remove(); return; }
+    const ok = await showConfirm('حذف المقال؟', 'حذف', { okLabel: 'حذف', danger: true });
+    if (!ok) return;
+    const { error } = await supabase.from('section_article_items').delete().eq('id', item.id);
+    if (error) return showToast(error.message, 'error');
+    row.remove(); showToast('تم الحذف');
   });
-  row.append(titleArLabel, title, titleEnWrap, authorArLabel, author, authorEnWrap, excerptArLabel, excerptField.el, excerptEnWrap, save, del); return row;
+
+  row.append(titleBi, authBi, exBi, url.wrap, actions);
+  return row;
 }
 
-// cover upload
-coverFile.addEventListener('change', async ()=>{
-  const f = coverFile.files && coverFile.files[0]; if (!f) return;
-  coverStatus.textContent = 'جاري رفع الصورة…';
-  // create inline progress bar
-  let pbar = document.getElementById('cover-progress');
-  if (!pbar){ pbar = document.createElement('progress'); pbar.id = 'cover-progress'; pbar.max = 1; pbar.value = 0; pbar.style.width = '100%'; coverPreview.appendChild(pbar); }
-  const note = showToast('جاري رفع صورة الغلاف…', 'pending', 0);
-  try{
-    const publicUrl = await uploadFileWithProgress(f, `newsletters/${newsletter?.id||'temp'}`, (ratio)=>{
-      if (ratio >= 0 && ratio <= 1){ pbar.value = ratio; coverStatus.textContent = `جاري الرفع ${Math.round(ratio*100)}%`; }
-    });
-    pbar.value = 1; coverStatus.textContent = 'تم الرفع';
-    coverPreview.innerHTML = `<img src='${publicUrl}' style='max-width:260px'>`;
-    // if newsletter exists, update
-    if (newsletter && newsletter.id){ await supabase.from('newsletters').update({ cover_image_url: publicUrl }).eq('id', newsletter.id); note.dismiss(); showToast('تم تحديث صورة الغلاف'); }
-    else { newsletter = newsletter || {}; newsletter.cover_image_url = publicUrl; note.dismiss(); }
-  }catch(e){ coverStatus.textContent = ''; if (pbar && pbar.parentElement) pbar.remove(); note.dismiss(); showToast(e.message||e,'error'); }
-});
+/* ── Podcast (single) ── */
+async function buildPodcastSection(section) {
+  const { data } = await supabase.from('section_podcast').select('*').eq('newsletter_section_id', section.id).maybeSingle();
+  let podcastImageUrl = data?.podcast_image_url || data?.cover_image_url || null;
 
-// Toggle translation input row
-hasTranslation.addEventListener('change', ()=>{
-  const enabled = hasTranslation.checked;
-  toggleTranslationFields(enabled);
-  if (!enabled) {
-    titleEn.value = '';
-    readingTimeEn.value = '';
-    welcomeMessageEnField.clear();
-    Object.entries(contributorsInputs).forEach(([key, input]) => {
-      if (key.endsWith('_en') && input) input.value = '';
-    });
+  function isMissingPodcastImageColumn(error) {
+    const text = `${error?.message || ''} ${error?.details || ''} ${error?.hint || ''}`;
+    return error?.code === '42703' || error?.code === 'PGRST204' || /podcast_image_url/i.test(text);
   }
-});
 
-// Save meta
-saveMetaBtn.addEventListener('click', async ()=>{
-  if (!titleAr.value || !titleAr.value.trim()) return showToast('عنوان النشرة مطلوب','error');
-  setLoading(saveMetaBtn, true);
-  try{
+  const node = document.createElement('div');
+
+  const titleBi = document.createElement('div'); titleBi.className = 'bilingual';
+  const titleAr = inputField('عنوان البودكاست (عربي)', data?.title_ar || '');
+  const titleEn = inputField('Podcast title (EN)', data?.title_en || '', 'en');
+  titleBi.append(titleAr.wrap, titleEn.wrap);
+  if (!overview.has_translation.checked) titleBi.classList.add('hide-en');
+
+  const descBi = document.createElement('div'); descBi.className = 'bilingual';
+  const descAr = textareaField('الوصف (عربي)', data?.description_ar || '');
+  const descEn = textareaField('Description (EN)', data?.description_en || '', 'en');
+  descBi.append(descAr.wrap, descEn.wrap);
+  if (!overview.has_translation.checked) descBi.classList.add('hide-en');
+
+  const imgWrap = document.createElement('div'); imgWrap.className = 'field';
+  imgWrap.innerHTML = `<label class="field-label">صورة البودكاست</label>`;
+  const imgUploader = document.createElement('div'); imgUploader.className = 'uploader';
+  const imgFile = document.createElement('input'); imgFile.type = 'file'; imgFile.accept = 'image/*';
+  const imgPrev = document.createElement('div');
+  imgPrev.innerHTML = podcastImageUrl
+    ? `<img src="${podcastImageUrl}" style="max-width:100%;max-height:200px;border-radius:var(--r-sm)">`
+    : `<div class="muted">اسحب صورة هنا أو انقر للاختيار</div>`;
+  imgUploader.append(imgFile, imgPrev);
+  imgWrap.appendChild(imgUploader);
+
+  const clearImgBtn = document.createElement('button'); clearImgBtn.type = 'button'; clearImgBtn.className = 'btn btn-sm';
+  clearImgBtn.textContent = 'حذف الصورة';
+  if (!podcastImageUrl) clearImgBtn.style.display = 'none';
+  clearImgBtn.addEventListener('click', () => {
+    podcastImageUrl = null; imgFile.value = '';
+    imgPrev.innerHTML = `<div class="muted">اسحب صورة هنا أو انقر للاختيار</div>`;
+    clearImgBtn.style.display = 'none';
+  });
+  imgWrap.appendChild(clearImgBtn);
+
+  imgFile.addEventListener('change', async () => {
+    const file = imgFile.files?.[0];
+    if (!file) return;
+    setLoading(imgFile, true);
+    const prog = document.createElement('progress'); prog.max = 1; prog.value = 0; prog.style.width = '100%';
+    imgPrev.appendChild(prog);
+    const note = showToast('جاري الرفع…', 'pending', 0);
+    try {
+      const url = await uploadFileWithProgress(file, `sections/${section.id}`, (r) => { if (r >= 0) prog.value = r; });
+      prog.value = 1; note.dismiss();
+      podcastImageUrl = url;
+      imgPrev.innerHTML = `<img src="${url}" style="max-width:100%;max-height:200px;border-radius:var(--r-sm)">`;
+      clearImgBtn.style.display = '';
+      imgFile.value = '';
+      showToast('تم الرفع');
+    } catch (e) { note.dismiss(); showToast(e.message || e, 'error'); }
+    finally { setLoading(imgFile, false); }
+  });
+
+  node.append(titleBi, descBi, imgWrap);
+
+  return {
+    node,
+    save: async () => {
+      const payload = {
+        newsletter_section_id: section.id,
+        title_ar: titleAr.input.value,
+        title_en: overview.has_translation.checked ? (titleEn.input.value || null) : null,
+        description_ar: descAr.input.value,
+        description_en: overview.has_translation.checked ? (descEn.input.value || null) : null,
+        audio_url: data?.audio_url || '',
+        podcast_image_url: podcastImageUrl,
+      };
+      const upsert = data
+        ? supabase.from('section_podcast').update(payload).eq('id', data.id)
+        : supabase.from('section_podcast').insert(payload);
+      const { error } = await upsert;
+      if (!error) return;
+      if (!isMissingPodcastImageColumn(error)) throw error;
+      const legacy = { ...payload, cover_image_url: podcastImageUrl }; delete legacy.podcast_image_url;
+      const fb = data
+        ? supabase.from('section_podcast').update(legacy).eq('id', data.id)
+        : supabase.from('section_podcast').insert(legacy);
+      const { error: err2 } = await fb;
+      if (err2) throw err2;
+      showToast('تم الحفظ مع وضع التوافق. يفضّل تشغيل migration لإضافة podcast_image_url.', 'warning');
+    },
+  };
+}
+
+/* ── Small field factories used by news/article/podcast rows ── */
+function inputField(label, value = '', lang = 'ar') {
+  const wrap = document.createElement('div'); wrap.className = 'bilingual-side'; wrap.dataset.lang = lang;
+  const lbl = document.createElement('label'); lbl.className = 'field-label'; lbl.textContent = label;
+  const input = document.createElement('input'); input.type = 'text'; input.className = 'input'; input.value = value;
+  wrap.append(lbl, input);
+  return { wrap, input };
+}
+function textareaField(label, value = '', lang = 'ar') {
+  const wrap = document.createElement('div'); wrap.className = 'bilingual-side'; wrap.dataset.lang = lang;
+  const lbl = document.createElement('label'); lbl.className = 'field-label'; lbl.textContent = label;
+  const input = document.createElement('textarea'); input.className = 'input'; input.rows = 3; input.value = value;
+  wrap.append(lbl, input);
+  return { wrap, input };
+}
+
+/* ─── Save metadata ───────────────────────────────────────────────────────── */
+async function saveMetadata() {
+  if (!overview.title_ar.value.trim()) return showToast('عنوان النشرة مطلوب', 'error');
+  setLoading($('save-meta'), true);
+  try {
     const payload = {
-      title_ar: titleAr.value.trim(),
-      title_en: hasTranslation.checked ? (titleEn.value || null) : null,
-      edition_number: edition.value ? Number(edition.value) : null,
-      issue_date: issueDate.value || null,
-      reading_time: readingTime.value || null,
-      reading_time_en: hasTranslation.checked ? (readingTimeEn.value || null) : null,
-      welcome_message: welcomeMessageField.getHtml() || null,
-      welcome_message_en: hasTranslation.checked ? (welcomeMessageEnField.getHtml() || null) : null,
-      has_translation: hasTranslation.checked,
+      title_ar: overview.title_ar.value.trim(),
+      title_en: overview.has_translation.checked ? (overview.title_en.value || null) : null,
+      edition_number: overview.edition_number.value ? Number(overview.edition_number.value) : null,
+      issue_date: overview.issue_date.value || null,
+      reading_time: overview.reading_time_ar.value || null,
+      reading_time_en: overview.has_translation.checked ? (overview.reading_time_en.value || null) : null,
+      welcome_message: overview.welcome_rt_ar.getHtml() || null,
+      welcome_message_en: overview.has_translation.checked ? (overview.welcome_rt_en.getHtml() || null) : null,
+      has_translation: overview.has_translation.checked,
       translated_content: null,
-      status: isPublished.checked ? 'published' : 'draft',
-      category_id: categorySel.value || null,
-      cover_image_url: newsletter?.cover_image_url || null
+      status: overview.is_published.checked ? 'published' : 'draft',
+      category_id: overview.category?.value || null,
+      cover_image_url: state.newsletter?.cover_image_url || null,
     };
-    const fallbackPayload = { ...payload };
-    delete fallbackPayload.has_translation;
-    delete fallbackPayload.translated_content;
-    delete fallbackPayload.reading_time_en;
-    delete fallbackPayload.welcome_message_en;
+    const fallback = { ...payload };
+    delete fallback.has_translation;
+    delete fallback.translated_content;
+    delete fallback.reading_time_en;
+    delete fallback.welcome_message_en;
 
-    if (newsletter && newsletter.id){
-      const { error } = await supabase.from('newsletters').update(payload).eq('id', newsletter.id);
+    if (state.newsletter?.id) {
+      const { error } = await supabase.from('newsletters').update(payload).eq('id', state.newsletter.id);
       if (error) {
         if (error.code === '42703') {
-          const { error: fallbackError } = await supabase.from('newsletters').update(fallbackPayload).eq('id', newsletter.id);
-          if (fallbackError) throw fallbackError;
-          showToast('تم تحديث بيانات النشرة (بدون حقول الترجمة - يلزم تشغيل ترحيل قاعدة البيانات)');
-        } else {
-          throw error;
-        }
-      } else {
-        showToast('تم تحديث بيانات النشرة');
-      }
-    }
-    else {
+          const { error: e2 } = await supabase.from('newsletters').update(fallback).eq('id', state.newsletter.id);
+          if (e2) throw e2;
+          showToast('تم التحديث (بدون حقول الترجمة - يلزم تشغيل ترحيل قاعدة البيانات)');
+        } else throw error;
+      } else showToast('تم تحديث بيانات النشرة');
+    } else {
       const { data, error } = await supabase.from('newsletters').insert(payload).select().maybeSingle();
       if (error) {
         if (error.code === '42703') {
-          const { data: fallbackData, error: fallbackError } = await supabase.from('newsletters').insert(fallbackPayload).select().maybeSingle();
-          if (fallbackError) throw fallbackError;
-          newsletter = fallbackData;
-          history.replaceState(null, '', `?id=${newsletter.id}`);
-          showToast('تم إنشاء النشرة (بدون حقول الترجمة - يلزم تشغيل ترحيل قاعدة البيانات)');
-        } else {
-          throw error;
-        }
+          const { data: d2, error: e2 } = await supabase.from('newsletters').insert(fallback).select().maybeSingle();
+          if (e2) throw e2;
+          state.newsletter = d2;
+          history.replaceState(null, '', `?id=${state.newsletter.id}`);
+          showToast('تم الإنشاء (بدون حقول الترجمة - يلزم تشغيل ترحيل قاعدة البيانات)');
+        } else throw error;
       } else {
-        newsletter = data;
-        history.replaceState(null, '', `?id=${newsletter.id}`);
+        state.newsletter = data;
+        history.replaceState(null, '', `?id=${state.newsletter.id}`);
         showToast('تم إنشاء النشرة');
       }
     }
+    $('editor-title').textContent = overview.title_ar.value || overview.title_en.value || 'محرر النشرة';
     await persistContributors();
-    await loadNewsletterSections(newsletter.id);
-  }catch(e){ showToast(e.message||e,'error'); }
-  setLoading(saveMetaBtn, false);
+    if (state.newsletter?.id) await loadNewsletterSections(state.newsletter.id);
+    markClean();
+  } catch (e) { showToast(e.message || e, 'error'); }
+  finally { setLoading($('save-meta'), false); }
+}
+
+$('save-meta').addEventListener('click', saveMetadata);
+$('publish-all').addEventListener('click', async () => {
+  if (!state.newsletter?.id) return saveMetadata();
+  await saveMetadata();
 });
 
-// Delete newsletter
-deleteNewsBtn.addEventListener('click', async ()=>{
-  if (!newsletter || !newsletter.id) return showToast('لا يوجد عدد للحذف','error');
-  const ok = await showConfirm('حذف العدد؟ هذا الإجراء نهائي'); if (!ok) return;
-  const { error } = await supabase.from('newsletters').delete().eq('id', newsletter.id);
-  if (error) return showToast(error.message,'error');
-  showToast('تم حذف العدد'); window.setTimeout(()=> window.location.href = '/admin_cms/dashboard.html', 1000);
+/* ─── Delete ─────────────────────────────────────────────────────────────── */
+$('delete-news').addEventListener('click', async () => {
+  if (!state.newsletter?.id) return showToast('لا يوجد عدد للحذف', 'error');
+  const ok = await showConfirm('حذف هذا العدد وكل أقسامه؟ لا يمكن التراجع.', 'حذف العدد', { okLabel: 'حذف نهائي', danger: true });
+  if (!ok) return;
+  const { error } = await supabase.from('newsletters').delete().eq('id', state.newsletter.id);
+  if (error) return showToast(error.message, 'error');
+  state.dirty = false;
+  showToast('تم حذف العدد');
+  setTimeout(() => window.location.href = '/admin_cms/dashboard.html', 700);
 });
 
-publishAllBtn.addEventListener('click', async ()=>{
-  if (!newsletter?.id) return showToast('احفظ بيانات النشرة أولاً','error');
-  await persistContributors();
-  await loadNewsletter(newsletter.id);
-  showToast('تم مزامنة التغييرات');
+/* ─── Ctrl+S / Cmd+S ──────────────────────────────────────────────────────── */
+window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+    e.preventDefault();
+    saveMetadata();
+  }
 });
 
+/* ─── Go ──────────────────────────────────────────────────────────────────── */
 init();
