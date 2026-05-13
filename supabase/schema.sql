@@ -320,6 +320,111 @@ BEGIN
 END $$;
 
 
+-- ── 11b. Legacy plain-text → safe-HTML data migration ─────────────────────────
+-- All rich-text columns are now expected to store sanitized HTML produced by
+-- the CMS rich-text editor (admin_cms/js/rich-text-field.js). Older rows may
+-- still contain raw plain text whose line breaks and spacing would collapse
+-- when rendered as HTML on the public site.
+--
+-- This block walks every affected (table, column) once and converts plain-text
+-- values into safe HTML (escape entities, \n → <br>, runs of spaces → &nbsp;).
+-- Rows that already contain an HTML tag are left untouched, so the block is
+-- idempotent and a no-op on re-runs of this schema file.
+--
+-- Mirrors js/rich-text.js → textToSafeHtml(...). Helpers are dropped at the
+-- end so nothing persistent is added to the schema.
+--
+-- Positioned *before* the audit triggers in Part 4 so that on a fresh install
+-- the bulk update does not flood public.audit_logs. On re-runs of an already-
+-- audited DB, the WHERE clauses below match zero rows, so no triggers fire.
+DO $$
+DECLARE
+  _target record;
+  _sql    text;
+BEGIN
+
+  -- Helper 1: convert a plain-text value into safe HTML.
+  CREATE OR REPLACE FUNCTION pg_temp._text_to_safe_html(t text) RETURNS text AS $f$
+  DECLARE
+    result text;
+    mat    text[];
+    n      int;
+  BEGIN
+    IF t IS NULL OR t = '' THEN
+      RETURN t;
+    END IF;
+    result := t;
+    result := replace(result, '&',  '&amp;');
+    result := replace(result, '<',  '&lt;');
+    result := replace(result, '>',  '&gt;');
+    result := replace(result, '"',  '&quot;');
+    result := replace(result, '''', '&#39;');
+    result := regexp_replace(result, E'\r\n?', E'\n', 'g');
+    result := replace(result, E'\n', '<br>');
+    result := replace(result, E'\t', '&nbsp;&nbsp;&nbsp;&nbsp;');
+    LOOP
+      mat := regexp_match(result, '( {2,})');
+      EXIT WHEN mat IS NULL;
+      n := length(mat[1]);
+      result := regexp_replace(result, ' {2,}', repeat('&nbsp;', n), '');
+    END LOOP;
+    RETURN result;
+  END;
+  $f$ LANGUAGE plpgsql IMMUTABLE;
+
+  -- Helper 2: looks-like-HTML predicate (same heuristic as JS looksLikeHtml).
+  CREATE OR REPLACE FUNCTION pg_temp._looks_like_html(t text) RETURNS boolean AS $f$
+    SELECT t IS NOT NULL AND t ~* '<[a-z!/]';
+  $f$ LANGUAGE sql IMMUTABLE;
+
+  -- Driven loop over every (table, column) that stores rich-text content.
+  FOR _target IN
+    SELECT * FROM (VALUES
+      ('newsletters',           'welcome_message'),
+      ('newsletters',           'welcome_message_en'),
+      ('section_illumination',  'body_ar'),
+      ('section_illumination',  'body_en'),
+      ('section_inspiring',     'body_ar'),
+      ('section_inspiring',     'body_en'),
+      ('section_news_items',    'summary_ar'),
+      ('section_news_items',    'summary_en'),
+      ('section_article_items', 'excerpt_ar'),
+      ('section_article_items', 'excerpt_en'),
+      ('section_podcast',       'description_ar'),
+      ('section_podcast',       'description_en')
+    ) AS t(table_name, column_name)
+  LOOP
+    -- The column may not exist yet on very old databases (e.g. *_en added
+    -- by later migrations); skip those gracefully.
+    IF EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name   = _target.table_name
+        AND column_name  = _target.column_name
+    ) THEN
+      _sql := format(
+        'UPDATE public.%I
+            SET %I = pg_temp._text_to_safe_html(%I)
+          WHERE %I IS NOT NULL
+            AND %I <> ''''
+            AND NOT pg_temp._looks_like_html(%I)',
+        _target.table_name,
+        _target.column_name, _target.column_name,
+        _target.column_name,
+        _target.column_name,
+        _target.column_name
+      );
+      EXECUTE _sql;
+    END IF;
+  END LOOP;
+
+  -- pg_temp.* helpers are dropped automatically when the session ends, but
+  -- drop explicitly here so nothing leaks into the SQL editor's session.
+  DROP FUNCTION IF EXISTS pg_temp._text_to_safe_html(text);
+  DROP FUNCTION IF EXISTS pg_temp._looks_like_html(text);
+END $$;
+
+
 -- ══════════════════════════════════════════════════════════════════════════════
 -- PART 2 — AUDIT LOG TABLE
 -- Defined before any trigger functions so the function body can reference it.
