@@ -3227,3 +3227,137 @@ body.dark-mode .section-toggle-btn:hover {
     background-position: left 20px center !important;
 }
 
+
+
+
+
+
+/* ===== MOBILE FIX: stable clean layout ===== */
+@media (max-width: 768px) {
+    #main-header {
+        position: relative !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 12px 14px !important;
+    }
+
+    .header-right-section,
+    .brand-link {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    .header-logo-main img {
+        height: 48px !important;
+    }
+
+    .header-text h1 {
+        font-size: 1rem !important;
+    }
+
+    .header-text p {
+        display: block !important;
+        font-size: 0.72rem !important;
+    }
+
+    #main-header > .header-tools,
+    .header-tools {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    .main-nav {
+        width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+    }
+
+    .main-nav ul {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        width: max-content !important;
+        min-width: 100% !important;
+        justify-content: center !important;
+        gap: 6px !important;
+        padding: 6px !important;
+        border-radius: 14px !important;
+    }
+
+    .main-nav ul li {
+        width: auto !important;
+        flex: 0 0 auto !important;
+    }
+
+    .main-nav ul li a {
+        width: auto !important;
+        min-width: max-content !important;
+        white-space: nowrap !important;
+        padding: 8px 12px !important;
+        font-size: 0.82rem !important;
+        border-radius: 9px !important;
+    }
+
+    #search-bar-container {
+        width: calc(100% - 28px) !important;
+        margin: 12px auto 18px !important;
+        padding: 10px !important;
+        border-radius: 16px !important;
+    }
+
+    #search-bar-container .search-controls {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 9px !important;
+        padding: 0 !important;
+    }
+
+    #search-input,
+    #category-filter,
+    #search-execute-btn,
+    #close-search-btn {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 42px !important;
+        font-size: 0.88rem !important;
+        border-radius: 12px !important;
+    }
+
+    #hero-section {
+        padding-top: 36px !important;
+        padding-bottom: 32px !important;
+    }
+
+    #hero-section h2 {
+        font-size: 1.55rem !important;
+        line-height: 1.6 !important;
+    }
+
+    #hero-section p {
+        text-align: center !important;
+        font-size: 0.95rem !important;
+    }
+
+    .episodes-grid,
+    .latest-news-grid {
+        grid-template-columns: 1fr !important;
+        gap: 18px !important;
+    }
+
+    .card-image-container {
+        height: 185px !important;
+    }
+
+    .join-fixed-bottom {
+        left: 14px !important;
+        right: auto !important;
+        bottom: 14px !important;
+    }
+}
+
+
+
+
+
