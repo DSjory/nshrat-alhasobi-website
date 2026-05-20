@@ -734,58 +734,151 @@ textarea.input { min-height: 90px; resize: vertical; }
   flex-wrap: wrap;
 }
 
-/* Rich-text editor field (existing) */
+/* ─── Rich-text editor (Quill 2) ──────────────────────────────────────────── */
+/* The wrapper houses a language badge + Quill's snow theme. The badge sits in
+ * the top corner (top-start in writing direction) so editors always know which
+ * language/direction this instance is anchored to.                             */
 .rt-field {
+  position: relative;
   border: 1px solid var(--border-strong);
   border-radius: var(--r);
   background: var(--surface);
-  display: flex; flex-direction: column;
-  overflow: hidden;
   transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
 }
 .rt-field:focus-within {
   border-color: var(--brand);
   box-shadow: 0 0 0 3px rgba(1,106,109,.14);
 }
-.rt-toolbar {
-  display: flex; gap: 2px;
-  padding: 6px 8px;
+.rt-field--ltr .ql-editor { direction: ltr; text-align: left; }
+.rt-field--rtl .ql-editor { direction: rtl; text-align: right; }
+.rt-host { display: block; }
+
+/* Language badge — small chip pinned to the corner of the field. */
+.rt-lang-badge {
+  position: absolute;
+  top: -10px;
+  inset-inline-end: 12px;
+  z-index: 2;
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 10px;
+  font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  border-radius: var(--r-pill);
+  background: var(--brand);
+  color: var(--text-on-brand);
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+  user-select: none;
+}
+.rt-field--ltr .rt-lang-badge {
+  background: var(--ink);
+}
+
+/* Quill — Snow theme tuning to match our token palette */
+.rt-field .ql-toolbar.ql-snow {
+  border: 0;
   border-bottom: 1px solid var(--border);
   background: var(--surface-2);
+  padding: 6px 8px;
+  border-top-left-radius: var(--r);
+  border-top-right-radius: var(--r);
+  display: flex; flex-wrap: wrap; gap: 2px;
 }
-.rt-btn {
-  min-width: 32px; height: 28px; padding: 0 8px;
-  border: 1px solid transparent; background: transparent;
+.rt-field .ql-toolbar.ql-snow .ql-formats { margin-inline-end: 8px; }
+
+/* Toolbar buttons */
+.rt-field .ql-toolbar.ql-snow button,
+.rt-field .ql-toolbar.ql-snow .ql-picker-label {
+  min-width: 32px; height: 32px;            /* meets 44px touch target on mobile via padding below */
+  padding: 4px 6px;
   border-radius: var(--r-sm);
-  cursor: pointer; color: var(--text); font-size: var(--fs);
-  line-height: 1;
-  display: inline-flex; align-items: center; justify-content: center;
+  color: var(--text-soft);
+  transition: background var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
-.rt-btn:hover { background: var(--brand-soft); }
-.rt-btn:active { background: var(--brand-soft-2); }
-.rt-editor {
-  width: 100%;
-  padding: 10px 12px;
-  border: 0; outline: none;
+.rt-field .ql-toolbar.ql-snow button:hover,
+.rt-field .ql-toolbar.ql-snow button:focus-visible,
+.rt-field .ql-toolbar.ql-snow .ql-picker-label:hover {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.rt-field .ql-toolbar.ql-snow button.ql-active,
+.rt-field .ql-toolbar.ql-snow .ql-picker-label.ql-active,
+.rt-field .ql-toolbar.ql-snow .ql-picker-item.ql-selected {
+  background: var(--brand-soft-2);
+  color: var(--brand);
+}
+.rt-field .ql-toolbar.ql-snow .ql-stroke { stroke: currentColor; }
+.rt-field .ql-toolbar.ql-snow .ql-fill,
+.rt-field .ql-toolbar.ql-snow .ql-stroke.ql-fill { fill: currentColor; }
+.rt-field .ql-toolbar.ql-snow .ql-picker { color: var(--text-soft); }
+.rt-field .ql-toolbar.ql-snow .ql-picker-options { border-radius: var(--r-sm); border-color: var(--border); }
+
+/* Editor surface */
+.rt-field .ql-container.ql-snow {
+  border: 0;
   background: var(--surface);
+  border-bottom-left-radius: var(--r);
+  border-bottom-right-radius: var(--r);
+  font-family: inherit;
+  font-size: var(--fs-md);
+}
+.rt-field .ql-editor {
+  padding: 12px 14px;
+  min-height: inherit;
   color: var(--text);
-  line-height: 1.7;
+  line-height: 1.8;
   overflow-wrap: anywhere; word-break: break-word;
 }
-.rt-editor:empty::before {
-  content: attr(data-placeholder);
+.rt-field .ql-editor.ql-blank::before {
   color: var(--text-muted);
-  pointer-events: none;
+  font-style: normal;
+  inset-inline-start: 14px;
+  inset-inline-end:   14px;
+  left: auto; right: auto;
 }
-.rt-editor a { color: var(--brand); text-decoration: underline; }
-.rt-editor p { margin: 0 0 .6em; }
-.rt-editor p:last-child { margin-bottom: 0; }
-.rt-editor ul, .rt-editor ol { padding-inline-start: 1.5em; margin: .4em 0; }
-.rt-editor blockquote {
+.rt-field--ltr .ql-editor.ql-blank::before { text-align: left; }
+.rt-field--rtl .ql-editor.ql-blank::before { text-align: right; }
+
+.rt-field .ql-editor a { color: var(--brand); text-decoration: underline; }
+.rt-field .ql-editor p { margin: 0 0 .6em; }
+.rt-field .ql-editor p:last-child { margin-bottom: 0; }
+.rt-field .ql-editor h2 { font-size: var(--fs-xl); margin: .5em 0 .3em; color: var(--text-strong); }
+.rt-field .ql-editor h3 { font-size: var(--fs-lg); margin: .5em 0 .3em; color: var(--text-strong); }
+.rt-field .ql-editor ul,
+.rt-field .ql-editor ol { padding-inline-start: 1.6em; margin: .4em 0; }
+.rt-field .ql-editor blockquote {
   border-inline-start: 3px solid var(--brand);
   padding-inline-start: 1em;
   margin: .5em 0;
-  color: var(--text-muted);
+  color: var(--text-soft);
+  background: var(--surface-2);
+}
+.rt-field .ql-editor pre,
+.rt-field .ql-editor code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  background: var(--bg-subtle);
+  padding: 2px 6px;
+  border-radius: var(--r-sm);
+  font-size: var(--fs-sm);
+}
+
+/* Link tooltip — match palette */
+.rt-field .ql-snow .ql-tooltip {
+  border-radius: var(--r);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow);
+}
+.rt-field .ql-snow .ql-tooltip input[type="text"] {
+  border-radius: var(--r-sm);
+  border-color: var(--border-strong);
+}
+
+/* Compact toolbar on phones — keep tap targets ≥40px */
+@media (max-width: 560px) {
+  .rt-field .ql-toolbar.ql-snow button,
+  .rt-field .ql-toolbar.ql-snow .ql-picker-label {
+    min-width: 36px; height: 34px;
+  }
+  .rt-lang-badge { top: -8px; font-size: 10px; padding: 2px 8px; }
 }
 
 /* ── 17. Audit log ────────────────────────────────────────────────────────── */

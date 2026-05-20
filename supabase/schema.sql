@@ -320,19 +320,30 @@ BEGIN
 END $$;
 
 
--- ── 11b. Legacy plain-text → safe-HTML data migration ─────────────────────────
--- All rich-text columns are now expected to store sanitized HTML produced by
--- the CMS rich-text editor (admin_cms/js/rich-text-field.js). Older rows may
--- still contain raw plain text whose line breaks and spacing would collapse
--- when rendered as HTML on the public site.
+-- ── 11b. Rich-text content normalisation (legacy text + Quill alignment) ─────
+-- All rich-text columns are expected to store sanitized HTML produced by the
+-- CMS rich-text editor (admin_cms/js/rich-text-field.js, backed by Quill 2).
+-- The sanitizer (js/rich-text.js) permits:
+--   • Inline   : <a> <b> <strong> <i> <em> <u> <s> <sub> <sup> <br> <span>
+--   • Block    : <p> <div> <blockquote> <pre> <code>
+--   • Headings : <h1>–<h6>
+--   • Lists    : <ul> <ol> <li>
+--   • Rule     : <hr>
+--   • Attrs    : href, target, rel, dir, lang, style (text-align/direction only)
 --
--- This block walks every affected (table, column) once and converts plain-text
--- values into safe HTML (escape entities, \n → <br>, runs of spaces → &nbsp;).
--- Rows that already contain an HTML tag are left untouched, so the block is
--- idempotent and a no-op on re-runs of this schema file.
+-- This block reconciles older data with that contract via two idempotent passes:
 --
--- Mirrors js/rich-text.js → textToSafeHtml(...). Helpers are dropped at the
--- end so nothing persistent is added to the schema.
+--   1. Plain-text → safe HTML: rows that never went through the rich-text
+--      pipeline (raw <p>/<br>-free strings) get newline + multi-space
+--      preservation so they render the same on the public site.
+--
+--   2. Quill class → inline-style: any HTML carrying Quill's class-based
+--      align/direction markup (`ql-align-right`, `ql-direction-rtl`) gets
+--      rewritten to the inline-style form the public renderer can show
+--      without loading Quill's stylesheet.
+--
+-- Both passes are idempotent — rows already in the target shape match
+-- nothing and produce no UPDATE.
 --
 -- Positioned *before* the audit triggers in Part 4 so that on a fresh install
 -- the bulk update does not flood public.audit_logs. On re-runs of an already-
@@ -377,6 +388,31 @@ BEGIN
     SELECT t IS NOT NULL AND t ~* '<[a-z!/]';
   $f$ LANGUAGE sql IMMUTABLE;
 
+  -- Helper 3: Quill `class="ql-align-*"` / `ql-direction-*` → inline-style.
+  -- Idempotent — strings with no `ql-` substring are returned unchanged.
+  CREATE OR REPLACE FUNCTION pg_temp._normalize_quill_classes(t text) RETURNS text AS $f$
+  DECLARE r text;
+  BEGIN
+    IF t IS NULL OR position('ql-' in t) = 0 THEN RETURN t; END IF;
+    r := t;
+    r := regexp_replace(r, 'class="ql-align-center"',  'style="text-align: center"',  'gi');
+    r := regexp_replace(r, 'class="ql-align-right"',   'style="text-align: right"',   'gi');
+    r := regexp_replace(r, 'class="ql-align-justify"', 'style="text-align: justify"', 'gi');
+    r := regexp_replace(r, 'class="ql-align-left"',    'style="text-align: left"',    'gi');
+    r := regexp_replace(r, 'class="ql-direction-rtl"', 'dir="rtl"',                   'gi');
+    r := regexp_replace(r, 'class="ql-direction-ltr"', 'dir="ltr"',                   'gi');
+    r := regexp_replace(r,
+          'class="ql-direction-(rtl|ltr)\s+ql-align-(center|right|justify|left)"',
+          'dir="\1" style="text-align: \2"',
+          'gi');
+    r := regexp_replace(r,
+          'class="ql-align-(center|right|justify|left)\s+ql-direction-(rtl|ltr)"',
+          'style="text-align: \1" dir="\2"',
+          'gi');
+    RETURN r;
+  END;
+  $f$ LANGUAGE plpgsql IMMUTABLE;
+
   -- Driven loop over every (table, column) that stores rich-text content.
   FOR _target IN
     SELECT * FROM (VALUES
@@ -396,32 +432,48 @@ BEGIN
   LOOP
     -- The column may not exist yet on very old databases (e.g. *_en added
     -- by later migrations); skip those gracefully.
-    IF EXISTS (
+    IF NOT EXISTS (
       SELECT 1 FROM information_schema.columns
       WHERE table_schema = 'public'
         AND table_name   = _target.table_name
         AND column_name  = _target.column_name
-    ) THEN
-      _sql := format(
-        'UPDATE public.%I
-            SET %I = pg_temp._text_to_safe_html(%I)
-          WHERE %I IS NOT NULL
-            AND %I <> ''''
-            AND NOT pg_temp._looks_like_html(%I)',
-        _target.table_name,
-        _target.column_name, _target.column_name,
-        _target.column_name,
-        _target.column_name,
-        _target.column_name
-      );
-      EXECUTE _sql;
+    ) THEN CONTINUE;
     END IF;
+
+    -- Pass 1: plain-text → safe-HTML.
+    _sql := format(
+      'UPDATE public.%I
+          SET %I = pg_temp._text_to_safe_html(%I)
+        WHERE %I IS NOT NULL
+          AND %I <> ''''
+          AND NOT pg_temp._looks_like_html(%I)',
+      _target.table_name,
+      _target.column_name, _target.column_name,
+      _target.column_name,
+      _target.column_name,
+      _target.column_name
+    );
+    EXECUTE _sql;
+
+    -- Pass 2: Quill class → inline-style normalisation.
+    _sql := format(
+      'UPDATE public.%I
+          SET %I = pg_temp._normalize_quill_classes(%I)
+        WHERE %I IS NOT NULL
+          AND position(''ql-'' in %I) > 0',
+      _target.table_name,
+      _target.column_name, _target.column_name,
+      _target.column_name,
+      _target.column_name
+    );
+    EXECUTE _sql;
   END LOOP;
 
   -- pg_temp.* helpers are dropped automatically when the session ends, but
   -- drop explicitly here so nothing leaks into the SQL editor's session.
   DROP FUNCTION IF EXISTS pg_temp._text_to_safe_html(text);
   DROP FUNCTION IF EXISTS pg_temp._looks_like_html(text);
+  DROP FUNCTION IF EXISTS pg_temp._normalize_quill_classes(text);
 END $$;
 
 

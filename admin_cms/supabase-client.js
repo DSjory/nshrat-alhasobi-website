@@ -25,7 +25,13 @@ export async function initSupabase() {
 }
 
 export async function reinitSupabase() {
-  // Force schema cache refresh by reinitializing the client
+  // Force schema cache refresh by reinitializing the client.
+  //
+  // IMPORTANT: a freshly-created client restores its session from localStorage
+  // asynchronously. Issuing a `.from(...)` request before that completes makes
+  // the request fire with the anon role — which RLS rejects for draft rows,
+  // surfacing as empty editor fields. We explicitly await getSession() so the
+  // client has its access_token attached before this function returns.
   try {
     const res = await fetch('/admin_cms/env.json');
     const env = await res.json();
@@ -35,7 +41,7 @@ export async function reinitSupabase() {
     SUPABASE_KEY = key;
     supabase = createClient(url, key);
     window.supabase = supabase;
-    console.log('Supabase client reinitialized — schema cache should be refreshed');
+    await supabase.auth.getSession();
     return supabase;
   } catch (e) {
     console.error('Failed to reinitialize Supabase:', e);

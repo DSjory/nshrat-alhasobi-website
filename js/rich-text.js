@@ -5,19 +5,31 @@
 import DOMPurify from 'dompurify';
 
 export const RICH_TEXT_TAGS = [
-  'a', 'b', 'strong', 'i', 'em', 'u',
-  'br', 'p', 'div', 'span',
+  // Inline
+  'a', 'b', 'strong', 'i', 'em', 'u', 's', 'sub', 'sup', 'br', 'span',
+  // Block
+  'p', 'div', 'blockquote', 'pre', 'code',
+  // Headings (Quill toolbar exposes H2/H3; we allow H1-H6 for safety)
+  'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+  // Lists
   'ul', 'ol', 'li',
-  'blockquote', 'code',
+  // Horizontal rule
+  'hr',
 ];
 
-export const RICH_TEXT_ATTR = ['href', 'target', 'rel'];
+export const RICH_TEXT_ATTR = ['href', 'target', 'rel', 'dir', 'lang', 'style'];
+
+// Only these `style:` properties survive sanitization. Editors can align
+// paragraphs but cannot inject color/background/font tricks via inline styles.
+const ALLOWED_STYLE_PROPS = new Set(['text-align', 'direction']);
+const ALLOWED_TEXT_ALIGN  = new Set(['left', 'right', 'center', 'justify']);
+const ALLOWED_DIRECTION   = new Set(['rtl', 'ltr']);
 
 export const RICH_TEXT_CONFIG = {
   ALLOWED_TAGS: RICH_TEXT_TAGS,
   ALLOWED_ATTR: RICH_TEXT_ATTR,
-  FORBID_TAGS: ['style', 'script', 'iframe', 'object', 'embed', 'svg', 'math', 'img', 'link', 'meta'],
-  FORBID_ATTR: ['style', 'onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur'],
+  FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'svg', 'math', 'img', 'link', 'meta', 'style'],
+  FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur', 'srcset', 'src'],
   ALLOW_DATA_ATTR: false,
   KEEP_CONTENT: true,
 };
@@ -26,14 +38,42 @@ let hooksInstalled = false;
 function installPurifyHooks() {
   if (hooksInstalled) return;
   hooksInstalled = true;
+
   DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    // Constrain anchors: drop javascript:, always force a safe target/rel pair.
     if (node.tagName === 'A') {
       const href = node.getAttribute('href') || '';
       if (/^\s*javascript:/i.test(href)) {
         node.removeAttribute('href');
       }
-      node.setAttribute('target', '_blank');
-      node.setAttribute('rel', 'noopener noreferrer');
+      if (node.hasAttribute('href')) {
+        node.setAttribute('target', '_blank');
+        node.setAttribute('rel', 'noopener noreferrer');
+      }
+    }
+
+    // Constrain inline styles: keep only text-align / direction, with a
+    // whitelisted value set. Strip the attribute entirely if nothing survives.
+    if (node.hasAttribute && node.hasAttribute('style')) {
+      const allowed = [];
+      for (const decl of node.getAttribute('style').split(';')) {
+        const [rawProp, ...rest] = decl.split(':');
+        if (!rawProp || !rest.length) continue;
+        const prop = rawProp.trim().toLowerCase();
+        const val  = rest.join(':').trim().toLowerCase().replace(/!important\s*$/, '').trim();
+        if (!ALLOWED_STYLE_PROPS.has(prop)) continue;
+        if (prop === 'text-align' && !ALLOWED_TEXT_ALIGN.has(val)) continue;
+        if (prop === 'direction'  && !ALLOWED_DIRECTION.has(val))  continue;
+        allowed.push(`${prop}: ${val}`);
+      }
+      if (allowed.length) node.setAttribute('style', allowed.join('; '));
+      else                 node.removeAttribute('style');
+    }
+
+    // Constrain `dir` attribute to rtl / ltr / auto.
+    if (node.hasAttribute && node.hasAttribute('dir')) {
+      const d = (node.getAttribute('dir') || '').toLowerCase();
+      if (d !== 'rtl' && d !== 'ltr' && d !== 'auto') node.removeAttribute('dir');
     }
   });
 }
