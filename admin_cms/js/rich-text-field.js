@@ -1,155 +1,147 @@
 // admin_cms/js/rich-text-field.js
-// Factory for a contentEditable rich-text field with a small toolbar
-// (Bold / Italic / Link / Clear) and a sanitizing paste handler.
+//
+// Quill-backed rich-text field with per-instance text direction.
+//
+// • Arabic instance  → dir="rtl", default text-align:right, "AR" badge
+// • English instance → dir="ltr", default text-align:left,  "EN" badge
+//
+// Toolbar: bold, italic, underline, strike · heading H2 / H3 · ordered list ·
+//          bullet list · blockquote · link · align (default / center / right /
+//          justify) · clear.
+//
+// Output: Quill emits HTML with classes like `ql-align-right` and a `dir`
+// attribute. We register the *style* attributors for align and direction so the
+// stored HTML uses inline `style="text-align:right"` and `dir="rtl"` — that
+// way the public renderer (which doesn't load Quill's CSS) still shows the
+// correct alignment.
+//
+// Sanitization happens in /js/rich-text.js (single source of truth, also used
+// by the public renderer).
+//
+// Public API (unchanged):
+//   createRichTextField({ initialHtml?, dir?, placeholder?, minHeight? })
+//     → { el, editor, focus, clear, setHtml, getHtml }
 
-import { sanitizeRichText, textToSafeHtml } from '/js/rich-text.js';
-import { showPrompt } from '/admin_cms/ui.js';
+import Quill from 'quill';
+import 'quill/dist/quill.snow.css';
+import { sanitizeRichText } from '/js/rich-text.js';
 
-function insertHtmlAtCursor(html) {
-  const sel = window.getSelection();
-  if (!sel || sel.rangeCount === 0) {
-    document.execCommand('insertHTML', false, html);
-    return;
-  }
-  const range = sel.getRangeAt(0);
-  range.deleteContents();
-  const template = document.createElement('template');
-  template.innerHTML = html;
-  const frag = template.content;
-  const lastNode = frag.lastChild;
-  range.insertNode(frag);
-  if (lastNode) {
-    const newRange = document.createRange();
-    newRange.setStartAfter(lastNode);
-    newRange.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(newRange);
-  }
-}
+// Register inline-style versions of Align and Direction so Quill writes
+// `style="text-align:..."` and `dir="..."` instead of class names. Public site
+// then renders correctly without needing Quill's stylesheet.
+const AlignStyle     = Quill.import('attributors/style/align');
+const DirectionStyle = Quill.import('attributors/style/direction');
+AlignStyle.whitelist     = ['center', 'right', 'justify', 'left'];
+DirectionStyle.whitelist = ['rtl', 'ltr'];
+Quill.register(AlignStyle,     true);
+Quill.register(DirectionStyle, true);
 
-function makeToolbarButton({ label, title, html, onClick }) {
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'rt-btn';
-  btn.title = title;
-  btn.setAttribute('aria-label', title);
-  if (html) btn.innerHTML = html;
-  else btn.textContent = label;
-  btn.addEventListener('mousedown', (e) => e.preventDefault()); // keep selection
-  btn.addEventListener('click', (e) => { e.preventDefault(); onClick(); });
-  return btn;
+// Bold default uses <strong>, italic uses <em>; that's already Quill's
+// default for v2 — no override needed. We expose only the formats we want
+// to keep the output predictable.
+const ALLOWED_FORMATS = [
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'header', 'blockquote', 'link',
+  'align', 'direction',
+];
+
+function buildToolbarSpec() {
+  return [
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ header: 2 }, { header: 3 }],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['blockquote', 'link'],
+    [{ align: '' }, { align: 'center' }, { align: 'right' }, { align: 'justify' }],
+    ['clean'],
+  ];
 }
 
 export function createRichTextField({
   initialHtml = '',
-  dir = 'rtl',
+  dir         = 'rtl',
   placeholder = '',
-  minHeight = '8em',
+  minHeight   = '10em',
 } = {}) {
+  const isRtl = dir === 'rtl';
+
   const wrap = document.createElement('div');
-  wrap.className = 'rt-field';
+  wrap.className = `rt-field rt-field--${isRtl ? 'rtl' : 'ltr'}`;
+  wrap.dir = dir;
 
-  const toolbar = document.createElement('div');
-  toolbar.className = 'rt-toolbar';
-  toolbar.setAttribute('role', 'toolbar');
+  // Visual language badge — sits in the corner so editors always know which
+  // direction this instance is committed to.
+  const badge = document.createElement('span');
+  badge.className = 'rt-lang-badge';
+  badge.textContent = isRtl ? 'عربي · RTL' : 'English · LTR';
+  badge.setAttribute('aria-hidden', 'true');
+  wrap.appendChild(badge);
 
-  const editor = document.createElement('div');
-  editor.className = 'rt-editor input';
-  editor.contentEditable = 'true';
-  editor.dir = dir;
-  editor.style.minHeight = minHeight;
-  if (placeholder) editor.dataset.placeholder = placeholder;
-  editor.innerHTML = sanitizeRichText(initialHtml);
+  const host = document.createElement('div');
+  host.className = 'rt-host';
+  host.style.minHeight = minHeight;
+  wrap.appendChild(host);
 
-  const runCmd = (cmd, value = null) => {
-    editor.focus();
-    document.execCommand(cmd, false, value);
-  };
-
-  const boldBtn = makeToolbarButton({
-    label: 'B',
-    title: 'عريض (Bold)',
-    html: '<strong>B</strong>',
-    onClick: () => runCmd('bold'),
-  });
-  const italicBtn = makeToolbarButton({
-    label: 'I',
-    title: 'مائل (Italic)',
-    html: '<em>I</em>',
-    onClick: () => runCmd('italic'),
-  });
-  const linkBtn = makeToolbarButton({
-    label: '🔗',
-    title: 'إضافة رابط (Link)',
-    html: '🔗',
-    onClick: async () => {
-      const sel = window.getSelection();
-      const savedRange = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
-      const url = await showPrompt('رابط (URL):', 'https://');
-      if (!url) return;
-      const trimmed = String(url).trim();
-      if (!trimmed || /^javascript:/i.test(trimmed)) return;
-      editor.focus();
-      if (savedRange) {
-        sel.removeAllRanges();
-        sel.addRange(savedRange);
-      }
-      const currentSel = window.getSelection();
-      if (currentSel && !currentSel.isCollapsed) {
-        document.execCommand('createLink', false, trimmed);
-      } else {
-        const safeHref = trimmed.replace(/"/g, '&quot;');
-        const safeText = trimmed.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        insertHtmlAtCursor(`<a href="${safeHref}">${safeText}</a>`);
-      }
-      // Normalise links so they always open in a new tab.
-      editor.querySelectorAll('a[href]').forEach((a) => {
-        a.setAttribute('target', '_blank');
-        a.setAttribute('rel', 'noopener noreferrer');
-      });
-    },
-  });
-  const clearBtn = makeToolbarButton({
-    label: '✕',
-    title: 'إزالة التنسيق (Clear formatting)',
-    html: '✕',
-    onClick: () => {
-      runCmd('removeFormat');
-      runCmd('unlink');
+  const quill = new Quill(host, {
+    theme: 'snow',
+    placeholder,
+    formats: ALLOWED_FORMATS,
+    modules: {
+      toolbar: buildToolbarSpec(),
+      clipboard: {
+        // Quill 2 sanitizes paste through Delta conversion which respects the
+        // formats whitelist above. We still run DOMPurify on save for defense
+        // in depth.
+      },
     },
   });
 
-  toolbar.append(boldBtn, italicBtn, linkBtn, clearBtn);
+  // Anchor the editor's default writing direction so first-paragraph behaviour
+  // matches the language pair. Quill applies these as block-level attributors.
+  function applyDefaultDirection() {
+    const len = quill.getLength();
+    if (len > 1) return; // user already has content; don't fight them
+    quill.formatLine(0, len, {
+      direction: isRtl ? 'rtl' : false,
+      align:     isRtl ? 'right' : false,
+    });
+  }
 
-  editor.addEventListener('paste', (ev) => {
-    ev.preventDefault();
-    const html = ev.clipboardData?.getData('text/html') || '';
-    const plain = ev.clipboardData?.getData('text/plain') || '';
-    const incoming = html && html.trim() ? html : textToSafeHtml(plain);
-    const clean = sanitizeRichText(incoming);
-    insertHtmlAtCursor(clean);
-  });
+  function setHtml(html) {
+    const clean = sanitizeRichText(html || '');
+    quill.setContents([]);
+    if (clean) {
+      const delta = quill.clipboard.convert({ html: clean });
+      quill.setContents(delta);
+    }
+    applyDefaultDirection();
+  }
 
-  // Strip pasted/dropped images that bypass paste (drag-and-drop)
-  editor.addEventListener('drop', (ev) => {
-    ev.preventDefault();
-    const plain = ev.dataTransfer?.getData('text/plain') || '';
-    if (plain) insertHtmlAtCursor(sanitizeRichText(textToSafeHtml(plain)));
-  });
+  function getHtml() {
+    const html = quill.root.innerHTML || '';
+    // Quill leaves `<p><br></p>` (an empty paragraph) for an empty editor.
+    // Strip tags + nbsp to detect a truly empty value so the DB stores NULL.
+    const stripped = html
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/ /g, ' ')
+      .trim();
+    if (!stripped) return '';
+    return sanitizeRichText(html);
+  }
 
-  wrap.append(toolbar, editor);
+  if (initialHtml) {
+    setHtml(initialHtml);
+  } else {
+    applyDefaultDirection();
+  }
 
   return {
-    el: wrap,
-    editor,
-    focus: () => editor.focus(),
-    clear: () => { editor.innerHTML = ''; },
-    setHtml(html) { editor.innerHTML = sanitizeRichText(html || ''); },
-    getHtml() {
-      const cleaned = sanitizeRichText(editor.innerHTML);
-      // Treat an editor whose only content is whitespace / empty tags as empty.
-      const textOnly = cleaned.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
-      return textOnly ? cleaned : '';
-    },
+    el:      wrap,
+    editor:  quill.root,                  // for `addEventListener('input', …)`
+    quill,                                // escape hatch if a caller needs it
+    focus:   () => quill.focus(),
+    clear:   () => { quill.setContents([]); applyDefaultDirection(); },
+    setHtml,
+    getHtml,
   };
 }
