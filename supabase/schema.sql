@@ -779,6 +779,11 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_newsletters_category_id
   ON public.newsletters (category_id);
 
+-- Supports the cascade-published RLS subqueries on section tables — without
+-- this, the EXISTS join in `public_select_published` falls back to a seqscan.
+CREATE INDEX IF NOT EXISTS idx_newsletters_status
+  ON public.newsletters (status);
+
 CREATE INDEX IF NOT EXISTS idx_newsletter_sections_newsletter
   ON public.newsletter_sections (newsletter_id);
 
@@ -1070,7 +1075,74 @@ BEGIN
 
 
   -- ── all section-content tables + newsletter_editors ────────────────────────────────
-  -- Public: SELECT. Authenticated admins: full access.
+  -- Authenticated admins: full access (auth_all). Public: SELECT only, and
+  -- gated by the parent newsletter's publication status — this CASCADES the
+  -- newsletters.status='published' check down to every child table so that
+  -- draft content is not leakable by querying child tables directly.
+  --
+  -- See migrations/20260520_cascade_published_rls.sql for context on why
+  -- the older `public_select USING (true)` was a confidentiality hole.
+
+  -- newsletter_sections: gate on parent newsletter being published.
+  BEGIN
+    DROP POLICY IF EXISTS "public_select"           ON public.newsletter_sections;
+    DROP POLICY IF EXISTS "public_select_published" ON public.newsletter_sections;
+    CREATE POLICY "public_select_published" ON public.newsletter_sections
+      FOR SELECT
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.newsletters n
+          WHERE n.id = newsletter_sections.newsletter_id
+            AND n.status = 'published'
+        )
+      );
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+
+  -- newsletter_editors: same cascade.
+  BEGIN
+    DROP POLICY IF EXISTS "public_select"           ON public.newsletter_editors;
+    DROP POLICY IF EXISTS "public_select_published" ON public.newsletter_editors;
+    CREATE POLICY "public_select_published" ON public.newsletter_editors
+      FOR SELECT
+      USING (
+        EXISTS (
+          SELECT 1 FROM public.newsletters n
+          WHERE n.id = newsletter_editors.newsletter_id
+            AND n.status = 'published'
+        )
+      );
+  EXCEPTION WHEN duplicate_object THEN NULL; END;
+
+  -- section_* content tables: two-hop cascade through newsletter_sections.
+  -- Public additionally requires the section to be marked visible.
+  FOREACH tbl IN ARRAY ARRAY[
+    'section_illumination',
+    'section_inspiring',
+    'section_news_items',
+    'section_article_items',
+    'section_podcast'
+  ] LOOP
+    BEGIN
+      EXECUTE format('DROP POLICY IF EXISTS "public_select"           ON public.%I', tbl);
+      EXECUTE format('DROP POLICY IF EXISTS "public_select_published" ON public.%I', tbl);
+      EXECUTE format($pol$
+        CREATE POLICY "public_select_published" ON public.%I
+          FOR SELECT
+          USING (
+            EXISTS (
+              SELECT 1
+                FROM public.newsletter_sections ns
+                JOIN public.newsletters         n  ON n.id = ns.newsletter_id
+               WHERE ns.id = %I.newsletter_section_id
+                 AND n.status      = 'published'
+                 AND ns.is_visible = true
+            )
+          )
+      $pol$, tbl, tbl);
+    EXCEPTION WHEN duplicate_object THEN NULL; END;
+  END LOOP;
+
+  -- Authenticated admin policy is unchanged: full access to every child table.
   FOREACH tbl IN ARRAY ARRAY[
     'newsletter_sections',
     'newsletter_editors',
@@ -1080,12 +1152,6 @@ BEGIN
     'section_article_items',
     'section_podcast'
   ] LOOP
-    BEGIN
-      EXECUTE format(
-        'CREATE POLICY "public_select" ON public.%I FOR SELECT USING (true)', tbl
-      );
-    EXCEPTION WHEN duplicate_object THEN NULL; END;
-
     BEGIN
       EXECUTE format(
         'CREATE POLICY "auth_all" ON public.%I FOR ALL USING (auth.role() = ''authenticated'')',
