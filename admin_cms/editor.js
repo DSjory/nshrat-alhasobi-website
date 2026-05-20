@@ -7,12 +7,15 @@
 // Data layer is unchanged — every Supabase call below mirrors the previous
 // implementation; only the presentation has been reorganised.
 
-import { initSupabase, reinitSupabase, uploadFileWithProgress } from './supabase-client.js';
+import { initSupabase, uploadFileWithProgress } from './supabase-client.js';
 import { showToast, showConfirm, openDrawer, bindMobileSidebar } from './ui.js';
 import { createRichTextField } from './js/rich-text-field.js';
 
-await initSupabase();
-let supabase = window.supabase;
+// Reuse the client created by auth-guard.js. Calling reinit here used to spawn
+// a fresh client whose session wasn't yet restored from localStorage, causing
+// the very first `.from(...)` query to fire as `anon` — which RLS rejects for
+// draft rows, surfacing as an empty editor form.
+let supabase = await initSupabase();
 
 /* ─── Utilities ───────────────────────────────────────────────────────────── */
 const $ = (id) => document.getElementById(id);
@@ -77,13 +80,33 @@ document.querySelectorAll('.tab[data-tab], .nav-item[data-tab]').forEach(b => {
 });
 
 /* ─── Init ────────────────────────────────────────────────────────────────── */
+// Every step is independent — a failure in one (e.g. RLS on section_types)
+// must NOT prevent the rest of the editor from rendering. Each step logs to
+// the console and surfaces a toast on failure so production issues are
+// diagnosable without source-level debugging.
 async function init() {
-  supabase = await reinitSupabase();
-  await loadSectionTypes();
-  await loadCategories();
-  buildOverviewTab();
-  buildContributorsTab();
-  if (state.newsletterId) await loadNewsletter(state.newsletterId);
+  try { await loadSectionTypes(); }
+  catch (e) { console.error('[editor.init] loadSectionTypes failed:', e); }
+
+  try { await loadCategories(); }
+  catch (e) { console.error('[editor.init] loadCategories failed:', e); }
+
+  try { buildOverviewTab(); }
+  catch (e) {
+    console.error('[editor.init] buildOverviewTab failed:', e);
+    showToast('فشل في بناء نموذج التحرير: ' + (e.message || e), 'error');
+  }
+
+  try { buildContributorsTab(); }
+  catch (e) { console.error('[editor.init] buildContributorsTab failed:', e); }
+
+  if (state.newsletterId) {
+    try { await loadNewsletter(state.newsletterId); }
+    catch (e) {
+      console.error('[editor.init] loadNewsletter failed:', e);
+      showToast('فشل تحميل بيانات النشرة: ' + (e.message || e), 'error');
+    }
+  }
 }
 
 async function loadSectionTypes() {
@@ -116,37 +139,71 @@ const overview = {}; // refs to the field elements
 
 function buildOverviewTab() {
   const root = $('overview-form');
+  if (!root) { console.error('[editor] #overview-form not found in DOM'); return; }
   root.innerHTML = '';
 
-  root.appendChild(makeBilingualText('title', 'عنوان النشرة', { required: true, placeholderAr: 'مثال: نشرة شهر أبريل', placeholderEn: 'e.g. April Newsletter' }));
+  // Each field-builder is wrapped so a single failure (e.g. Quill barfing on
+  // an unusual environment) cannot prevent the remaining fields from rendering.
+  const safeAppend = (label, fn) => {
+    try {
+      const node = fn();
+      if (node) root.appendChild(node);
+    } catch (e) {
+      console.error(`[editor.buildOverviewTab] field "${label}" failed:`, e);
+      // Visible breadcrumb so admins know something went wrong with this field
+      const warn = document.createElement('div');
+      warn.className = 'field-error';
+      warn.style.padding = '8px';
+      warn.style.marginBottom = '12px';
+      warn.style.background = 'var(--danger-soft)';
+      warn.style.borderRadius = 'var(--r-sm)';
+      warn.textContent = `تعذر بناء حقل "${label}" — تحقق من وحدة التحكم`;
+      root.appendChild(warn);
+    }
+  };
 
-  const meta = document.createElement('div');
-  meta.className = 'field-row';
-  meta.appendChild(makeField({ name: 'edition_number', label: 'رقم الإصدار', type: 'number', min: 1 }));
-  meta.appendChild(makeField({ name: 'issue_date',     label: 'تاريخ الإصدار', type: 'date' }));
-  root.appendChild(meta);
+  safeAppend('title', () => makeBilingualText('title', 'عنوان النشرة', {
+    required: true, placeholderAr: 'مثال: نشرة شهر أبريل', placeholderEn: 'e.g. April Newsletter',
+  }));
 
-  const toggles = document.createElement('div');
-  toggles.className = 'field-row';
-  toggles.appendChild(makeCheckbox('has_translation', 'يحتوي على ترجمة إنجليزية'));
-  toggles.appendChild(makeCheckbox('is_published', 'منشور (متاح للعامة)'));
-  root.appendChild(toggles);
+  safeAppend('edition + date', () => {
+    const meta = document.createElement('div');
+    meta.className = 'field-row';
+    meta.appendChild(makeField({ name: 'edition_number', label: 'رقم الإصدار', type: 'number', min: 1 }));
+    meta.appendChild(makeField({ name: 'issue_date',     label: 'تاريخ الإصدار', type: 'date' }));
+    return meta;
+  });
 
-  root.appendChild(makeBilingualText('reading_time', 'وقت القراءة', { placeholderAr: '5 دقائق', placeholderEn: '5 mins' }));
+  safeAppend('toggles', () => {
+    const toggles = document.createElement('div');
+    toggles.className = 'field-row';
+    toggles.appendChild(makeCheckbox('has_translation', 'يحتوي على ترجمة إنجليزية'));
+    toggles.appendChild(makeCheckbox('is_published', 'منشور (متاح للعامة)'));
+    return toggles;
+  });
 
-  root.appendChild(makeBilingualRich('welcome', 'رسالة الترحيب', { placeholderAr: 'اهلا بك في نشرة الحاسوبي', placeholderEn: 'Welcome to the Hasoobi newsletter…' }));
+  safeAppend('reading_time', () => makeBilingualText('reading_time', 'وقت القراءة', {
+    placeholderAr: '5 دقائق', placeholderEn: '5 mins',
+  }));
 
-  root.appendChild(makeField({
+  safeAppend('welcome (rich-text)', () => makeBilingualRich('welcome', 'رسالة الترحيب', {
+    placeholderAr: 'اهلا بك في نشرة الحاسوبي',
+    placeholderEn: 'Welcome to the Hasoobi newsletter…',
+  }));
+
+  safeAppend('category', () => makeField({
     name: 'category', label: 'التصنيف', type: 'select',
     options: [{ value: '', label: '— اختر —' }, ...state.categories.map(c => ({ value: c.id, label: c.name_ar || c.name_en }))],
   }));
 
-  root.appendChild(makeCoverUploader());
+  safeAppend('cover uploader', () => makeCoverUploader());
 
   root.querySelectorAll('input, textarea, select').forEach(el => el.addEventListener('input', markDirty));
 
-  overview.has_translation.addEventListener('change', toggleEnglishFields);
-  toggleEnglishFields();
+  if (overview.has_translation) {
+    overview.has_translation.addEventListener('change', toggleEnglishFields);
+  }
+  try { toggleEnglishFields(); } catch (e) { console.error(e); }
 }
 
 function toggleEnglishFields() {
@@ -330,42 +387,77 @@ function buildContributorsTab() {
 
 /* ─── Load existing newsletter ────────────────────────────────────────────── */
 async function loadNewsletter(id) {
+  console.log('[editor.loadNewsletter] fetching id=', id);
+  let data;
   try {
-    const { data, error } = await supabase.from('newsletters').select('*').eq('id', id).maybeSingle();
-    if (error) throw error;
-    if (!data) return showToast('العدد غير موجود', 'error');
-    state.newsletter = data;
-
-    overview.title_ar.value      = data.title_ar || '';
-    overview.title_en.value      = data.title_en || '';
-    overview.edition_number.value = data.edition_number ?? '';
-    overview.issue_date.value    = data.issue_date || '';
-    overview.has_translation.checked = !!data.has_translation;
-    overview.is_published.checked = data.status === 'published';
-    overview.reading_time_ar.value = data.reading_time || '';
-    overview.reading_time_en.value = data.reading_time_en || '';
-    overview.welcome_rt_ar.setHtml(data.welcome_message || '');
-    overview.welcome_rt_en.setHtml(data.welcome_message_en || '');
-
-    await loadCategories();
-
-    if (data.cover_image_url) {
-      overview._coverPreview.innerHTML = `<img src="${data.cover_image_url}" alt="" style="max-width:260px;border-radius:var(--r-sm)">`;
-      overview._coverStatus.textContent = 'يوجد صورة غلاف محفوظة';
-    }
-
-    $('editor-title').textContent = data.title_ar || data.title_en || 'محرر النشرة';
-    document.title = `تحرير: ${data.title_ar || data.title_en || ''} — لوحة الإدارة`;
-
-    toggleEnglishFields();
-
-    await loadNewsletterEditors(id);
-    await loadNewsletterSections(id);
-    markClean();
+    const res = await supabase.from('newsletters').select('*').eq('id', id).maybeSingle();
+    if (res.error) throw res.error;
+    data = res.data;
   } catch (e) {
-    console.error(e);
-    showToast(e.message || 'فشل جلب بيانات النشرة', 'error');
+    console.error('[editor.loadNewsletter] query failed:', e);
+    showToast('تعذّر قراءة بيانات النشرة من الخادم: ' + (e.message || e), 'error');
+    return;
   }
+
+  if (!data) {
+    console.warn('[editor.loadNewsletter] no row returned for id=', id);
+    showToast('العدد غير موجود (تحقق من تسجيل الدخول والصلاحيات)', 'error');
+    return;
+  }
+
+  console.log('[editor.loadNewsletter] received', { id: data.id, title_ar: data.title_ar, status: data.status });
+  state.newsletter = data;
+
+  // Populate each field independently. A missing form-field ref (because
+  // buildOverviewTab partially failed) must NOT abort the rest of the load.
+  const setVal = (key, value) => {
+    const el = overview[key];
+    if (!el) { console.warn('[editor.loadNewsletter] missing field', key); return; }
+    if ('checked' in el && typeof value === 'boolean') el.checked = value;
+    else el.value = value ?? '';
+  };
+  const setRich = (key, html) => {
+    const rt = overview[key];
+    if (!rt || typeof rt.setHtml !== 'function') {
+      console.warn('[editor.loadNewsletter] missing rich-text field', key);
+      return;
+    }
+    try { rt.setHtml(html || ''); }
+    catch (e) { console.error('[editor.loadNewsletter] setHtml failed for', key, e); }
+  };
+
+  setVal('title_ar',         data.title_ar);
+  setVal('title_en',         data.title_en);
+  setVal('edition_number',   data.edition_number ?? '');
+  setVal('issue_date',       data.issue_date);
+  setVal('has_translation',  !!data.has_translation);
+  setVal('is_published',     data.status === 'published');
+  setVal('reading_time_ar',  data.reading_time);
+  setVal('reading_time_en',  data.reading_time_en);
+  setRich('welcome_rt_ar',   data.welcome_message);
+  setRich('welcome_rt_en',   data.welcome_message_en);
+
+  try { await loadCategories(); }
+  catch (e) { console.error('[editor.loadNewsletter] loadCategories failed:', e); }
+
+  if (data.cover_image_url && overview._coverPreview && overview._coverStatus) {
+    overview._coverPreview.innerHTML = `<img src="${data.cover_image_url}" alt="" style="max-width:260px;border-radius:var(--r-sm)">`;
+    overview._coverStatus.textContent = 'يوجد صورة غلاف محفوظة';
+  }
+
+  const title = data.title_ar || data.title_en || 'محرر النشرة';
+  $('editor-title').textContent = title;
+  document.title = `تحرير: ${title} — لوحة الإدارة`;
+
+  try { toggleEnglishFields(); } catch (e) { console.error(e); }
+
+  try { await loadNewsletterEditors(id); }
+  catch (e) { console.error('[editor.loadNewsletter] loadNewsletterEditors failed:', e); }
+
+  try { await loadNewsletterSections(id); }
+  catch (e) { console.error('[editor.loadNewsletter] loadNewsletterSections failed:', e); }
+
+  markClean();
 }
 
 async function loadNewsletterEditors(nlId) {
