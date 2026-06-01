@@ -142,6 +142,9 @@ CREATE TABLE IF NOT EXISTS public.newsletter_editors (
   member_affairs_ar      text,
   newsletter_leader_ar   text,
   newsletter_deputy_ar   text,
+  translator_leader_ar   text, -- مضاف حديثاً
+  translators_members_ar text, -- مضاف حديثاً
+
 
   -- Contributors (English translation)
   article_writer_en      text,
@@ -151,7 +154,10 @@ CREATE TABLE IF NOT EXISTS public.newsletter_editors (
   member_affairs_en      text,
   newsletter_leader_en   text,
   newsletter_deputy_en   text,
+  translator_leader_en   text, -- مضاف حديثاً
+  translators_members_en text, -- مضاف حديثاً
 
+  
   sort_order      int         NOT NULL DEFAULT 0,
   created_at      timestamptz NOT NULL DEFAULT now(),
   updated_at      timestamptz NOT NULL DEFAULT now()
@@ -173,7 +179,10 @@ ALTER TABLE public.newsletter_editors
   ADD COLUMN IF NOT EXISTS member_affairs_en text,
   ADD COLUMN IF NOT EXISTS newsletter_leader_en text,
   ADD COLUMN IF NOT EXISTS newsletter_deputy_en text;
-
+  ADD COLUMN IF NOT EXISTS translator_leader_ar text,     -- مضاف حديثاً
+  ADD COLUMN IF NOT EXISTS translators_members_ar text,    -- مضاف حديثاً
+  ADD COLUMN IF NOT EXISTS translator_leader_en text,     -- مضاف حديثاً
+  ADD COLUMN IF NOT EXISTS translators_members_en text;    -- مضاف حديثاً
 
 -- ── 5. section_illumination ───────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.section_illumination (

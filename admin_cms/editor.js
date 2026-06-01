@@ -361,6 +361,8 @@ const contribRoles = [
   { key: 'member_affairs',     label: 'شؤون الأعضاء',  labelEn: 'Member Affairs' },
   { key: 'newsletter_leader',  label: 'قائدة النشرة', labelEn: 'Newsletter Leader' },
   { key: 'newsletter_deputy',  label: 'نائبة النشرة', labelEn: 'Newsletter Deputy' },
+  { key: 'translator_leader',  label: 'قائد المترجمين', labelEn: 'Translator Leader' },
+  { key: 'translators_members', label: 'أعضاء المترجمين', labelEn: 'Translators Members' },
 ];
 const contributorsInputs = {};
 
