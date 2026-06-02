@@ -333,6 +333,8 @@ function renderNewsletterContributors(editors, lang = 'ar', hasTranslation = fal
         { label: 'Member Affairs', value: row.member_affairs_en || row.member_affairs_ar },
         { label: 'Newsletter Leader', value: row.newsletter_leader_en || row.newsletter_leader_ar },
         { label: 'Newsletter Deputy', value: row.newsletter_deputy_en || row.newsletter_deputy_ar },
+        { label: 'Translator Leader', value: row.translator_leader_en || row.translator_leader_ar },
+        { label: 'Translators Members', value: row.translators_members_en || row.translators_members_ar },
       ]
     : [
         { label: 'كاتب المقالة', value: row.article_writer_ar || row.article_writer_en },
