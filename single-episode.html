@@ -7,96 +7,111 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-
   gtag('config', 'G-5XMZ21TC28');
 </script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نشرة الحاسوبي | عرض النشرة</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نشرة الحاسوبي | عرض النشرة</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/newsletter.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<script type="importmap">
+{
+  "imports": {
+    "dompurify": "https://cdn.jsdelivr.net/npm/dompurify@3.2.6/+esm"
+  }
+}
+</script>
 
 </head>
+
 <body>
-    <div class="top-cta-bar">
-        <a href="join.html">انضم كمستفيد — كن جزءًا من نشرة الحاسوبي</a>
-    </div>
 
-    <header id="main-header">
-        
-        <div class="header-right-section">
-          <a href="index.html" class="brand-link" aria-label="الانتقال إلى الصفحة الرئيسية">
-            <div class="header-logo-main">
-              <img src="assets/img/شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
-            </div>
+<div class="top-cta-bar">
+  <a href="join.html">انضم كمستفيد — كن جزءًا من نشرة الحاسوبي</a>
+</div>
 
-            <div class="header-text">
-              <h1>نشرة الحاسوبي</h1>
-              <p>موعدك الأسبوعي في جديد التقنية</p>
-            </div>
-          </a>
-        </div>
+<header id="main-header">
+  <div class="header-right-section">
+    <a href="index.html" class="brand-link" aria-label="الانتقال إلى الصفحة الرئيسية">
+      <div class="header-logo-main">
+        <img src="assets/img/شعار نشرة الحاسوبي باللون الازرق.png" alt="شعار نشرة الحاسوبي">
+      </div>
 
-    <nav class="main-nav">
+      <div class="header-text">
+        <h1>نشرة الحاسوبي</h1>
+        <p>موعدك الأسبوعي في جديد التقنية</p>
+      </div>
+    </a>
+  </div>
+
+  <nav class="main-nav">
     <ul>
-        <li><a href="index.html">الرئيسية</a></li> 
-        <li><a href="episodes_ar.html">جميع النشرات </a></li>
-        <li><a href="episodes_en.html">النشرات المترجمة</a></li> 
-        <li><a href="about.html">فريق العمل</a></li>
-    </ul> </nav>
-        
-        <div class="header-left-section">
-            <div class="header-tools">
-                <button class="header-tool-button" id="search-button" aria-label="بحث">
-                    <i class="fas fa-search"></i> 
-                </button>
+      <li><a href="index.html">الرئيسية</a></li>
+      <li><a href="episodes_ar.html">جميع النشرات</a></li>
+      <li><a href="episodes_en.html">النشرات المترجمة</a></li>
+      <li><a href="about.html">فريق العمل</a></li>
+    </ul>
+  </nav>
 
-                <button class="header-tool-button" id="mode-toggle-button" aria-label="تبديل الوضع">
-                    <i class="fas fa-moon"></i> 
-                </button>
-            </div>
-        </div>
-    </header>
-                            
+  <div class="header-left-section">
+    <div class="header-tools">
+      <button class="header-tool-button" id="search-button" aria-label="بحث">
+        <i class="fas fa-search"></i>
+      </button>
 
-    <main id="episode-page-container" class="main-content-area">
+      <button class="header-tool-button" id="mode-toggle-button" aria-label="تبديل الوضع">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+  </div>
+</header>
 
-        <!-- Newsletter content region — replaced by agent -->
-        <div class="nl-page" dir="rtl">
-          <img id="nl-cover" class="newsletter-cover hidden" alt="">
-          <h1 class="newsletter-title"></h1>
-          <div class="filter-bar"></div>
-          <nav class="newsletter-nav" role="tablist" aria-label="أقسام النشرة"></nav>
-          <div id="newsletter-sections"></div>
-        </div>
+<main id="episode-page-container" class="main-content-area">
 
-    </main>
+  <div class="nl-page" dir="rtl">
+    <img id="nl-cover" class="newsletter-cover hidden" alt="">
+    <h1 class="newsletter-title">جاري تحميل النشرة...</h1>
+    <div class="filter-bar"></div>
+    <nav class="newsletter-nav" role="tablist" aria-label="أقسام النشرة"></nav>
+    <div id="newsletter-sections">
+      <p>جاري تحميل المحتوى...</p>
+    </div>
+  </div>
 
-    <link rel="stylesheet" href="/css/newsletter.css">
-    <script type="module">
-      import supabase from '/js/supabase-client.js';
-      // Store globally for data scripts to pick up
-      window.supabase = supabase;
-    </script>
-    <script type="module">
-      // Load dependencies as modules to enforce execution order after supabase initializes
-      import '/js/newsletter-data.js';
-      import '/js/newsletter-render.js';
-      
-      // Delay initialization slightly to ensure all exports are mapped
-      window.addEventListener('DOMContentLoaded', () => {
-         setTimeout(() => {
-           if (window.initNewsletterPage) {
-             window.initNewsletterPage('id');
-           }
-         }, 50);
-      });
-    </script>
+</main>
+
+<script type="module">
+  import supabase from './js/supabase-client.js';
+  window.supabase = supabase;
+
+  await import('./js/newsletter-data.js');
+  await import('./js/newsletter-render.js');
+
+  const container = document.getElementById('newsletter-sections');
+  const title = document.querySelector('.newsletter-title');
+
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+
+  if (!id) {
+    title.textContent = 'تعذر تحميل النشرة';
+    container.innerHTML = '<p class="nl-error">رابط النشرة ناقص. لا يوجد ID في الرابط.</p>';
+  } else if (window.initNewsletterPage) {
+    window.initNewsletterPage('id');
+  } else {
+    title.textContent = 'تعذر تحميل النشرة';
+    container.innerHTML = '<p class="nl-error">تعذر تشغيل صفحة النشرة.</p>';
+  }
+</script>
 
 <script>
-  // Helper: ensure dark mode is synced with localStorage on page load
   document.addEventListener('DOMContentLoaded', () => {
     const savedTheme = localStorage.getItem('theme') || 'light';
+
     if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark-mode');
       document.body.classList.add('dark-mode');
@@ -104,8 +119,8 @@
   });
 </script>
 
+<script type="module" src="js/footer-year.js"></script>
+<script type="module" src="js/layout.js"></script>
 
-    <script type="module" src="js/footer-year.js"></script>
-    <script type="module" src="js/layout.js"></script>
 </body>
 </html>

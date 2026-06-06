@@ -364,3 +364,53 @@
   font-size: .95em;
 }
 
+/* ===== Article Reading Container ===== */
+
+.article-item-body,
+.news-item-body,
+.section-text,
+.article-excerpt,
+.news-summary {
+    background: #ffffff;
+    border-radius: 18px;
+    padding: 28px;
+    margin-top: 20px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.06);
+    line-height: 2;
+}
+
+/* المقالات الطويلة */
+.article-item {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 32px;
+    margin-top: 24px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.08);
+}
+
+/* الصور داخل المقال */
+.article-thumb {
+    border-radius: 16px;
+    margin-bottom: 20px;
+}
+
+/* Dark Mode */
+
+.dark-mode .article-item,
+.dark-mode .article-item-body,
+.dark-mode .news-item-body,
+.dark-mode .section-text,
+.dark-mode .article-excerpt,
+.dark-mode .news-summary {
+    background: #1f2430;
+    color: #f1f1f1;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.35);
+}
+
+.dark-mode .article-title,
+.dark-mode .news-title,
+.dark-mode .section-title {
+    color: #ffffff;
+}
+
+
