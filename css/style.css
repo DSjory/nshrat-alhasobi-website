@@ -3357,6 +3357,1014 @@ body.dark-mode .section-toggle-btn:hover {
     }
 }
 
+.hero-subscribe-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    margin-top: 26px;
+    padding: 12px 24px;
+    min-height: 44px;
+
+    background-color: #b8734f;
+    color: #ffffff;
+    border-radius: 999px;
+
+    text-decoration: none;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+
+    box-shadow: 0 8px 18px rgba(184, 115, 79, 0.18);
+    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hero-subscribe-btn:hover {
+    background-color: #a86645;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(184, 115, 79, 0.24);
+}
+
+.hero-subscribe-btn:focus-visible {
+    outline: 3px solid rgba(184, 115, 79, 0.35);
+    outline-offset: 4px;
+}
+
+.hero-subscribe-btn i {
+    font-size: 14px;
+}
+
+@media (max-width: 600px) {
+    .hero-subscribe-btn {
+        padding: 11px 20px;
+        font-size: 14px;
+    }
+}
+
+
+
+/* =========================================================
+   Single Episode Reading Layout Fix
+   Improves the newsletter reading layout for mobile and desktop
+   ========================================================= */
+
+/* Main episode page containers */
+#episode-page-container,
+.main-content-area {
+    width: 100%;
+}
+
+/* One clean reading sheet for the whole newsletter */
+.nl-page {
+    width: min(100% - 32px, 920px);
+    margin: 48px auto 72px;
+    padding: 42px 54px;
+    background: #fffaf3;
+    border: 1px solid rgba(184, 115, 79, 0.14);
+    border-radius: 28px;
+    box-shadow: 0 18px 45px rgba(47, 64, 83, 0.08);
+}
+
+/* Main newsletter title */
+.newsletter-title {
+    max-width: 760px;
+    margin: 0 auto 22px;
+    text-align: center;
+    color: #243f5a;
+    font-size: clamp(28px, 4vw, 42px);
+    line-height: 1.45;
+    font-weight: 800;
+}
+
+/* Welcome message and reading time */
+.newsletter-welcome {
+    max-width: 720px;
+    margin: 0 auto 30px;
+    text-align: center;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.newsletter-welcome-text {
+    color: #324b63;
+    font-size: 18px;
+    line-height: 1.9;
+}
+
+.newsletter-reading-time {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: rgba(47, 64, 83, 0.06);
+    color: #526679;
+    font-size: 13px;
+}
+
+/* Filter navigation bar */
+.filter-bar,
+.newsletter-nav {
+    max-width: 720px;
+    margin: 28px auto 38px;
+    padding: 12px;
+    border-radius: 22px;
+    background: #ffffff;
+    border: 1px solid rgba(184, 115, 79, 0.12);
+    box-shadow: 0 8px 24px rgba(47, 64, 83, 0.06);
+}
+
+/* Sections without nested cards */
+.newsletter-section {
+    max-width: 760px;
+    margin: 0 auto 48px;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+}
+
+/* Section header */
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(47, 64, 83, 0.12);
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+.section-title {
+    margin: 0;
+    color: #243f5a;
+    font-size: clamp(22px, 3vw, 30px);
+    line-height: 1.4;
+    font-weight: 800;
+}
+
+.section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    border-radius: 50%;
+    background: rgba(184, 115, 79, 0.12);
+}
+
+/* Section body without extra visual layers */
+.section-body {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Rich text content inside the newsletter */
+.rich-text,
+.section-text,
+.news-summary,
+.article-excerpt,
+.podcast-desc,
+.newsletter-welcome-text {
+    max-width: 680px;
+    margin-inline: auto;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    color: #243f5a;
+    font-size: 18px;
+    line-height: 2.05;
+    text-align: start;
+}
+
+/* Paragraph spacing */
+.rich-text p,
+.section-text p,
+.newsletter-welcome-text p {
+    margin: 0 0 1.25em;
+}
+
+/* List readability */
+.rich-text ul,
+.rich-text ol {
+    margin: 1.2em 0;
+    padding-inline-start: 1.5em;
+}
+
+.rich-text li {
+    margin-bottom: 0.65em;
+    line-height: 1.9;
+}
+
+/* Newsletter images */
+.section-header-banner,
+.section-hero-img,
+.news-thumb,
+.article-thumb,
+.podcast-image {
+    display: block;
+    width: 100%;
+    max-width: 720px;
+    height: auto;
+    margin: 0 auto 26px;
+    border-radius: 22px;
+    object-fit: cover;
+    box-shadow: 0 12px 30px rgba(47, 64, 83, 0.08);
+}
+
+/* News, articles, and podcast cards */
+.news-item,
+.article-item,
+.podcast-player {
+    max-width: 720px;
+    margin: 0 auto 22px;
+    padding: 22px;
+    background: #ffffff;
+    border: 1px solid rgba(184, 115, 79, 0.12);
+    border-radius: 22px;
+    box-shadow: 0 10px 26px rgba(47, 64, 83, 0.06);
+}
+
+.news-title,
+.article-title,
+.podcast-title {
+    margin: 0 0 10px;
+    color: #243f5a;
+    font-size: 21px;
+    line-height: 1.55;
+    font-weight: 800;
+}
+
+.news-title a,
+.article-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.news-title a:hover,
+.article-title a:hover {
+    color: #b8734f;
+}
+
+.news-source,
+.article-author,
+.podcast-dur {
+    display: inline-block;
+    margin-bottom: 12px;
+    color: #7b6d62;
+    font-size: 14px;
+}
+
+/* Section show / hide button */
+.section-toggle-btn {
+    border: 0;
+    background: rgba(184, 115, 79, 0.12);
+    color: #9f5f3f;
+    border-radius: 999px;
+    padding: 8px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* Large screens reading improvements */
+@media (min-width: 1100px) {
+    .nl-page {
+        width: min(100% - 64px, 980px);
+        padding: 56px 72px;
+    }
+
+    .rich-text,
+    .section-text,
+    .news-summary,
+    .article-excerpt,
+    .podcast-desc {
+        font-size: 19px;
+        line-height: 2.1;
+    }
+}
+
+/* Mobile layout */
+@media (max-width: 700px) {
+    .nl-page {
+        width: calc(100% - 20px);
+        margin: 26px auto 56px;
+        padding: 28px 18px;
+        border-radius: 22px;
+    }
+
+    .newsletter-title {
+        font-size: 25px;
+        line-height: 1.55;
+        margin-bottom: 18px;
+    }
+
+    .newsletter-welcome {
+        margin-bottom: 24px;
+    }
+
+    .newsletter-welcome-text {
+        font-size: 15.5px;
+        line-height: 1.95;
+    }
+
+    .filter-bar,
+    .newsletter-nav {
+        margin: 22px auto 32px;
+        padding: 10px;
+        border-radius: 18px;
+        overflow-x: auto;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .newsletter-section {
+        max-width: 100%;
+        margin-bottom: 42px;
+    }
+
+    .section-header {
+        align-items: center;
+        margin-bottom: 18px;
+    }
+
+    .section-title {
+        font-size: 22px;
+    }
+
+    .section-toggle-btn {
+        padding: 7px 11px;
+        font-size: 13px;
+    }
+
+    .rich-text,
+    .section-text,
+    .news-summary,
+    .article-excerpt,
+    .podcast-desc {
+        max-width: 100%;
+        font-size: 16.5px;
+        line-height: 2;
+        text-align: start;
+    }
+
+    .rich-text p,
+    .section-text p {
+        margin-bottom: 1.15em;
+    }
+
+    .section-header-banner,
+    .section-hero-img,
+    .news-thumb,
+    .article-thumb,
+    .podcast-image {
+        max-width: 100%;
+        margin-bottom: 20px;
+        border-radius: 18px;
+    }
+
+    .news-item,
+    .article-item,
+    .podcast-player {
+        max-width: 100%;
+        padding: 18px;
+        border-radius: 20px;
+    }
+
+    .news-title,
+    .article-title,
+    .podcast-title {
+        font-size: 18px;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 430px) {
+    .nl-page {
+        width: calc(100% - 14px);
+        padding: 24px 14px;
+        border-radius: 18px;
+    }
+
+    .newsletter-title {
+        font-size: 23px;
+    }
+
+    .rich-text,
+    .section-text,
+    .news-summary,
+    .article-excerpt,
+    .podcast-desc {
+        font-size: 16px;
+        line-height: 1.95;
+    }
+
+    .section-title {
+        font-size: 20px;
+    }
+}
+
+/* =========================================================
+   Single Newsletter Professional Reading Override
+   Creates one clean white reading surface and removes
+   nested visual layers inside the newsletter page
+   ========================================================= */
+
+/* Main reading surface */
+.nl-page {
+    width: min(100% - 24px, 960px) !important;
+    margin: 32px auto 64px !important;
+    padding: 40px 48px !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(36, 63, 90, 0.08) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 18px 50px rgba(36, 63, 90, 0.08) !important;
+    overflow: hidden !important;
+}
+
+/* Main title */
+.newsletter-title {
+    max-width: 760px !important;
+    margin: 0 auto 18px !important;
+    text-align: center !important;
+    color: #243f5a !important;
+    font-size: clamp(28px, 4vw, 40px) !important;
+    line-height: 1.5 !important;
+    font-weight: 800 !important;
+}
+
+/* Intro / welcome */
+.newsletter-welcome {
+    max-width: 720px !important;
+    margin: 0 auto 28px !important;
+    text-align: center !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.newsletter-welcome,
+.newsletter-welcome *,
+.newsletter-welcome-text,
+.newsletter-welcome-text * {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+.newsletter-welcome-text {
+    color: #4b5f73 !important;
+    font-size: 18px !important;
+    line-height: 1.95 !important;
+}
+
+.newsletter-reading-time {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-top: 14px !important;
+    padding: 7px 14px !important;
+    border-radius: 999px !important;
+    background: #f5f7fa !important;
+    color: #607080 !important;
+    font-size: 13px !important;
+    border: 1px solid rgba(36, 63, 90, 0.08) !important;
+}
+
+/* Filter bar */
+.filter-bar,
+.newsletter-nav {
+    max-width: 720px !important;
+    margin: 24px auto 36px !important;
+    padding: 10px !important;
+    border-radius: 18px !important;
+    background: #fafafa !important;
+    border: 1px solid rgba(36, 63, 90, 0.08) !important;
+    box-shadow: none !important;
+}
+
+/* Section wrapper */
+.newsletter-section {
+    max-width: 760px !important;
+    margin: 0 auto 42px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Section header */
+.section-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 14px !important;
+    margin-bottom: 18px !important;
+    padding: 0 0 14px 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(36, 63, 90, 0.12) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.section-title {
+    margin: 0 !important;
+    color: #243f5a !important;
+    font-size: clamp(22px, 3vw, 30px) !important;
+    line-height: 1.45 !important;
+    font-weight: 800 !important;
+}
+
+.section-icon {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    flex: 0 0 34px !important;
+    border-radius: 999px !important;
+    background: rgba(184, 115, 79, 0.12) !important;
+}
+
+/* Section body */
+.section-body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Remove nested layers from all inner wrappers */
+.section-body > div,
+.section-body > article,
+.section-body > section,
+.section-body > aside,
+.section-body .rich-text,
+.section-body .section-text,
+.section-body .news-summary,
+.section-body .article-excerpt,
+.section-body .podcast-desc,
+.section-body .newsletter-welcome-text,
+.section-body .newsletter-welcome,
+.section-illumination .section-body *,
+.section-inspiring .section-body * {
+    box-shadow: none !important;
+}
+
+/* Specifically flatten inspiration / illumination sections */
+.section-illumination .section-body,
+.section-inspiring .section-body,
+.section-illumination .section-text,
+.section-inspiring .section-text,
+.section-illumination .rich-text,
+.section-inspiring .rich-text,
+.section-illumination .section-body > div,
+.section-inspiring .section-body > div {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+/* Main readable text */
+.rich-text,
+.section-text,
+.news-summary,
+.article-excerpt,
+.podcast-desc {
+    max-width: 700px !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    color: #243f5a !important;
+    font-size: 18px !important;
+    line-height: 2.05 !important;
+    text-align: right !important;
+}
+
+/* Paragraph rhythm */
+.rich-text p,
+.section-text p,
+.news-summary p,
+.article-excerpt p,
+.podcast-desc p {
+    margin: 0 0 1.2em 0 !important;
+}
+
+/* Lists */
+.rich-text ul,
+.rich-text ol {
+    margin: 1.1em 0 !important;
+    padding-inline-start: 1.4em !important;
+}
+
+.rich-text li {
+    margin-bottom: 0.6em !important;
+    line-height: 1.9 !important;
+}
+
+/* Section images */
+.section-header-banner,
+.section-hero-img,
+.news-thumb,
+.article-thumb,
+.podcast-image {
+    display: block !important;
+    width: 100% !important;
+    max-width: 720px !important;
+    height: auto !important;
+    margin: 0 auto 22px !important;
+    border-radius: 18px !important;
+    object-fit: cover !important;
+    box-shadow: none !important;
+}
+
+/* Keep content blocks simple and clean */
+.news-item,
+.article-item,
+.podcast-player {
+    max-width: 720px !important;
+    margin: 0 auto 20px !important;
+    padding: 18px 20px !important;
+    background: #fcfcfc !important;
+    border: 1px solid rgba(36, 63, 90, 0.08) !important;
+    border-radius: 18px !important;
+    box-shadow: none !important;
+}
+
+.news-item-body,
+.article-item-body,
+.podcast-info {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+.news-title,
+.article-title,
+.podcast-title {
+    margin: 0 0 10px !important;
+    color: #243f5a !important;
+    font-size: 20px !important;
+    line-height: 1.55 !important;
+    font-weight: 800 !important;
+}
+
+.news-title a,
+.article-title a {
+    color: inherit !important;
+    text-decoration: none !important;
+}
+
+.news-title a:hover,
+.article-title a:hover {
+    color: #b8734f !important;
+}
+
+.news-source,
+.article-author,
+.podcast-dur {
+    display: inline-block !important;
+    margin-bottom: 12px !important;
+    color: #7b6d62 !important;
+    font-size: 14px !important;
+}
+
+/* Toggle button */
+.section-toggle-btn {
+    border: 0 !important;
+    background: rgba(184, 115, 79, 0.12) !important;
+    color: #9f5f3f !important;
+    border-radius: 999px !important;
+    padding: 8px 14px !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+}
+
+/* Desktop improvements */
+@media (min-width: 1100px) {
+    .nl-page {
+        width: min(100% - 48px, 1000px) !important;
+        padding: 52px 64px !important;
+    }
+
+    .rich-text,
+    .section-text,
+    .news-summary,
+    .article-excerpt,
+    .podcast-desc {
+        font-size: 19px !important;
+        line-height: 2.1 !important;
+    }
+}
+
+/* Tablet / mobile */
+@media (max-width: 700px) {
+    .nl-page {
+        width: calc(100% - 14px) !important;
+        margin: 18px auto 42px !important;
+        padding: 22px 14px !important;
+        border-radius: 18px !important;
+    }
+
+    .newsletter-title {
+        font-size: 24px !important;
+        line-height: 1.55 !important;
+        margin-bottom: 16px !important;
+    }
+
+    .newsletter-welcome-text {
+        font-size: 15.5px !important;
+        line-height: 1.95 !important;
+    }
+
+    .filter-bar,
+    .newsletter-nav {
+        margin: 20px auto 28px !important;
+        padding: 8px !important;
+        border-radius: 16px !important;
+        overflow-x: auto !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .newsletter-section {
+        max-width: 100% !important;
+        margin-bottom: 34px !important;
+    }
+
+    .section-header {
+        margin-bottom: 16px !important;
+        padding-bottom: 12px !important;
+    }
+
+    .section-title {
+        font-size: 21px !important;
+    }
+
+    .section-toggle-btn {
+        padding: 6px 10px !important;
+        font-size: 13px !important;
+    }
+
+    .rich-text,
+    .section-text,
+    .news-summary,
+    .article-excerpt,
+    .podcast-desc {
+        max-width: 100% !important;
+        font-size: 16px !important;
+        line-height: 2 !important;
+    }
+
+    .section-header-banner,
+    .section-hero-img,
+    .news-thumb,
+    .article-thumb,
+    .podcast-image {
+        max-width: 100% !important;
+        margin-bottom: 18px !important;
+        border-radius: 14px !important;
+    }
+
+    .news-item,
+    .article-item,
+    .podcast-player {
+        max-width: 100% !important;
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+
+    .news-title,
+    .article-title,
+    .podcast-title {
+        font-size: 18px !important;
+    }
+}
+
+/* Very small phones */
+@media (max-width: 430px) {
+    .nl-page {
+        width: calc(100% - 10px) !important;
+        padding: 18px 12px !important;
+        border-radius: 16px !important;
+    }
+
+    .newsletter-title {
+        font-size: 22px !important;
+    }
+
+    .rich-text,
+    .section-text,
+    .news-summary,
+    .article-excerpt,
+    .podcast-desc {
+        font-size: 15.5px !important;
+        line-height: 1.95 !important;
+    }
+
+    .section-title {
+        font-size: 19px !important;
+    }
+
+    .news-item,
+    .article-item,
+    .podcast-player {
+        padding: 14px !important;
+    }
+}
+
+
+/* =========================================================
+   English Newsletter Reading Fix
+   Fixes LTR layout, text alignment, spacing, and readability
+   ========================================================= */
+
+html[lang="en"],
+html[lang="en"] body {
+    direction: ltr !important;
+}
+
+/* Keep the page reading surface centered */
+html[lang="en"] .nl-page {
+    direction: ltr !important;
+}
+
+/* English sections should read left-to-right */
+html[lang="en"] .newsletter-section,
+.newsletter-section[dir="ltr"] {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+/* English section header layout */
+html[lang="en"] .section-header,
+.newsletter-section[dir="ltr"] .section-header {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+/* English titles */
+html[lang="en"] .newsletter-title,
+html[lang="en"] .section-title,
+html[lang="en"] .news-title,
+html[lang="en"] .article-title,
+html[lang="en"] .podcast-title,
+.newsletter-section[dir="ltr"] .section-title,
+.newsletter-section[dir="ltr"] .news-title,
+.newsletter-section[dir="ltr"] .article-title,
+.newsletter-section[dir="ltr"] .podcast-title {
+    direction: ltr !important;
+    text-align: left !important;
+    letter-spacing: -0.01em;
+}
+
+/* Main English paragraph styling */
+html[lang="en"] .rich-text,
+html[lang="en"] .section-text,
+html[lang="en"] .news-summary,
+html[lang="en"] .article-excerpt,
+html[lang="en"] .podcast-desc,
+html[lang="en"] .newsletter-welcome-text,
+.newsletter-section[dir="ltr"] .rich-text,
+.newsletter-section[dir="ltr"] .section-text,
+.newsletter-section[dir="ltr"] .news-summary,
+.newsletter-section[dir="ltr"] .article-excerpt,
+.newsletter-section[dir="ltr"] .podcast-desc {
+    direction: ltr !important;
+    text-align: left !important;
+    font-size: 17px !important;
+    line-height: 1.8 !important;
+    max-width: 680px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* English paragraph rhythm */
+html[lang="en"] .rich-text p,
+html[lang="en"] .section-text p,
+html[lang="en"] .news-summary p,
+html[lang="en"] .article-excerpt p,
+html[lang="en"] .podcast-desc p,
+.newsletter-section[dir="ltr"] .rich-text p,
+.newsletter-section[dir="ltr"] .section-text p,
+.newsletter-section[dir="ltr"] .news-summary p,
+.newsletter-section[dir="ltr"] .article-excerpt p,
+.newsletter-section[dir="ltr"] .podcast-desc p {
+    text-align: left !important;
+    margin: 0 0 1.1em !important;
+}
+
+/* English article/news cards */
+html[lang="en"] .news-item,
+html[lang="en"] .article-item,
+html[lang="en"] .podcast-player,
+.newsletter-section[dir="ltr"] .news-item,
+.newsletter-section[dir="ltr"] .article-item,
+.newsletter-section[dir="ltr"] .podcast-player {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+/* Article metadata */
+html[lang="en"] .news-source,
+html[lang="en"] .article-author,
+html[lang="en"] .podcast-dur,
+.newsletter-section[dir="ltr"] .news-source,
+.newsletter-section[dir="ltr"] .article-author,
+.newsletter-section[dir="ltr"] .podcast-dur {
+    text-align: left !important;
+}
+
+/* English filter bar */
+html[lang="en"] .filter-bar,
+html[lang="en"] .newsletter-nav {
+    direction: ltr !important;
+}
+
+html[lang="en"] .filter-pill {
+    direction: ltr !important;
+}
+
+/* English mobile readability */
+@media (max-width: 700px) {
+    html[lang="en"] .newsletter-title {
+        text-align: center !important;
+        font-size: 24px !important;
+        line-height: 1.45 !important;
+    }
+
+    html[lang="en"] .newsletter-welcome-text {
+        text-align: center !important;
+        font-size: 15.5px !important;
+        line-height: 1.75 !important;
+    }
+
+    html[lang="en"] .rich-text,
+    html[lang="en"] .section-text,
+    html[lang="en"] .news-summary,
+    html[lang="en"] .article-excerpt,
+    html[lang="en"] .podcast-desc,
+    .newsletter-section[dir="ltr"] .rich-text,
+    .newsletter-section[dir="ltr"] .section-text,
+    .newsletter-section[dir="ltr"] .news-summary,
+    .newsletter-section[dir="ltr"] .article-excerpt,
+    .newsletter-section[dir="ltr"] .podcast-desc {
+        font-size: 15.5px !important;
+        line-height: 1.75 !important;
+        text-align: left !important;
+    }
+
+    html[lang="en"] .article-title,
+    html[lang="en"] .news-title,
+    html[lang="en"] .podcast-title,
+    .newsletter-section[dir="ltr"] .article-title,
+    .newsletter-section[dir="ltr"] .news-title,
+    .newsletter-section[dir="ltr"] .podcast-title {
+        font-size: 18px !important;
+        line-height: 1.45 !important;
+        text-align: left !important;
+    }
+
+    html[lang="en"] .article-item,
+    html[lang="en"] .news-item,
+    html[lang="en"] .podcast-player,
+    .newsletter-section[dir="ltr"] .article-item,
+    .newsletter-section[dir="ltr"] .news-item,
+    .newsletter-section[dir="ltr"] .podcast-player {
+        padding: 16px !important;
+    }
+}
+
+
+
+
 
 
 

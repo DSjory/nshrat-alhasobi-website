@@ -146,18 +146,20 @@ async function fetchPublishedNewsletter(newsletterId) {
   }
   if (!newsletter) return null;
 
-  // Step B & C
-  const sections          = await fetchSectionsForNewsletter(newsletterId, true);
+  // Step B & D: fetch visible sections and editors in parallel
+  const [sections, editors] = await Promise.all([
+    fetchSectionsForNewsletter(newsletterId, true),
+    fetchNewsletterEditors(newsletterId),
+  ]);
+
+  // Step C: fetch all section content in parallel
   const sectionsWithContent = await Promise.all(
-    sections.map(async sec => ({
+    (sections || []).map(async sec => ({
       ...sec,
       content: await fetchSectionContent(sec.id, sec.section_type.slug),
     }))
   );
-  
-  // Step D: Fetch editors
-  const editors = await fetchNewsletterEditors(newsletterId);
-  
+
   return { newsletter, sections: sectionsWithContent, editors };
 }
 
@@ -448,3 +450,4 @@ window.newsletterData = {
   fetchNewsletterForEditing, saveNewsletter, setNewsletterStatus,
   fetchAllIlluminations, fetchLatestNewsItems, migrateOldData
 };
+

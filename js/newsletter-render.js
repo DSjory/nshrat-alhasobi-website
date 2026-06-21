@@ -9,6 +9,12 @@ async function initNewsletterPage(idParam = 'id') {
   const newsletterId  = params.get(idParam);
   const lang          = params.get('lang') || 'ar';
   window._nlLang      = lang; // globally available for rendering
+
+  const isEnglish = lang === 'en';
+  document.documentElement.lang = isEnglish ? 'en' : 'ar';
+  document.documentElement.dir = isEnglish ? 'ltr' : 'rtl';
+  document.body.dir = isEnglish ? 'ltr' : 'rtl';
+
   const container     = document.getElementById('newsletter-sections');
 
   const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(newsletterId);
@@ -17,10 +23,17 @@ async function initNewsletterPage(idParam = 'id') {
     return;
   }
 
+  if (container) {
+    container.setAttribute('aria-busy', 'true');
+  }
+
   try {
     const result = await window.newsletterData.fetchPublishedNewsletter(newsletterId);
     if (!result) {
-      if (container) container.innerHTML = '<p class="nl-error">النشرة غير موجودة أو غير منشورة.</p>';
+      if (container) {
+        container.innerHTML = '<p class="nl-error">النشرة غير موجودة أو غير منشورة.</p>';
+        container.removeAttribute('aria-busy');
+      }
       return;
     }
 
@@ -50,15 +63,36 @@ async function initNewsletterPage(idParam = 'id') {
     mountNewsletterIntro(welcomeText, readingText, lang);
 
     buildNav(newsletter.nav_type || 'filter', sections);
+
     if (container) {
-      sections.forEach((sec) => container.appendChild(renderSection(sec)));
-      const contributorsNode = renderNewsletterContributors(result.editors || [], lang, newsletter.has_translation);
-      if (contributorsNode) container.appendChild(contributorsNode);
+      container.innerHTML = '';
+
+      const fragment = document.createDocumentFragment();
+
+      sections.forEach((sec) => {
+        fragment.appendChild(renderSection(sec));
+      });
+
+      const contributorsNode = renderNewsletterContributors(
+        result.editors || [],
+        lang,
+        newsletter.has_translation
+      );
+
+      if (contributorsNode) {
+        fragment.appendChild(contributorsNode);
+      }
+
+      container.appendChild(fragment);
+      container.removeAttribute('aria-busy');
     }
 
   } catch (err) {
     console.error(err);
-    if (container) container.innerHTML = '<p class="nl-error">حدث خطأ أثناء تحميل النشرة.</p>';
+    if (container) {
+      container.innerHTML = '<p class="nl-error">حدث خطأ أثناء تحميل النشرة.</p>';
+      container.removeAttribute('aria-busy');
+    }
   }
 }
 
@@ -72,11 +106,19 @@ function buildTabsNav(sections) {
   if (!nav) return;
   nav.innerHTML = '';
 
-  const allBtn = makeEl('button', 'tab active', 'كل النشرة');
+  const lang = window._nlLang || 'ar';
+  const isEnglish = lang === 'en';
+
+  const allBtn = makeEl('button', 'tab active', isEnglish ? 'All' : 'كل النشرة');
   allBtn.dataset.target = 'all';
   nav.appendChild(allBtn);
+
   sections.forEach(s => {
-    const btn = makeEl('button', 'tab', `${s.section_type.icon} ${s.section_type.name_ar}`);
+    const sectionName = isEnglish
+      ? (s.section_type.name_en || s.section_type.name_ar || 'Section')
+      : (s.section_type.name_ar || s.section_type.name_en || 'قسم');
+
+    const btn = makeEl('button', 'tab', `${s.section_type.icon} ${sectionName}`);
     btn.dataset.target = s.id;
     nav.appendChild(btn);
   });
@@ -98,15 +140,21 @@ function buildFilterNav(sections) {
   if (!bar) return;
   bar.innerHTML = '';
 
+  const lang = window._nlLang || 'ar';
+  const isEnglish = lang === 'en';
+
   const allPill = document.createElement('button');
   allPill.className = 'filter-pill active';
-  allPill.innerHTML = '<span class="filter-pill-icon" aria-hidden="true">✦</span><span class="filter-pill-label">الكل</span>';
+  allPill.innerHTML = `<span class="filter-pill-icon" aria-hidden="true">✦</span><span class="filter-pill-label">${isEnglish ? 'All' : 'الكل'}</span>`;
   allPill.dataset.target = 'all';
   bar.appendChild(allPill);
 
   sections.forEach(s => {
     const icon = htmlEsc(s?.section_type?.icon || '•');
-    const name = htmlEsc(s?.section_type?.name_ar || 'قسم');
+    const name = isEnglish
+      ? htmlEsc(s?.section_type?.name_en || s?.section_type?.name_ar || 'Section')
+      : htmlEsc(s?.section_type?.name_ar || s?.section_type?.name_en || 'قسم');
+
     const pill = document.createElement('button');
     pill.className = 'filter-pill';
     pill.innerHTML = `<span class="filter-pill-icon" aria-hidden="true">${icon}</span><span class="filter-pill-label">${name}</span>`;
@@ -135,7 +183,7 @@ function renderSection(sec) {
   const el = document.createElement('section');
   el.id        = `sec-${sec.id}`;
   el.className = `newsletter-section section-${sec.section_type.slug}`;
-  el.dir       = 'rtl';
+  el.dir       = lang === 'en' ? 'ltr' : 'rtl';
 
   const sectionTitle = lang === 'en'
     ? (sec.section_type.name_en || sec.section_type.name_ar)
@@ -159,14 +207,14 @@ function renderSection(sec) {
 
   // Render section header image (applies to all section types)
   if (sec.header_image_url) {
-    body.innerHTML += `<img src="${resolveMediaUrl(sec.header_image_url)}" alt="${htmlEsc(sec.section_type.name_ar || 'صورة هيدر القسم')}" class="section-header-banner" loading="lazy">`;
+    body.innerHTML += `<img src="${resolveMediaUrl(sec.header_image_url)}" alt="${htmlEsc(sec.section_type.name_ar || 'صورة هيدر القسم')}" class="section-header-banner" loading="lazy" decoding="async">`;
   }
 
   switch (slug) {
     case 'illumination':
     case 'inspiring':
       if (c.header_image_url)
-        body.innerHTML += `<img src="${resolveMediaUrl(c.header_image_url)}" alt="${htmlEsc(c.header_image_alt_ar)}" class="section-hero-img" loading="lazy">`;
+        body.innerHTML += `<img src="${resolveMediaUrl(c.header_image_url)}" alt="${htmlEsc(c.header_image_alt_ar)}" class="section-hero-img" loading="lazy" decoding="async">`;
       {
         const bodyText = lang === 'en' ? (c.body_en || c.body_ar) : (c.body_ar || c.body_en);
         if (bodyText) body.innerHTML += `<div class="section-text rich-text">${renderRichText(bodyText)}</div>`;
@@ -180,7 +228,7 @@ function renderSection(sec) {
         const summaryText = lang === 'en' ? (item.summary_en || item.summary_ar) : (item.summary_ar || item.summary_en);
         body.innerHTML += `
           <div class="news-item">
-            ${item.image_url ? `<img src="${resolveMediaUrl(item.image_url)}" class="news-thumb" loading="lazy" alt="">` : ''}
+            ${item.image_url ? `<img src="${resolveMediaUrl(item.image_url)}" class="news-thumb" loading="lazy" decoding="async" alt="">` : ''}
             <div class="news-item-body">
               <h3 class="news-title">${item.source_url
                 ? `<a href="${htmlEsc(item.source_url)}" target="_blank" rel="noopener">${htmlEsc(titleText)}</a>`
@@ -199,7 +247,7 @@ function renderSection(sec) {
         const excerptText = lang === 'en' ? (item.excerpt_en || item.excerpt_ar) : (item.excerpt_ar || item.excerpt_en);
         body.innerHTML += `
           <div class="article-item">
-            ${item.image_url ? `<img src="${resolveMediaUrl(item.image_url)}" class="article-thumb" loading="lazy" alt="">` : ''}
+            ${item.image_url ? `<img src="${resolveMediaUrl(item.image_url)}" class="article-thumb" loading="lazy" decoding="async" alt="">` : ''}
             <div class="article-item-body">
               <h3 class="article-title">${item.article_url
                 ? `<a href="${htmlEsc(item.article_url)}" target="_blank" rel="noopener">${htmlEsc(titleText)}</a>`
@@ -225,7 +273,7 @@ function renderSection(sec) {
           <div class="podcast-info">
             <h3 class="podcast-title">${htmlEsc(podcastTitle)}</h3>
             ${podcastDesc ? `<div class="podcast-desc rich-text">${renderRichText(podcastDesc)}</div>` : ''}
-            ${podcastImageUrl ? `<img src="${resolveMediaUrl(podcastImageUrl)}" class="podcast-image" loading="lazy" alt="">` : ''}
+            ${podcastImageUrl ? `<img src="${resolveMediaUrl(podcastImageUrl)}" class="podcast-image" loading="lazy" decoding="async" alt="">` : ''}
             ${c.duration_seconds ? `<span class="podcast-dur">${Math.floor(c.duration_seconds/60)} ${durationLabel}</span>` : ''}
           </div>
           ${c.audio_url ? `<audio controls src="${htmlEsc(resolveMediaUrl(c.audio_url) || c.audio_url)}" class="podcast-audio"></audio>` : ''}
