@@ -10,10 +10,7 @@ async function initNewsletterPage(idParam = 'id') {
   const lang          = params.get('lang') || 'ar';
   window._nlLang      = lang; // globally available for rendering
 
-  const isEnglish = lang === 'en';
-  document.documentElement.lang = isEnglish ? 'en' : 'ar';
-  document.documentElement.dir = isEnglish ? 'ltr' : 'rtl';
-  document.body.dir = isEnglish ? 'ltr' : 'rtl';
+  document.documentElement.lang = lang === 'en' ? 'en' : 'ar';
 
   const container     = document.getElementById('newsletter-sections');
 
@@ -44,7 +41,10 @@ async function initNewsletterPage(idParam = 'id') {
     document.title = displayTitle || document.title;
 
     const h1 = document.querySelector('.newsletter-title');
-    if (h1) h1.textContent = displayTitle;
+    if (h1) {
+      h1.textContent = displayTitle;
+      h1.dir = lang === 'en' ? 'ltr' : 'rtl';
+    }
 
     // Hide cover image in single-episode view (comment out or remove existing cover display)
     const cover = document.querySelector('.newsletter-cover');
@@ -180,10 +180,12 @@ function buildFilterNav(sections) {
 
 function renderSection(sec) {
   const lang = window._nlLang || 'ar';
+  const isEnglish = lang === 'en';
+  const textDir = isEnglish ? 'ltr' : 'rtl';
   const el = document.createElement('section');
   el.id        = `sec-${sec.id}`;
   el.className = `newsletter-section section-${sec.section_type.slug}`;
-  el.dir       = lang === 'en' ? 'ltr' : 'rtl';
+  el.dir       = 'rtl';
 
   const sectionTitle = lang === 'en'
     ? (sec.section_type.name_en || sec.section_type.name_ar)
@@ -192,7 +194,7 @@ function renderSection(sec) {
   el.innerHTML = `
     <div class="section-header">
       <span class="section-icon">${sec.section_type.icon}</span>
-      <h2 class="section-title">${htmlEsc(sectionTitle)}</h2>
+      <h2 class="section-title" dir="${textDir}">${htmlEsc(sectionTitle)}</h2>
       <button class="section-toggle-btn" type="button" aria-expanded="true" aria-label="${lang === 'en' ? 'Hide section' : 'إخفاء القسم'}">
         <span class="section-toggle-text">${lang === 'en' ? 'Hide' : 'إخفاء'}</span>
         <span class="section-toggle-icon" aria-hidden="true">▾</span>
@@ -217,7 +219,7 @@ function renderSection(sec) {
         body.innerHTML += `<img src="${resolveMediaUrl(c.header_image_url)}" alt="${htmlEsc(c.header_image_alt_ar)}" class="section-hero-img" loading="lazy" decoding="async">`;
       {
         const bodyText = lang === 'en' ? (c.body_en || c.body_ar) : (c.body_ar || c.body_en);
-        if (bodyText) body.innerHTML += `<div class="section-text rich-text">${renderRichText(bodyText)}</div>`;
+        if (bodyText) body.innerHTML += `<div class="section-text rich-text" dir="${textDir}">${renderRichText(bodyText)}</div>`;
       }
       break;
 
@@ -229,12 +231,12 @@ function renderSection(sec) {
         body.innerHTML += `
           <div class="news-item">
             ${item.image_url ? `<img src="${resolveMediaUrl(item.image_url)}" class="news-thumb" loading="lazy" decoding="async" alt="">` : ''}
-            <div class="news-item-body">
+            <div class="news-item-body" dir="${textDir}">
               <h3 class="news-title">${item.source_url
                 ? `<a href="${htmlEsc(item.source_url)}" target="_blank" rel="noopener">${htmlEsc(titleText)}</a>`
                 : htmlEsc(titleText)}</h3>
               ${sourceName ? `<span class="news-source">${htmlEsc(sourceName)}</span>` : ''}
-              ${summaryText ? `<div class="news-summary rich-text">${renderRichText(summaryText)}</div>` : ''}
+              ${summaryText ? `<div class="news-summary rich-text" dir="${textDir}">${renderRichText(summaryText)}</div>` : ''}
             </div>
           </div>`;
       });
@@ -248,12 +250,12 @@ function renderSection(sec) {
         body.innerHTML += `
           <div class="article-item">
             ${item.image_url ? `<img src="${resolveMediaUrl(item.image_url)}" class="article-thumb" loading="lazy" decoding="async" alt="">` : ''}
-            <div class="article-item-body">
+            <div class="article-item-body" dir="${textDir}">
               <h3 class="article-title">${item.article_url
                 ? `<a href="${htmlEsc(item.article_url)}" target="_blank" rel="noopener">${htmlEsc(titleText)}</a>`
                 : htmlEsc(titleText)}</h3>
               ${authorText ? `<span class="article-author">${htmlEsc(authorText)}</span>` : ''}
-              ${excerptText ? `<div class="article-excerpt rich-text">${renderRichText(excerptText)}</div>` : ''}
+              ${excerptText ? `<div class="article-excerpt rich-text" dir="${textDir}">${renderRichText(excerptText)}</div>` : ''}
             </div>
           </div>`;
       });
@@ -270,9 +272,9 @@ function renderSection(sec) {
 
       body.innerHTML += `
         <div class="podcast-player">
-          <div class="podcast-info">
+          <div class="podcast-info" dir="${textDir}">
             <h3 class="podcast-title">${htmlEsc(podcastTitle)}</h3>
-            ${podcastDesc ? `<div class="podcast-desc rich-text">${renderRichText(podcastDesc)}</div>` : ''}
+            ${podcastDesc ? `<div class="podcast-desc rich-text" dir="${textDir}">${renderRichText(podcastDesc)}</div>` : ''}
             ${podcastImageUrl ? `<img src="${resolveMediaUrl(podcastImageUrl)}" class="podcast-image" loading="lazy" decoding="async" alt="">` : ''}
             ${c.duration_seconds ? `<span class="podcast-dur">${Math.floor(c.duration_seconds/60)} ${durationLabel}</span>` : ''}
           </div>
@@ -346,9 +348,10 @@ function renderNewsletterIntro(welcomeText, readingText, lang = 'ar') {
   const wrap = document.createElement('section');
   wrap.className = 'newsletter-welcome';
   const readingLabel = lang === 'en' ? 'Reading time' : 'وقت القراءة';
+  const textDir = lang === 'en' ? 'ltr' : 'rtl';
 
   wrap.innerHTML = `
-    ${welcomeText ? `<div class="newsletter-welcome-text rich-text">${renderRichText(welcomeText)}</div>` : ''}
+    ${welcomeText ? `<div class="newsletter-welcome-text rich-text" dir="${textDir}">${renderRichText(welcomeText)}</div>` : ''}
     ${readingText ? `<div class="newsletter-reading-time"><span class="newsletter-reading-time-label">⏱ ${htmlEsc(readingLabel)}:</span> ${htmlEsc(readingText)}</div>` : ''}`;
 
   return wrap;

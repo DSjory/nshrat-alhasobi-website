@@ -4206,10 +4206,7 @@ body.dark-mode .section-toggle-btn:hover {
    Fixes LTR layout, text alignment, spacing, and readability
    ========================================================= */
 
-html[lang="en"],
-html[lang="en"] body {
-    direction: ltr !important;
-}
+
 
 /* Keep the page reading surface centered */
 html[lang="en"] .nl-page {
@@ -4360,6 +4357,1116 @@ html[lang="en"] .filter-pill {
     .newsletter-section[dir="ltr"] .podcast-player {
         padding: 16px !important;
     }
+}
+
+
+
+/* =========================================================
+   Archive Pages Direction Fix
+   Keeps archive pages and navigation RTL while allowing
+   English card text to read properly when needed
+   ========================================================= */
+
+/* Keep main site layout RTL on archive pages */
+body,
+#main-header,
+.main-nav,
+.header-right-section,
+.header-tools,
+.top-cta-bar {
+    direction: rtl;
+}
+
+/* Center archive page titles and descriptions */
+#episodes-page,
+.episodes-page,
+#episodes-section,
+.archive-page,
+.page-hero,
+.archive-hero {
+    direction: rtl;
+    text-align: center;
+}
+
+#episodes-page h1,
+#episodes-page h2,
+.episodes-page h1,
+.episodes-page h2,
+.archive-page h1,
+.archive-page h2,
+.page-hero h1,
+.page-hero h2,
+.archive-hero h1,
+.archive-hero h2 {
+    text-align: center !important;
+    margin-inline: auto !important;
+}
+
+/* Keep cards visually consistent */
+.episode-card,
+.newsletter-card,
+.card {
+    direction: rtl;
+    text-align: center;
+    overflow: hidden;
+}
+
+/* Card image */
+.episode-card img,
+.newsletter-card img,
+.card img {
+    width: 100%;
+    display: block;
+}
+
+/* Card body */
+.episode-card-content,
+.newsletter-card-content,
+.card-content {
+    direction: rtl;
+    text-align: center;
+}
+
+/* Arabic newsletter card titles */
+.episode-card-title,
+.newsletter-card-title,
+.card-title {
+    text-align: center;
+    line-height: 1.45;
+}
+
+/* English translated newsletter titles only */
+html[lang="en"] .episode-card-title,
+html[lang="en"] .newsletter-card-title,
+html[lang="en"] .card-title,
+.episode-card-title:lang(en),
+.newsletter-card-title:lang(en),
+.card-title:lang(en) {
+    direction: ltr;
+    text-align: center;
+}
+
+/* Card footer/meta should stay balanced, not flip the whole card */
+.episode-card-meta,
+.newsletter-card-meta,
+.card-meta,
+.episode-meta {
+    direction: rtl;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    text-align: initial;
+}
+
+/* English category text inside translated cards */
+html[lang="en"] .episode-card-meta,
+html[lang="en"] .newsletter-card-meta,
+html[lang="en"] .card-meta {
+    direction: rtl;
+}
+
+/* If category is English, allow only the text itself to be LTR */
+.episode-category,
+.newsletter-category,
+.card-category {
+    direction: ltr;
+    unicode-bidi: plaintext;
+}
+
+/* Issue number stays Arabic/RTL */
+.episode-number,
+.newsletter-number,
+.card-number {
+    direction: rtl;
+    unicode-bidi: plaintext;
+}
+
+/* Fix archive grid spacing */
+.episodes-grid,
+.newsletters-grid,
+.archive-grid {
+    direction: rtl;
+}
+
+/* Mobile archive readability */
+@media (max-width: 700px) {
+    #episodes-page h1,
+    #episodes-page h2,
+    .episodes-page h1,
+    .episodes-page h2,
+    .archive-page h1,
+    .archive-page h2,
+    .page-hero h1,
+    .page-hero h2,
+    .archive-hero h1,
+    .archive-hero h2 {
+        text-align: center !important;
+    }
+
+    .episode-card-title,
+    .newsletter-card-title,
+    .card-title {
+        font-size: 20px;
+        line-height: 1.45;
+    }
+
+    .episode-card-meta,
+    .newsletter-card-meta,
+    .card-meta,
+    .episode-meta {
+        gap: 8px;
+        font-size: 14px;
+    }
+}
+
+
+
+/* =========================================================
+   Translated Archive Header Alignment Fix
+   Centers archive page heading and description without
+   affecting the main navigation/header layout
+   ========================================================= */
+
+main:has(.episodes-grid) > h1,
+main:has(.episodes-grid) > h2,
+main:has(.episodes-grid) > p,
+main:has(.newsletters-grid) > h1,
+main:has(.newsletters-grid) > h2,
+main:has(.newsletters-grid) > p,
+main:has(.archive-grid) > h1,
+main:has(.archive-grid) > h2,
+main:has(.archive-grid) > p {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Archive page intro spacing */
+main:has(.episodes-grid) > h1,
+main:has(.episodes-grid) > h2,
+main:has(.newsletters-grid) > h1,
+main:has(.newsletters-grid) > h2,
+main:has(.archive-grid) > h1,
+main:has(.archive-grid) > h2 {
+    max-width: 900px !important;
+    margin-top: 110px !important;
+    margin-bottom: 16px !important;
+    color: #243f5a !important;
+    font-size: clamp(32px, 4vw, 48px) !important;
+    line-height: 1.4 !important;
+    font-weight: 800 !important;
+}
+
+/* Archive page subtitle */
+main:has(.episodes-grid) > p,
+main:has(.newsletters-grid) > p,
+main:has(.archive-grid) > p {
+    max-width: 760px !important;
+    margin-bottom: 70px !important;
+    color: #2f4053 !important;
+    font-size: 20px !important;
+    line-height: 1.8 !important;
+}
+
+/* Keep archive grids balanced */
+.episodes-grid,
+.newsletters-grid,
+.archive-grid {
+    width: min(100% - 90px, 1500px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Mobile archive header */
+@media (max-width: 700px) {
+    main:has(.episodes-grid) > h1,
+    main:has(.episodes-grid) > h2,
+    main:has(.newsletters-grid) > h1,
+    main:has(.newsletters-grid) > h2,
+    main:has(.archive-grid) > h1,
+    main:has(.archive-grid) > h2 {
+        margin-top: 70px !important;
+        margin-bottom: 12px !important;
+        font-size: 30px !important;
+        text-align: center !important;
+    }
+
+    main:has(.episodes-grid) > p,
+    main:has(.newsletters-grid) > p,
+    main:has(.archive-grid) > p {
+        margin-bottom: 42px !important;
+        font-size: 17px !important;
+        text-align: center !important;
+        padding-inline: 16px !important;
+    }
+
+    .episodes-grid,
+    .newsletters-grid,
+    .archive-grid {
+        width: min(100% - 28px, 520px) !important;
+    }
+}
+
+
+/* =========================================================
+   Final Archive Intro Alignment Fix
+   Centers archive title/subtitle even when they are inside wrappers
+   without changing the site header or navigation
+   ========================================================= */
+
+/* Center the intro area on archive pages */
+main:has(.episodes-grid) {
+    text-align: center !important;
+}
+
+/* Center common archive/header wrappers */
+main:has(.episodes-grid) .page-header,
+main:has(.episodes-grid) .archive-header,
+main:has(.episodes-grid) .episodes-header,
+main:has(.episodes-grid) .translated-archive-header,
+main:has(.episodes-grid) .container > .page-header,
+main:has(.episodes-grid) .container > .archive-header {
+    width: min(100% - 32px, 900px) !important;
+    margin: 110px auto 64px !important;
+    text-align: center !important;
+    direction: rtl !important;
+}
+
+/* Center standalone headings before the grid */
+main:has(.episodes-grid) h1,
+main:has(.episodes-grid) h2 {
+    text-align: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+/* Archive main title */
+main:has(.episodes-grid) h1:first-of-type,
+main:has(.episodes-grid) h2:first-of-type,
+main:has(.episodes-grid) .page-title,
+main:has(.episodes-grid) .archive-title,
+main:has(.episodes-grid) .episodes-title,
+main:has(.episodes-grid) .translated-title {
+    display: block !important;
+    width: 100% !important;
+    max-width: 900px !important;
+    margin: 110px auto 16px !important;
+    text-align: center !important;
+    color: #243f5a !important;
+    font-size: clamp(32px, 4vw, 48px) !important;
+    line-height: 1.4 !important;
+    font-weight: 800 !important;
+    direction: rtl !important;
+}
+
+/* Archive subtitle */
+main:has(.episodes-grid) h1:first-of-type + p,
+main:has(.episodes-grid) h2:first-of-type + p,
+main:has(.episodes-grid) .page-subtitle,
+main:has(.episodes-grid) .archive-subtitle,
+main:has(.episodes-grid) .episodes-subtitle,
+main:has(.episodes-grid) .translated-subtitle {
+    display: block !important;
+    width: 100% !important;
+    max-width: 760px !important;
+    margin: 0 auto 64px !important;
+    text-align: center !important;
+    color: #2f4053 !important;
+    font-size: 20px !important;
+    line-height: 1.8 !important;
+    direction: rtl !important;
+}
+
+/* Keep the archive grid centered */
+main:has(.episodes-grid) .episodes-grid {
+    width: min(100% - 90px, 1500px) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    direction: rtl !important;
+}
+
+/* Keep cards centered but do not flip the whole page */
+main:has(.episodes-grid) .episode-card {
+    direction: rtl !important;
+    text-align: center !important;
+}
+
+/* English card title only */
+main:has(.episodes-grid) .episode-card-title,
+main:has(.episodes-grid) .newsletter-card-title,
+main:has(.episodes-grid) .card-title {
+    direction: ltr !important;
+    text-align: center !important;
+    unicode-bidi: plaintext !important;
+}
+
+/* Card meta balance */
+main:has(.episodes-grid) .episode-card-meta,
+main:has(.episodes-grid) .newsletter-card-meta,
+main:has(.episodes-grid) .card-meta,
+main:has(.episodes-grid) .episode-meta {
+    direction: rtl !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+}
+
+/* English category text only */
+main:has(.episodes-grid) .episode-category,
+main:has(.episodes-grid) .newsletter-category,
+main:has(.episodes-grid) .card-category {
+    direction: ltr !important;
+    unicode-bidi: plaintext !important;
+    text-align: left !important;
+}
+
+/* Issue number stays RTL */
+main:has(.episodes-grid) .episode-number,
+main:has(.episodes-grid) .newsletter-number,
+main:has(.episodes-grid) .card-number {
+    direction: rtl !important;
+    unicode-bidi: plaintext !important;
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+    main:has(.episodes-grid) .page-header,
+    main:has(.episodes-grid) .archive-header,
+    main:has(.episodes-grid) .episodes-header,
+    main:has(.episodes-grid) .translated-archive-header {
+        margin: 70px auto 42px !important;
+    }
+
+    main:has(.episodes-grid) h1:first-of-type,
+    main:has(.episodes-grid) h2:first-of-type,
+    main:has(.episodes-grid) .page-title,
+    main:has(.episodes-grid) .archive-title,
+    main:has(.episodes-grid) .episodes-title,
+    main:has(.episodes-grid) .translated-title {
+        margin-top: 70px !important;
+        margin-bottom: 12px !important;
+        font-size: 30px !important;
+        text-align: center !important;
+    }
+
+    main:has(.episodes-grid) h1:first-of-type + p,
+    main:has(.episodes-grid) h2:first-of-type + p,
+    main:has(.episodes-grid) .page-subtitle,
+    main:has(.episodes-grid) .archive-subtitle,
+    main:has(.episodes-grid) .episodes-subtitle,
+    main:has(.episodes-grid) .translated-subtitle {
+        margin-bottom: 42px !important;
+        font-size: 17px !important;
+        padding-inline: 16px !important;
+        text-align: center !important;
+    }
+
+    main:has(.episodes-grid) .episodes-grid {
+        width: min(100% - 28px, 520px) !important;
+    }
+}
+
+/* =========================================================
+   Archive Hero Final UX Polish
+   Reduces excessive vertical spacing and improves hierarchy
+   for archive pages without affecting the main header
+   ========================================================= */
+
+main:has(.episodes-grid) {
+    padding-top: 0 !important;
+}
+
+/* Archive title */
+main:has(.episodes-grid) h1:first-of-type,
+main:has(.episodes-grid) h2:first-of-type,
+main:has(.episodes-grid) .page-title,
+main:has(.episodes-grid) .archive-title,
+main:has(.episodes-grid) .episodes-title,
+main:has(.episodes-grid) .translated-title {
+    display: block !important;
+    width: 100% !important;
+    max-width: 900px !important;
+
+    margin: 72px auto 12px !important;
+
+    text-align: center !important;
+    color: #243f5a !important;
+
+    font-size: clamp(32px, 3.2vw, 42px) !important;
+    line-height: 1.35 !important;
+    font-weight: 800 !important;
+
+    direction: rtl !important;
+}
+
+/* Archive subtitle */
+main:has(.episodes-grid) h1:first-of-type + p,
+main:has(.episodes-grid) h2:first-of-type + p,
+main:has(.episodes-grid) .page-subtitle,
+main:has(.episodes-grid) .archive-subtitle,
+main:has(.episodes-grid) .episodes-subtitle,
+main:has(.episodes-grid) .translated-subtitle {
+    display: block !important;
+    width: 100% !important;
+    max-width: 760px !important;
+
+    margin: 0 auto 54px !important;
+
+    text-align: center !important;
+    color: #43566a !important;
+
+    font-size: 18px !important;
+    line-height: 1.75 !important;
+    font-weight: 400 !important;
+
+    direction: rtl !important;
+}
+
+/* Archive grid spacing */
+main:has(.episodes-grid) .episodes-grid {
+    width: min(100% - 90px, 1500px) !important;
+    margin: 0 auto 80px !important;
+
+    direction: rtl !important;
+
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 34px !important;
+}
+
+/* Card polish */
+main:has(.episodes-grid) .episode-card {
+    border-radius: 14px !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    box-shadow: 0 12px 28px rgba(36, 63, 90, 0.08) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+main:has(.episodes-grid) .episode-card:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 18px 36px rgba(36, 63, 90, 0.12) !important;
+}
+
+/* Card image consistency */
+main:has(.episodes-grid) .episode-card img {
+    width: 100% !important;
+    height: 240px !important;
+    object-fit: cover !important;
+    display: block !important;
+}
+
+/* English card title only */
+main:has(.episodes-grid) .episode-card-title,
+main:has(.episodes-grid) .newsletter-card-title,
+main:has(.episodes-grid) .card-title {
+    direction: ltr !important;
+    text-align: center !important;
+    unicode-bidi: plaintext !important;
+
+    font-size: 22px !important;
+    line-height: 1.45 !important;
+    font-weight: 800 !important;
+    color: #243f5a !important;
+}
+
+/* Card meta */
+main:has(.episodes-grid) .episode-card-meta,
+main:has(.episodes-grid) .newsletter-card-meta,
+main:has(.episodes-grid) .card-meta,
+main:has(.episodes-grid) .episode-meta {
+    direction: rtl !important;
+
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+
+    gap: 12px !important;
+    color: #52737a !important;
+}
+
+/* English category text only */
+main:has(.episodes-grid) .episode-category,
+main:has(.episodes-grid) .newsletter-category,
+main:has(.episodes-grid) .card-category {
+    direction: ltr !important;
+    unicode-bidi: plaintext !important;
+    text-align: left !important;
+}
+
+/* Issue number stays RTL */
+main:has(.episodes-grid) .episode-number,
+main:has(.episodes-grid) .newsletter-number,
+main:has(.episodes-grid) .card-number {
+    direction: rtl !important;
+    unicode-bidi: plaintext !important;
+}
+
+/* Tablet */
+@media (max-width: 900px) {
+    main:has(.episodes-grid) h1:first-of-type,
+    main:has(.episodes-grid) h2:first-of-type,
+    main:has(.episodes-grid) .page-title,
+    main:has(.episodes-grid) .archive-title,
+    main:has(.episodes-grid) .episodes-title,
+    main:has(.episodes-grid) .translated-title {
+        margin-top: 56px !important;
+        font-size: 34px !important;
+    }
+
+    main:has(.episodes-grid) h1:first-of-type + p,
+    main:has(.episodes-grid) h2:first-of-type + p,
+    main:has(.episodes-grid) .page-subtitle,
+    main:has(.episodes-grid) .archive-subtitle,
+    main:has(.episodes-grid) .episodes-subtitle,
+    main:has(.episodes-grid) .translated-subtitle {
+        margin-bottom: 42px !important;
+        font-size: 17px !important;
+    }
+
+    main:has(.episodes-grid) .episodes-grid {
+        width: min(100% - 44px, 900px) !important;
+        gap: 26px !important;
+    }
+}
+
+/* Mobile */
+@media (max-width: 700px) {
+    main:has(.episodes-grid) h1:first-of-type,
+    main:has(.episodes-grid) h2:first-of-type,
+    main:has(.episodes-grid) .page-title,
+    main:has(.episodes-grid) .archive-title,
+    main:has(.episodes-grid) .episodes-title,
+    main:has(.episodes-grid) .translated-title {
+        margin-top: 42px !important;
+        margin-bottom: 10px !important;
+
+        font-size: 28px !important;
+        line-height: 1.45 !important;
+        text-align: center !important;
+    }
+
+    main:has(.episodes-grid) h1:first-of-type + p,
+    main:has(.episodes-grid) h2:first-of-type + p,
+    main:has(.episodes-grid) .page-subtitle,
+    main:has(.episodes-grid) .archive-subtitle,
+    main:has(.episodes-grid) .episodes-subtitle,
+    main:has(.episodes-grid) .translated-subtitle {
+        max-width: 92% !important;
+        margin-bottom: 34px !important;
+
+        font-size: 16px !important;
+        line-height: 1.7 !important;
+        text-align: center !important;
+    }
+
+    main:has(.episodes-grid) .episodes-grid {
+        width: min(100% - 28px, 520px) !important;
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+        margin-bottom: 56px !important;
+    }
+
+    main:has(.episodes-grid) .episode-card img {
+        height: 220px !important;
+    }
+
+    main:has(.episodes-grid) .episode-card-title,
+    main:has(.episodes-grid) .newsletter-card-title,
+    main:has(.episodes-grid) .card-title {
+        font-size: 20px !important;
+    }
+}
+
+
+/* =========================================================
+   Hero Subscribe Button Theme Colors
+   Orange in light mode, blue/teal in dark mode
+   ========================================================= */
+
+/* Light mode */
+body:not(.dark-mode) .hero-subscribe-btn {
+    background-color: #b8734f !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 24px rgba(184, 115, 79, 0.22) !important;
+}
+
+body:not(.dark-mode) .hero-subscribe-btn:hover {
+    background-color: #a86645 !important;
+    box-shadow: 0 14px 30px rgba(184, 115, 79, 0.28) !important;
+}
+
+/* Dark mode */
+body.dark-mode .hero-subscribe-btn {
+    background-color: #5f8d94 !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 24px rgba(95, 141, 148, 0.24) !important;
+}
+
+body.dark-mode .hero-subscribe-btn:hover {
+    background-color: #6fa0a8 !important;
+    box-shadow: 0 14px 30px rgba(95, 141, 148, 0.32) !important;
+}
+
+/* Button icon */
+.hero-subscribe-btn i {
+    color: inherit !important;
+}
+
+
+/* =========================================================
+   Dark Mode Performance Optimization
+   Reduces heavy paints, shadows, and expensive transitions
+   especially when switching to dark mode
+   ========================================================= */
+
+/* Avoid expensive full-page animations during theme switching */
+html.theme-changing *,
+html.theme-changing *::before,
+html.theme-changing *::after {
+    transition: none !important;
+    animation: none !important;
+}
+
+/* Keep theme transitions light and limited */
+body,
+#main-header,
+.main-nav,
+.header-tool-button,
+.hero-subscribe-btn,
+.join-fixed-bottom a,
+.episode-card,
+.newsletter-card,
+.card,
+.nl-page {
+    transition:
+        background-color 0.18s ease,
+        color 0.18s ease,
+        border-color 0.18s ease !important;
+}
+
+/* Remove expensive transitions from large content blocks */
+.episodes-grid *,
+.newsletters-grid *,
+.archive-grid *,
+#latest-episodes-grid *,
+#latest-news-grid *,
+.newsletter-section *,
+.section-body *,
+.rich-text * {
+    transition: none !important;
+}
+
+/* Reduce heavy shadows in dark mode */
+body.dark-mode .episode-card,
+body.dark-mode .newsletter-card,
+body.dark-mode .card,
+body.dark-mode .news-item,
+body.dark-mode .article-item,
+body.dark-mode .podcast-player,
+body.dark-mode .nl-page {
+    box-shadow: none !important;
+}
+
+/* Use lighter shadows only for important floating buttons */
+body.dark-mode .hero-subscribe-btn,
+body.dark-mode .join-fixed-bottom a,
+body.dark-mode .header-tool-button {
+    box-shadow: 0 8px 18px rgba(95, 141, 148, 0.18) !important;
+}
+
+/* Prevent expensive blur/filter effects in dark mode */
+body.dark-mode *,
+body.dark-mode *::before,
+body.dark-mode *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+}
+
+/* Improve rendering for long lists and newsletter sections */
+.episode-card,
+.newsletter-card,
+.card,
+.newsletter-section,
+.news-item,
+.article-item,
+.podcast-player {
+    content-visibility: auto;
+    contain-intrinsic-size: 420px;
+}
+
+/* Make images cheaper to render */
+.episode-card img,
+.newsletter-card img,
+.card img,
+.section-header-banner,
+.section-hero-img,
+.news-thumb,
+.article-thumb,
+.podcast-image {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+/* Reduce hover cost on dark mode */
+body.dark-mode .episode-card:hover,
+body.dark-mode .newsletter-card:hover,
+body.dark-mode .card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Respect users/devices that prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition: none !important;
+        animation: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* =========================================================
+   Dark Mode UI Polish
+   Improves cards, newsletter reading pages, contrast,
+   and overall readability in dark mode
+   ========================================================= */
+
+/* Main dark background */
+body.dark-mode {
+    background-color: #0f1117 !important;
+    color: #eef3f7 !important;
+}
+
+/* Main sections in dark mode */
+body.dark-mode main,
+body.dark-mode #main-content,
+body.dark-mode #episode-page-container,
+body.dark-mode .main-content-area {
+    background-color: #0f1117 !important;
+    color: #eef3f7 !important;
+}
+
+/* Page headings */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode .section-title,
+body.dark-mode .section-title-main,
+body.dark-mode .page-title,
+body.dark-mode .archive-title,
+body.dark-mode .episodes-title,
+body.dark-mode .newsletter-title {
+    color: #f4f7fb !important;
+}
+
+/* Subtitles and descriptions */
+body.dark-mode p,
+body.dark-mode .page-subtitle,
+body.dark-mode .archive-subtitle,
+body.dark-mode .episodes-subtitle,
+body.dark-mode .newsletter-welcome-text {
+    color: #c9d3dc !important;
+}
+
+/* =========================================================
+   Archive Cards - Dark Mode
+   ========================================================= */
+
+body.dark-mode .episode-card,
+body.dark-mode .newsletter-card,
+body.dark-mode .card {
+    background-color: #171b23 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28) !important;
+}
+
+body.dark-mode .episode-card:hover,
+body.dark-mode .newsletter-card:hover,
+body.dark-mode .card:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.38) !important;
+}
+
+/* Card image */
+body.dark-mode .episode-card img,
+body.dark-mode .newsletter-card img,
+body.dark-mode .card img {
+    opacity: 0.92 !important;
+}
+
+/* Card body */
+body.dark-mode .episode-card-content,
+body.dark-mode .newsletter-card-content,
+body.dark-mode .card-content {
+    background-color: #171b23 !important;
+    color: #eef3f7 !important;
+}
+
+/* Card titles */
+body.dark-mode .episode-card-title,
+body.dark-mode .newsletter-card-title,
+body.dark-mode .card-title {
+    color: #f3f7fb !important;
+    font-weight: 800 !important;
+}
+
+/* Card meta/footer */
+body.dark-mode .episode-card-meta,
+body.dark-mode .newsletter-card-meta,
+body.dark-mode .card-meta,
+body.dark-mode .episode-meta {
+    color: #b8c7d1 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Category and issue number */
+body.dark-mode .episode-category,
+body.dark-mode .newsletter-category,
+body.dark-mode .card-category,
+body.dark-mode .episode-number,
+body.dark-mode .newsletter-number,
+body.dark-mode .card-number {
+    color: #b8c7d1 !important;
+}
+
+/* =========================================================
+   Single Newsletter Reading Page - Dark Mode
+   ========================================================= */
+
+/* One clean dark reading sheet */
+body.dark-mode .nl-page {
+    background-color: #151922 !important;
+    color: #eef3f7 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Remove white inner blocks */
+body.dark-mode .newsletter-section,
+body.dark-mode .section-body,
+body.dark-mode .section-text,
+body.dark-mode .rich-text,
+body.dark-mode .newsletter-welcome,
+body.dark-mode .newsletter-welcome-text {
+    background: transparent !important;
+    color: #e8eef4 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Rich text readability */
+body.dark-mode .rich-text,
+body.dark-mode .section-text,
+body.dark-mode .news-summary,
+body.dark-mode .article-excerpt,
+body.dark-mode .podcast-desc,
+body.dark-mode .newsletter-welcome-text {
+    color: #e8eef4 !important;
+}
+
+/* Paragraphs */
+body.dark-mode .rich-text p,
+body.dark-mode .section-text p,
+body.dark-mode .news-summary p,
+body.dark-mode .article-excerpt p,
+body.dark-mode .podcast-desc p {
+    color: #e8eef4 !important;
+}
+
+/* Inner article/news/podcast cards */
+body.dark-mode .news-item,
+body.dark-mode .article-item,
+body.dark-mode .podcast-player {
+    background-color: #1b202a !important;
+    color: #eef3f7 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
+}
+
+/* Inner titles */
+body.dark-mode .news-title,
+body.dark-mode .article-title,
+body.dark-mode .podcast-title,
+body.dark-mode .news-title a,
+body.dark-mode .article-title a {
+    color: #f4f7fb !important;
+}
+
+/* Inner meta */
+body.dark-mode .news-source,
+body.dark-mode .article-author,
+body.dark-mode .podcast-dur {
+    color: #aebfca !important;
+}
+
+/* Section headers */
+body.dark-mode .section-header {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+body.dark-mode .section-icon {
+    background-color: rgba(95, 141, 148, 0.18) !important;
+}
+
+/* Reading time badge */
+body.dark-mode .newsletter-reading-time {
+    background-color: #202633 !important;
+    color: #c8d4dc !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Filter / tabs area */
+body.dark-mode .filter-bar,
+body.dark-mode .newsletter-nav {
+    background-color: #171b23 !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
+}
+
+body.dark-mode .filter-pill,
+body.dark-mode .tab {
+    background-color: #232a36 !important;
+    color: #e8eef4 !important;
+    border: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+body.dark-mode .filter-pill.active,
+body.dark-mode .tab.active {
+    background-color: #5f8d94 !important;
+    color: #ffffff !important;
+}
+
+/* Show / hide section button */
+body.dark-mode .section-toggle-btn {
+    background-color: #5f8d94 !important;
+    color: #ffffff !important;
+    box-shadow: none !important;
+}
+
+/* Images in dark mode */
+body.dark-mode .section-header-banner,
+body.dark-mode .section-hero-img,
+body.dark-mode .news-thumb,
+body.dark-mode .article-thumb,
+body.dark-mode .podcast-image {
+    opacity: 0.95 !important;
+    box-shadow: none !important;
+}
+
+/* Links */
+body.dark-mode a {
+    color: inherit;
+}
+
+body.dark-mode .rich-text a,
+body.dark-mode .section-text a,
+body.dark-mode .news-summary a,
+body.dark-mode .article-excerpt a {
+    color: #8fc5cf !important;
+}
+
+/* Fixed join button */
+body.dark-mode .join-fixed-bottom a {
+    background-color: #5f8d94 !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 24px rgba(95, 141, 148, 0.22) !important;
+}
+
+/* Hero subscribe button */
+body.dark-mode .hero-subscribe-btn {
+    background-color: #5f8d94 !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 24px rgba(95, 141, 148, 0.22) !important;
+}
+
+body.dark-mode .hero-subscribe-btn:hover,
+body.dark-mode .join-fixed-bottom a:hover {
+    background-color: #6fa0a8 !important;
+}
+
+/* =========================================================
+   Dark Mode Performance Safe Defaults
+   Keeps the UI smooth without heavy effects
+   ========================================================= */
+
+body.dark-mode .episode-card,
+body.dark-mode .newsletter-card,
+body.dark-mode .card,
+body.dark-mode .news-item,
+body.dark-mode .article-item,
+body.dark-mode .podcast-player,
+body.dark-mode .nl-page {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+}
+
+/* Mobile dark mode readability */
+@media (max-width: 700px) {
+    body.dark-mode .episode-card-title,
+    body.dark-mode .newsletter-card-title,
+    body.dark-mode .card-title {
+        font-size: 20px !important;
+        line-height: 1.45 !important;
+    }
+
+    body.dark-mode .rich-text,
+    body.dark-mode .section-text,
+    body.dark-mode .news-summary,
+    body.dark-mode .article-excerpt,
+    body.dark-mode .podcast-desc {
+        font-size: 16px !important;
+        line-height: 1.95 !important;
+    }
+
+    body.dark-mode .nl-page {
+        background-color: #151922 !important;
+    }
+}
+
+
+/* =========================================================
+   News Source Pill Hover Fix
+   Makes pill text white when hovered
+   ========================================================= */
+
+.news-source:hover,
+.source-badge:hover,
+.source-pill:hover,
+.news-card-source:hover,
+.latest-news-source:hover,
+.news-item-source:hover,
+.news-tag:hover,
+.news-category:hover {
+    color: #ffffff !important;
+}
+
+/* Make inner text/icons white too */
+.news-source:hover *,
+.source-badge:hover *,
+.source-pill:hover *,
+.news-card-source:hover *,
+.latest-news-source:hover *,
+.news-item-source:hover *,
+.news-tag:hover *,
+.news-category:hover * {
+    color: #ffffff !important;
+}
+
+/* If the source is a link */
+.news-source:hover a,
+.source-badge:hover a,
+.source-pill:hover a,
+.news-card-source:hover a,
+.latest-news-source:hover a,
+.news-item-source:hover a {
+    color: #ffffff !important;
 }
 
 
