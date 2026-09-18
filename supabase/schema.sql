@@ -47,7 +47,8 @@ BEGIN
       ('هندسة البرمجيات',  'Software Engineering'),
       ('المجتمع التقني',   'Tech Community'),
       ('الحوسبة',          'Computing'),
-      ('مجالات متنوعة' ,'Diverse Fields');  
+      ('مجالات متنوعة' ,'Diverse Fields');
+      ('معمل الخريجين' ,'Alumni Lab');  
   END IF;
 END $$;
 
